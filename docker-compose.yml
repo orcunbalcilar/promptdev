@@ -1,0 +1,104 @@
+# =============================================================================
+# PromptDev — Docker / Podman Compose
+# =============================================================================
+# Runs the full stack: PostgreSQL, Backend, Frontend, and optionally Slack Bot.
+#
+# Usage (Docker):
+#   docker compose up -d                         # Core services
+#   docker compose --profile slack up -d          # Include Slack bot
+#   docker compose down                           # Stop all
+#   docker compose down -v                        # Stop all + delete DB volume
+#
+# Usage (Podman):
+#   podman-compose up -d
+#   podman-compose --profile slack up -d
+#   podman-compose down
+#
+# Environment:
+#   Copy .env.example → .env and fill in your secrets before starting.
+# =============================================================================
+
+services:
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  db:
+    image: postgres:17-alpine
+    container_name: promptdev-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: promptdev
+      POSTGRES_USER: promptdev
+      POSTGRES_PASSWORD: promptdev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U promptdev -d promptdev"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ── Spring Boot Backend ────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./promptdev-backend
+      dockerfile: Dockerfile
+    container_name: promptdev-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/promptdev
+      DB_USERNAME: promptdev
+      DB_PASSWORD: promptdev
+      JPA_DDL_AUTO: update
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-change-me-in-production-32chars!}
+      BITBUCKET_URL: ${BITBUCKET_URL:-}
+      BITBUCKET_PROJECT_KEY: ${BITBUCKET_PROJECT_KEY:-}
+      BITBUCKET_USERNAME: ${BITBUCKET_USERNAME:-}
+      BITBUCKET_TOKEN: ${BITBUCKET_TOKEN:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    ports:
+      - "8080:8080"
+
+  # ── Next.js Frontend ──────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./promptdev-frontend
+      dockerfile: Dockerfile
+    container_name: promptdev-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api}
+      AUTH_SECRET: ${AUTH_SECRET:-}
+      AUTH_GITHUB_ID: ${AUTH_GITHUB_ID:-}
+      AUTH_GITHUB_SECRET: ${AUTH_GITHUB_SECRET:-}
+      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
+      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    ports:
+      - "3000:3000"
+
+  # ── Slack Bot (optional — start with --profile slack) ──────────────────────
+  bot:
+    build:
+      context: ./promptdev-bot
+      dockerfile: Dockerfile
+    container_name: promptdev-bot
+    restart: unless-stopped
+    profiles:
+      - slack
+    depends_on:
+      - backend
+    environment:
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+      SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
+      SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET}
+      PROMPTDEV_API_URL: http://backend:8080/api
+      PROMPTDEV_FRONTEND_URL: http://frontend:3000
+
+volumes:
+  pgdata:

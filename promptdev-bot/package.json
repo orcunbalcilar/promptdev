@@ -1,0 +1,27 @@
+{
+  "name": "promptdev-bot",
+  "version": "1.0.0",
+  "description": "Slack bot for remote PromptDev task management",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@slack/bolt": "^4.6.0",
+    "@slack/web-api": "^7.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.10",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

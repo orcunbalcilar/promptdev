@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: promptdev-backend
+
+  # ─── Database ────────────────────────────────────────────────────────────────
+  # All connection properties are REQUIRED via environment variables.
+  # No defaults are shipped — start-all.sh / docker-compose.yml inject them.
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging — override with LOG_LEVEL env var for verbose output
+logging:
+  level:
+    root: INFO
+    com.promptdev: ${LOG_LEVEL:INFO}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Bitbucket (per-user settings stored in database, these are optional global fallbacks)
+bitbucket:
+  base-url: ${BITBUCKET_URL:}
+  project-key: ${BITBUCKET_PROJECT_KEY:}
+  username: ${BITBUCKET_USERNAME:}
+  password: ${BITBUCKET_PASSWORD:}
+  token: ${BITBUCKET_TOKEN:}
+
+# SSE & encryption
+promptdev:
+  sse:
+    timeout: 30000
+    heartbeat-interval: 15000
+  encryption:
+    key: ${ENCRYPTION_KEY:}
