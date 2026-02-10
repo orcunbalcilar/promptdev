@@ -9,11 +9,18 @@ export type CopilotEventType =
   | 'assistant.message_delta'
   | 'assistant.reasoning'
   | 'assistant.reasoning_delta'
+  | 'assistant.turn_start'
+  | 'assistant.intent'
+  | 'assistant.usage'
   | 'tool.execution_start'
   | 'tool.execution_end'
+  | 'tool.execution_complete'
+  | 'tool.execution_partial_result'
   | 'session.idle'
   | 'session.compaction_start'
   | 'session.compaction_complete'
+  | 'session.usage_info'
+  | 'pending_messages.modified'
   | 'error'
 
 // Base event structure
@@ -110,6 +117,83 @@ export interface ErrorEvent extends CopilotEvent {
   }
 }
 
+// Session compaction start event
+export interface SessionCompactionStartEvent extends CopilotEvent {
+  type: 'session.compaction_start'
+  data: Record<string, unknown>
+}
+
+// Session compaction complete event
+export interface SessionCompactionCompleteEvent extends CopilotEvent {
+  type: 'session.compaction_complete'
+  data: Record<string, unknown>
+}
+
+// Session usage info event
+export interface SessionUsageInfoEvent extends CopilotEvent {
+  type: 'session.usage_info'
+  data: {
+    inputTokens?: number
+    outputTokens?: number
+    totalTokens?: number
+    [key: string]: unknown
+  }
+}
+
+// Pending messages modified event
+export interface PendingMessagesModifiedEvent extends CopilotEvent {
+  type: 'pending_messages.modified'
+  data: Record<string, unknown>
+}
+
+// Assistant turn start event
+export interface AssistantTurnStartEvent extends CopilotEvent {
+  type: 'assistant.turn_start'
+  data: Record<string, unknown>
+}
+
+// Assistant intent event
+export interface AssistantIntentEvent extends CopilotEvent {
+  type: 'assistant.intent'
+  data: {
+    intent?: string
+    [key: string]: unknown
+  }
+}
+
+// Assistant usage event
+export interface AssistantUsageEvent extends CopilotEvent {
+  type: 'assistant.usage'
+  data: {
+    inputTokens?: number
+    outputTokens?: number
+    totalTokens?: number
+    [key: string]: unknown
+  }
+}
+
+// Tool execution complete event
+export interface ToolExecutionCompleteEvent extends CopilotEvent {
+  type: 'tool.execution_complete'
+  data: {
+    toolName: string
+    toolId: string
+    output?: unknown
+    error?: string
+    duration?: number
+  }
+}
+
+// Tool execution partial result event
+export interface ToolExecutionPartialResultEvent extends CopilotEvent {
+  type: 'tool.execution_partial_result'
+  data: {
+    toolName: string
+    toolId: string
+    partialOutput?: unknown
+  }
+}
+
 // Union type for all events
 export type TypedCopilotEvent =
   | UserMessageEvent
@@ -117,9 +201,18 @@ export type TypedCopilotEvent =
   | AssistantMessageDeltaEvent
   | AssistantReasoningEvent
   | AssistantReasoningDeltaEvent
+  | AssistantTurnStartEvent
+  | AssistantIntentEvent
+  | AssistantUsageEvent
   | ToolExecutionStartEvent
   | ToolExecutionEndEvent
+  | ToolExecutionCompleteEvent
+  | ToolExecutionPartialResultEvent
   | SessionIdleEvent
+  | SessionCompactionStartEvent
+  | SessionCompactionCompleteEvent
+  | SessionUsageInfoEvent
+  | PendingMessagesModifiedEvent
   | ErrorEvent
 
 // Session state

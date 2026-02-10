@@ -240,6 +240,30 @@ function setupSessionEventListeners(
 }
 
 /**
+ * Set of all known Copilot SDK event types
+ */
+const KNOWN_EVENT_TYPES = new Set<CopilotEventType>([
+  "user.message",
+  "assistant.message",
+  "assistant.message_delta",
+  "assistant.reasoning",
+  "assistant.reasoning_delta",
+  "assistant.turn_start",
+  "assistant.intent",
+  "assistant.usage",
+  "tool.execution_start",
+  "tool.execution_end",
+  "tool.execution_complete",
+  "tool.execution_partial_result",
+  "session.idle",
+  "session.compaction_start",
+  "session.compaction_complete",
+  "session.usage_info",
+  "pending_messages.modified",
+  "error",
+]);
+
+/**
  * Transform SDK event to our typed event format
  */
 function transformEvent(
@@ -248,76 +272,20 @@ function transformEvent(
 ): TypedCopilotEvent | null {
   const rawEvent = event as { type: string; data?: unknown };
 
-  const baseEvent = {
+  if (!KNOWN_EVENT_TYPES.has(rawEvent.type as CopilotEventType)) {
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[Copilot] Unknown event type: ${rawEvent.type}`, rawEvent);
+    }
+    return null;
+  }
+
+  return {
     id: nanoid(),
     sessionId,
     timestamp: new Date().toISOString(),
-  };
-
-  switch (rawEvent.type) {
-    case "user.message":
-      return {
-        ...baseEvent,
-        type: "user.message" as CopilotEventType,
-        data: rawEvent.data as TypedCopilotEvent["data"],
-      } as TypedCopilotEvent;
-
-    case "assistant.message":
-      return {
-        ...baseEvent,
-        type: "assistant.message" as CopilotEventType,
-        data: rawEvent.data as TypedCopilotEvent["data"],
-      } as TypedCopilotEvent;
-
-    case "assistant.message_delta":
-      return {
-        ...baseEvent,
-        type: "assistant.message_delta" as CopilotEventType,
-        data: rawEvent.data as TypedCopilotEvent["data"],
-      } as TypedCopilotEvent;
-
-    case "assistant.reasoning":
-      return {
-        ...baseEvent,
-        type: "assistant.reasoning" as CopilotEventType,
-        data: rawEvent.data as TypedCopilotEvent["data"],
-      } as TypedCopilotEvent;
-
-    case "assistant.reasoning_delta":
-      return {
-        ...baseEvent,
-        type: "assistant.reasoning_delta" as CopilotEventType,
-        data: rawEvent.data as TypedCopilotEvent["data"],
-      } as TypedCopilotEvent;
-
-    case "tool.execution_start":
-      return {
-        ...baseEvent,
-        type: "tool.execution_start" as CopilotEventType,
-        data: rawEvent.data as TypedCopilotEvent["data"],
-      } as TypedCopilotEvent;
-
-    case "tool.execution_end":
-      return {
-        ...baseEvent,
-        type: "tool.execution_end" as CopilotEventType,
-        data: rawEvent.data as TypedCopilotEvent["data"],
-      } as TypedCopilotEvent;
-
-    case "session.idle":
-      return {
-        ...baseEvent,
-        type: "session.idle" as CopilotEventType,
-        data: {},
-      } as TypedCopilotEvent;
-
-    default:
-      // Log unknown events in dev
-      if (process.env.NODE_ENV === "development") {
-        console.log(`[Copilot] Unknown event type: ${rawEvent.type}`, rawEvent);
-      }
-      return null;
-  }
+    type: rawEvent.type as CopilotEventType,
+    data: rawEvent.data ?? {},
+  } as TypedCopilotEvent;
 }
 
 /**

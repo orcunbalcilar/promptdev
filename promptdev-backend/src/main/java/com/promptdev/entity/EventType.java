@@ -22,6 +22,8 @@ public enum EventType {
     TASK_FAILED,
     RETRY_SCHEDULED,
     ERROR,
+    // General progress event
+    PROGRESS,
     // Iterative session events
     ITERATION_STARTED,
     ITERATION_COMPLETED,

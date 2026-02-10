@@ -146,7 +146,8 @@ public class SseService {
                     .name("heartbeat")
                     .data("ping"));
         } catch (IOException e) {
-            log.trace("Failed to send heartbeat: {}", e.getMessage());
+            log.trace("SSE emitter failure during heartbeat: {}", e.getMessage());
+            removeEmitter(emitter);
         }
     }
 
@@ -169,9 +170,16 @@ public class SseService {
                         .name(eventName)
                         .data(jsonData));
             } catch (IOException e) {
-                log.trace("Failed to send SSE event to emitter: {}", e.getMessage());
-                emitters.remove(emitter);
+                log.trace("SSE emitter failure during event send: {}", e.getMessage());
+                removeEmitter(emitter);
             }
+        }
+    }
+
+    private void removeEmitter(SseEmitter emitter) {
+        globalSubscribers.remove(emitter);
+        for (CopyOnWriteArrayList<SseEmitter> subscribers : taskSubscribers.values()) {
+            subscribers.remove(emitter);
         }
     }
 
