@@ -58,6 +58,13 @@ public class TaskService {
                 .maxIterations(request.getMaxIterations() != null ? request.getMaxIterations() : 10)
                 .completionCriteria(request.getCompletionCriteria())
                 .steps(request.getSteps())
+                .jiraIssueKey(request.getJiraIssueKey())
+                .reviewEnabled(request.getReviewEnabled() == null || request.getReviewEnabled())
+                .reviewModelId(request.getReviewModelId())
+                .commitMessagePattern(request.getCommitMessagePattern())
+                .bootScript(request.getBootScript())
+                .skills(request.getSkills())
+                .additionalRepositories(request.getAdditionalRepositories())
                 .build();
 
         task = taskRepository.save(task);
@@ -139,6 +146,14 @@ public class TaskService {
         switch (callback.getEventType()) {
             case TASK_QUEUED -> task.setStatus(TaskStatus.QUEUED);
             case AGENT_STARTED -> {
+                // Ralph Wiggum loop guard: prevent runaway agent starts
+                if (task.getCurrentAttempt() >= task.getMaxAttempts()) {
+                    log.warn("Task {} exceeded max attempts ({}/{}), marking FAILED",
+                            task.getId(), task.getCurrentAttempt(), task.getMaxAttempts());
+                    task.setStatus(TaskStatus.FAILED);
+                    task.setErrorMessage("Maximum attempts exceeded (" + task.getMaxAttempts() + ")");
+                    return;
+                }
                 task.setStatus(TaskStatus.IN_PROGRESS);
                 task.setCurrentAttempt(task.getCurrentAttempt() + 1);
             }
@@ -204,6 +219,13 @@ public class TaskService {
             throw new IllegalStateException("Can only retry failed tasks");
         }
 
+        // Ralph Wiggum loop guard: prevent infinite retry loops
+        if (task.getCurrentAttempt() >= task.getMaxAttempts()) {
+            throw new IllegalStateException(
+                    "Maximum retry attempts reached (" + task.getCurrentAttempt()
+                    + "/" + task.getMaxAttempts() + "). Increase maxAttempts to retry.");
+        }
+
         task.setStatus(TaskStatus.PENDING);
         task.setErrorMessage(null);
 
@@ -263,6 +285,41 @@ public class TaskService {
     @Transactional(readOnly = true)
     public long countByStatus(TaskStatus status) {
         return taskRepository.countByStatus(status);
+    }
+
+    /**
+     * Resume a completed/failed session with a new prompt.
+     */
+    @Transactional
+    public TaskResponse resumeTask(UUID taskId, String resumePrompt) {
+        Task task = taskRepository.findById(taskId)
+            .orElseThrow(() -> new IllegalArgumentException(TASK_NOT_FOUND_MSG + taskId));
+
+        if (task.getStatus() != TaskStatus.COMPLETED && task.getStatus() != TaskStatus.FAILED) {
+            throw new IllegalStateException("Can only resume completed or failed tasks");
+        }
+
+        task.setStatus(TaskStatus.PENDING);
+        task.setResumePrompt(resumePrompt);
+        task.setResumeCount(task.getResumeCount() + 1);
+        task.setErrorMessage(null);
+        task.setCompletedAt(null);
+
+        TaskEvent event = TaskEvent.builder()
+                .task(task)
+                .eventType(EventType.TASK_QUEUED)
+                .message("Session resumed (attempt #" + task.getResumeCount() + "): " + resumePrompt)
+                .build();
+        taskEventRepository.save(event);
+
+        task = taskRepository.save(task);
+        TaskResponse response = taskMapper.toResponse(task);
+
+        sseService.sendTaskEvent(task.getId(), taskMapper.toEventResponse(event));
+        sseService.broadcastTaskUpdate(response);
+
+        log.info("Task {} resumed with prompt: {}", taskId, resumePrompt);
+        return response;
     }
 
     /**

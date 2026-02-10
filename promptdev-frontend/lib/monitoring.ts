@@ -59,6 +59,49 @@ export interface MonitoringDashboard {
   }>
 }
 
+export interface MonitoringSession {
+  id: string
+  sdkSessionId: string
+  model: string
+  reasoningEffort?: string
+  status: 'ACTIVE' | 'ENDED' | 'ERROR'
+  totalInputTokens: number
+  totalOutputTokens: number
+  messageCount: number
+  toolExecutionCount: number
+  errorCount: number
+  source: string
+  createdAt: string
+  endedAt?: string
+}
+
+export interface MonitoringOperation {
+  id: string
+  operationType: string
+  message?: string
+  details?: string
+  toolName?: string
+  model?: string
+  inputTokens?: number
+  outputTokens?: number
+  durationMs?: number
+  success?: boolean
+  errorMessage?: string
+  source?: string
+  timestamp: string
+}
+
+export interface PaginatedResponse<T> {
+  content: T[]
+  totalElements: number
+  totalPages: number
+  size: number
+  number: number
+  first: boolean
+  last: boolean
+  empty: boolean
+}
+
 async function monitoringFetch<T>(
   endpoint: string,
   options?: RequestInit
@@ -141,22 +184,22 @@ export async function getMonitoringDashboard(days = 7): Promise<MonitoringDashbo
 /**
  * Get all sessions (paginated).
  */
-export async function getMonitoringSessions(page = 0, size = 20) {
-  return monitoringFetch(`/sessions?page=${page}&size=${size}`)
+export async function getMonitoringSessions(page = 0, size = 20): Promise<PaginatedResponse<MonitoringSession>> {
+  return monitoringFetch<PaginatedResponse<MonitoringSession>>(`/sessions?page=${page}&size=${size}`)
 }
 
 /**
  * Get operations for a session.
  */
-export async function getSessionOperations(sdkSessionId: string) {
-  return monitoringFetch(`/sessions/${sdkSessionId}/operations`)
+export async function getSessionOperations(sdkSessionId: string): Promise<MonitoringOperation[]> {
+  return monitoringFetch<MonitoringOperation[]>(`/sessions/${sdkSessionId}/operations`)
 }
 
 /**
  * Get all operations (paginated).
  */
-export async function getMonitoringOperations(page = 0, size = 50) {
-  return monitoringFetch(`/operations?page=${page}&size=${size}`)
+export async function getMonitoringOperations(page = 0, size = 50): Promise<PaginatedResponse<MonitoringOperation>> {
+  return monitoringFetch<PaginatedResponse<MonitoringOperation>>(`/operations?page=${page}&size=${size}`)
 }
 
 // ============================================================================
@@ -180,9 +223,7 @@ export function queueOperation(params: TrackOperationParams): void {
     return
   }
 
-  if (!flushTimeout) {
-    flushTimeout = setTimeout(flushOperations, FLUSH_INTERVAL)
-  }
+  flushTimeout ??= setTimeout(flushOperations, FLUSH_INTERVAL)
 }
 
 /**

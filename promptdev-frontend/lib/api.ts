@@ -80,6 +80,19 @@ export interface Task {
   completionCriteria?: string;
   steps?: string;
   scheduledJobId?: string;
+  // Jira integration
+  jiraIssueKey?: string;
+  // Review feature
+  reviewEnabled?: boolean;
+  reviewModelId?: string;
+  // Session resume
+  resumePrompt?: string;
+  resumeCount?: number;
+  // Workspace configuration
+  commitMessagePattern?: string;
+  bootScript?: string;
+  skills?: string;
+  additionalRepositories?: string;
   createdAt: string;
   updatedAt: string;
   completedAt?: string;
@@ -122,6 +135,17 @@ export interface CreateTaskRequest {
   maxIterations?: number;
   completionCriteria?: string;
   steps?: string;
+  // Jira integration
+  jiraIssueKey?: string;
+  // Review feature
+  reviewEnabled?: boolean;
+  reviewModelId?: string;
+  // Workspace configuration
+  commitMessagePattern?: string;
+  envVars?: string;
+  bootScript?: string;
+  skills?: string;
+  additionalRepositories?: string;
 }
 
 export interface ScheduledJob {
@@ -249,9 +273,62 @@ export async function retryTask(taskId: string): Promise<Task> {
 }
 
 export async function startTask(taskId: string): Promise<Task> {
-  return apiFetch<Task>(`/tasks/${taskId}/start`, {
+  // First mark the task as QUEUED in the backend
+  const task = await apiFetch<Task>(`/tasks/${taskId}/start`, {
     method: "POST",
   });
+
+  // Then trigger actual Copilot SDK execution via the frontend orchestrator
+  try {
+    await fetch(`/api/tasks/${taskId}/execute`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    console.error("[API] Failed to trigger task execution:", e);
+    // Don't throw - the task is still queued and can be retried
+  }
+
+  return task;
+}
+
+export async function resumeTask(
+  taskId: string,
+  resumePrompt: string,
+): Promise<Task> {
+  // Resume the task in backend
+  const task = await apiFetch<Task>(`/tasks/${taskId}/resume`, {
+    method: "POST",
+    body: JSON.stringify({ resumePrompt }),
+  });
+
+  // Trigger execution of the resumed task
+  try {
+    await fetch(`/api/tasks/${taskId}/execute`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    console.error("[API] Failed to trigger resumed task execution:", e);
+  }
+
+  return task;
+}
+
+/**
+ * Check if a task is currently being executed by the orchestrator.
+ */
+export async function isTaskExecuting(taskId: string): Promise<{ running: boolean; sessionId: string | null }> {
+  const res = await fetch(`/api/tasks/${taskId}/execute`);
+  if (!res.ok) return { running: false, sessionId: null };
+  return res.json();
+}
+
+/**
+ * Cancel a running task execution.
+ */
+export async function cancelTaskExecution(taskId: string): Promise<void> {
+  await fetch(`/api/tasks/${taskId}/execute`, { method: "DELETE" });
 }
 
 // ============================================================================

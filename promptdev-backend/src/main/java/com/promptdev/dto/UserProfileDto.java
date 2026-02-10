@@ -38,4 +38,11 @@ public class UserProfileDto {
     private String byokBaseUrl;
     /** True if a BYOK API key is stored, false otherwise. */
     private boolean byokApiKeySet;
+
+    // Jira settings
+    private String jiraUrl;
+    private String jiraProjectKey;
+    private String jiraUsername;
+    /** True if a Jira token is stored, false otherwise. */
+    private boolean jiraTokenSet;
 }

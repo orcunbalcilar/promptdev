@@ -41,13 +41,20 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
-# Bitbucket (per-user settings stored in database, these are optional global fallbacks)
+# Bitbucket (per-user settings stored in a database, these are optional global fallbacks)
 bitbucket:
   base-url: ${BITBUCKET_URL:}
   project-key: ${BITBUCKET_PROJECT_KEY:}
   username: ${BITBUCKET_USERNAME:}
   password: ${BITBUCKET_PASSWORD:}
   token: ${BITBUCKET_TOKEN:}
+
+# Jira Server (optional — per-user settings stored in a database, global fallback)
+jira:
+  base-url: ${JIRA_URL:}
+  username: ${JIRA_USERNAME:}
+  password: ${JIRA_PASSWORD:}
+  token: ${JIRA_TOKEN:}
 
 # SSE & encryption
 promptdev:
@@ -56,3 +63,6 @@ promptdev:
     heartbeat-interval: 15000
   encryption:
     key: ${ENCRYPTION_KEY:}
+  workspace:
+    base-path: ${WORKSPACE_BASE_PATH:${java.io.tmpdir}/promptdev-workspaces}
+    max-size-mb: ${WORKSPACE_MAX_SIZE_MB:500}

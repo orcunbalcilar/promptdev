@@ -75,6 +75,10 @@ public class UserService {
                 .byokProviderType(user.getByokProviderType())
                 .byokBaseUrl(user.getByokBaseUrl())
                 .byokApiKeySet(user.getByokApiKeyEncrypted() != null)
+                .jiraUrl(user.getJiraUrl())
+                .jiraProjectKey(user.getJiraProjectKey())
+                .jiraUsername(user.getJiraUsername())
+                .jiraTokenSet(user.getJiraTokenEncrypted() != null)
                 .build();
     }
 
@@ -132,6 +136,25 @@ public class UserService {
         }
         if (request.getByokAzureApiVersion() != null) {
             user.setByokAzureApiVersion(request.getByokAzureApiVersion().isEmpty() ? null : request.getByokAzureApiVersion());
+        }
+
+        // Jira settings
+        if (request.getJiraUrl() != null) {
+            user.setJiraUrl(request.getJiraUrl().isEmpty() ? null : request.getJiraUrl());
+        }
+        if (request.getJiraProjectKey() != null) {
+            user.setJiraProjectKey(request.getJiraProjectKey().isEmpty() ? null : request.getJiraProjectKey());
+        }
+        if (request.getJiraUsername() != null) {
+            user.setJiraUsername(request.getJiraUsername().isEmpty() ? null : request.getJiraUsername());
+        }
+        if (request.getJiraToken() != null) {
+            if (request.getJiraToken().isEmpty()) {
+                user.setJiraTokenEncrypted(null);
+            } else {
+                user.setJiraTokenEncrypted(
+                        EncryptionUtil.encrypt(request.getJiraToken(), key));
+            }
         }
 
         userRepository.save(user);

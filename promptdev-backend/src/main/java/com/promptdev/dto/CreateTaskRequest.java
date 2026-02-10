@@ -59,4 +59,39 @@ public class CreateTaskRequest {
 
     /** Steps definition for multi-step tasks (JSON array of step descriptions) */
     private String steps;
+
+    // ── Jira integration ───────────────────────────────────────────
+
+    /** Jira issue key (e.g., PROJ-123) to link with this task */
+    private String jiraIssueKey;
+
+    // ── Review feature ─────────────────────────────────────────────
+
+    /** Whether auto-review is enabled for this task (default: true) */
+    @Builder.Default
+    private Boolean reviewEnabled = true;
+
+    /** Model ID for reviewing (null = same model as task) */
+    private String reviewModelId;
+
+    // ── Ephemeral workspace ────────────────────────────────────────
+
+    /** Environment variables JSON (will be encrypted before storage) */
+    private String environmentVariables;
+
+    /** Commit message pattern (e.g., "[PROJ-123] {message}") */
+    private String commitMessagePattern;
+
+    /** Boot script instructions for workspace setup */
+    private String bootScript;
+
+    // ── Skills ──────────────────────────────────────────────────────
+
+    /** JSON array of skill names to activate for this task */
+    private String skills;
+
+    // ── Multiple repositories ──────────────────────────────────────
+
+    /** JSON array of additional repository slugs */
+    private String additionalRepositories;
 }

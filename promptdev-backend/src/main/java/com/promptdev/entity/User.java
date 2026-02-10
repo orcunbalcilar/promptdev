@@ -81,6 +81,21 @@ public class User {
     @Column(name = "byok_azure_api_version")
     private String byokAzureApiVersion;
 
+    // ── Jira settings (per-user) ───────────────────────────────────
+
+    @Column(name = "jira_url")
+    private String jiraUrl;
+
+    @Column(name = "jira_project_key")
+    private String jiraProjectKey;
+
+    @Column(name = "jira_username")
+    private String jiraUsername;
+
+    /** Encrypted Jira personal access token */
+    @Column(name = "jira_token_encrypted")
+    private String jiraTokenEncrypted;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

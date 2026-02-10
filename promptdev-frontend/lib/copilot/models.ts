@@ -173,7 +173,7 @@ export const COPILOT_MODELS: CopilotModel[] = [
     provider: 'openai',
     multiplier: '1x',
     sampleMessage: 'Reliable performance for standard tasks.',
-    capabilities: { reasoning: true, vision: true }
+    capabilities: { reasoning: false, vision: true }
   },
 ]
 

@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { SessionProvider } from 'next-auth/react'
 
 // Mock next-auth/react
 const mockSignOut = vi.fn()
@@ -40,6 +39,15 @@ const mockUpdateUserSettings = vi.fn()
 vi.mock('@/lib/user', () => ({
   getUserProfile: (...args: unknown[]) => mockGetUserProfile(...args),
   updateUserSettings: (...args: unknown[]) => mockUpdateUserSettings(...args),
+  syncUser: vi.fn().mockResolvedValue({
+    id: 'user-123',
+    email: 'test@example.com',
+    name: 'Test User',
+    provider: 'github',
+    bitbucketTokenSet: false,
+    copilotTokenSet: false,
+    jiraTokenSet: false,
+  }),
 }))
 
 function renderWithProviders(ui: React.ReactElement) {
@@ -75,6 +83,10 @@ beforeEach(() => {
     bitbucketUsername: 'testuser',
     bitbucketTokenSet: false,
     copilotTokenSet: false,
+    jiraUrl: 'https://jira.company.com',
+    jiraProjectKey: 'JIRA',
+    jiraUsername: 'jirauser',
+    jiraTokenSet: false,
   })
   mockUpdateUserSettings.mockResolvedValue({
     id: 'user-123',
@@ -163,8 +175,11 @@ describe('SettingsPage', () => {
     await waitFor(() => {
       expect(screen.getByLabelText(/bitbucket server url/i)).toHaveValue('https://bitbucket.company.com')
     })
-    expect(screen.getByLabelText(/project key/i)).toHaveValue('PRJ')
-    expect(screen.getByLabelText(/username/i)).toHaveValue('testuser')
+    // Use specific element IDs since Jira also has "Project Key" and "Username" labels
+    const bitbucketProject = document.getElementById('bitbucket-project') as HTMLInputElement
+    expect(bitbucketProject.value).toBe('PRJ')
+    const bitbucketUser = document.getElementById('bitbucket-user') as HTMLInputElement
+    expect(bitbucketUser.value).toBe('testuser')
   })
 
   it('should have Save Bitbucket Settings button', async () => {
@@ -213,6 +228,7 @@ describe('SettingsPage', () => {
       provider: 'github',
       bitbucketTokenSet: true,
       copilotTokenSet: true,
+      jiraTokenSet: true,
     })
 
     const SettingsPage = await getSettingsPage()
@@ -222,5 +238,64 @@ describe('SettingsPage', () => {
       const setBadges = screen.getAllByText('Set')
       expect(setBadges.length).toBeGreaterThanOrEqual(2)
     })
+  })
+
+  it('should show Jira Server Configuration section', async () => {
+    const SettingsPage = await getSettingsPage()
+    renderWithProviders(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Jira Server Configuration')).toBeInTheDocument()
+    })
+  })
+
+  it('should populate Jira fields from profile', async () => {
+    const SettingsPage = await getSettingsPage()
+    renderWithProviders(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/jira server url/i)).toHaveValue('https://jira.company.com')
+    })
+    expect(screen.getByLabelText(/default project key/i)).toHaveValue('JIRA')
+  })
+
+  it('should have Save Jira Settings button', async () => {
+    const SettingsPage = await getSettingsPage()
+    renderWithProviders(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /save jira settings/i })).toBeInTheDocument()
+    })
+  })
+
+  it('should call updateUserSettings when saving Jira settings', async () => {
+    const SettingsPage = await getSettingsPage()
+    const user = userEvent.setup()
+    renderWithProviders(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /save jira settings/i })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /save jira settings/i }))
+
+    await waitFor(() => {
+      expect(mockUpdateUserSettings).toHaveBeenCalledWith('user-123', expect.objectContaining({
+        jiraUrl: 'https://jira.company.com',
+        jiraProjectKey: 'JIRA',
+        jiraUsername: 'jirauser',
+      }))
+    })
+  })
+
+  it('should mention Jira in security note', async () => {
+    const SettingsPage = await getSettingsPage()
+    renderWithProviders(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText(/AES-256-GCM/)).toBeInTheDocument()
+    })
+    // Verify the security note mentions Jira alongside other tokens
+    expect(screen.getByText(/Bitbucket, GitHub\/Copilot, Jira/)).toBeInTheDocument()
   })
 })

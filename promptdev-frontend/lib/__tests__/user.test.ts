@@ -86,6 +86,72 @@ describe('User API Client', () => {
         }),
       )
     })
+
+    it('should send Jira settings in PUT request', async () => {
+      const updatedProfile = {
+        id: 'user-123',
+        email: 'dev@example.com',
+        name: 'Test Dev',
+        provider: 'github',
+        bitbucketTokenSet: false,
+        copilotTokenSet: false,
+        jiraUrl: 'https://jira.company.com',
+        jiraProjectKey: 'PROJ',
+        jiraUsername: 'jirauser',
+        jiraTokenSet: true,
+      }
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve(JSON.stringify(updatedProfile)),
+      })
+
+      const result = await updateUserSettings('user-123', {
+        jiraUrl: 'https://jira.company.com',
+        jiraProjectKey: 'PROJ',
+        jiraUsername: 'jirauser',
+        jiraToken: 'jira-pat-token',
+      })
+
+      expect(result.jiraUrl).toBe('https://jira.company.com')
+      expect(result.jiraProjectKey).toBe('PROJ')
+      expect(result.jiraUsername).toBe('jirauser')
+      expect(result.jiraTokenSet).toBe(true)
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+      expect(body.jiraUrl).toBe('https://jira.company.com')
+      expect(body.jiraProjectKey).toBe('PROJ')
+      expect(body.jiraUsername).toBe('jirauser')
+      expect(body.jiraToken).toBe('jira-pat-token')
+    })
+
+    it('should handle profile with all Jira fields populated', async () => {
+      const fullProfile = {
+        id: 'user-123',
+        email: 'dev@example.com',
+        name: 'Test Dev',
+        provider: 'github',
+        bitbucketTokenSet: true,
+        copilotTokenSet: true,
+        jiraUrl: 'https://jira.myco.com',
+        jiraProjectKey: 'DEV',
+        jiraUsername: 'admin',
+        jiraTokenSet: true,
+        byokApiKeySet: false,
+      }
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve(JSON.stringify(fullProfile)),
+      })
+
+      const result = await getUserProfile('user-123')
+
+      expect(result.jiraUrl).toBe('https://jira.myco.com')
+      expect(result.jiraProjectKey).toBe('DEV')
+      expect(result.jiraUsername).toBe('admin')
+      expect(result.jiraTokenSet).toBe(true)
+    })
   })
 
   describe('syncUser', () => {

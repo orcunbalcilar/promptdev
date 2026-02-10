@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Textarea } from "@/components/ui/textarea"
 import {
   ArrowLeft,
   Clock,
@@ -24,8 +25,12 @@ import {
   MessageSquare,
   Play,
   RefreshCcw,
+  RotateCcw,
+  Shield,
+  Bug,
+  BookOpen,
 } from 'lucide-react'
-import { getTask, getTaskEvents, cancelTask, startTask, subscribeToTaskEvents, type TaskEvent } from '@/lib/api'
+import { getTask, getTaskEvents, cancelTask, startTask, resumeTask, subscribeToTaskEvents, type TaskEvent } from '@/lib/api'
 import { COPILOT_MODELS } from '@/lib/copilot/models'
 import { cn } from '@/lib/utils'
 
@@ -97,6 +102,9 @@ export default function TaskDetailPage() {
   const eventsEndRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
   const [realtimeEvents, setRealtimeEvents] = useState<TaskEvent[]>([])
+  const [showResumeForm, setShowResumeForm] = useState(false)
+  const [resumePrompt, setResumePrompt] = useState('')
+  const [isResuming, setIsResuming] = useState(false)
 
   // Fetch task details
   const { data: task, isLoading, error } = useQuery({
@@ -177,6 +185,23 @@ export default function TaskDetailPage() {
     }
   }
 
+  const handleResume = async () => {
+    if (!task || !resumePrompt.trim()) return
+    setIsResuming(true)
+    try {
+      await resumeTask(task.id, resumePrompt.trim())
+      queryClient.invalidateQueries({ queryKey: ['task', id] })
+      setShowResumeForm(false)
+      setResumePrompt('')
+      setRealtimeEvents([])
+    } catch (e) {
+      console.error('Failed to resume task:', e)
+      alert('Failed to resume task')
+    } finally {
+      setIsResuming(false)
+    }
+  }
+
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -218,6 +243,12 @@ export default function TaskDetailPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {(task.status === 'COMPLETED' || task.status === 'FAILED') && (
+                <Button variant="outline" size="sm" onClick={() => setShowResumeForm(!showResumeForm)}>
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Resume{task.resumeCount ? ` (${task.resumeCount})` : ''}
+                </Button>
+              )}
               {(task.status === 'FAILED' || task.status === 'CANCELLED') && (
                 <Button variant="outline" size="sm" onClick={handleRetry}>
                   <Play className="h-4 w-4 mr-2" />
@@ -234,6 +265,33 @@ export default function TaskDetailPage() {
           </div>
         </div>
       </header>
+
+      {/* Resume Form */}
+      {showResumeForm && (
+        <div className="border-b bg-primary/5 px-4 py-4">
+          <div className="container mx-auto max-w-2xl space-y-3">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <RotateCcw className="h-4 w-4" />
+              Resume Session
+            </h3>
+            <Textarea
+              value={resumePrompt}
+              onChange={(e) => setResumePrompt(e.target.value)}
+              placeholder="Describe what you want the agent to improve or change..."
+              rows={3}
+            />
+            <div className="flex items-center justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => { setShowResumeForm(false); setResumePrompt('') }}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleResume} disabled={isResuming || !resumePrompt.trim()}>
+                {isResuming ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
+                Resume Task
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6 flex-1">
@@ -303,6 +361,57 @@ export default function TaskDetailPage() {
                       <GitPullRequest className="h-4 w-4" />
                       View Pull Request
                     </a>
+                  </div>
+                )}
+
+                {/* Jira Issue Link */}
+                {task.jiraIssueKey && (
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground font-medium">Jira Issue</span>
+                    <div className="flex items-center gap-2 text-xs">
+                      <Bug className="h-3 w-3" />
+                      <Badge variant="outline" className="font-mono">{task.jiraIssueKey}</Badge>
+                    </div>
+                  </div>
+                )}
+
+                {/* Review Status */}
+                {task.reviewEnabled !== undefined && (
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground font-medium">Review</span>
+                    <div className="flex items-center gap-2 text-xs">
+                      <Shield className="h-3 w-3" />
+                      <span>{task.reviewEnabled ? 'Enabled' : 'Disabled'}</span>
+                      {task.reviewModelId && (
+                        <Badge variant="secondary" className="text-xs ml-1">{task.reviewModelId}</Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Skills */}
+                {task.skills && (
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground font-medium">Skills</span>
+                    <div className="flex flex-wrap gap-1">
+                      {task.skills.split(',').map((s) => (
+                        <Badge key={s.trim()} variant="outline" className="text-xs flex items-center gap-1">
+                          <BookOpen className="h-2.5 w-2.5" />
+                          {s.trim()}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Resume Count */}
+                {(task.resumeCount ?? 0) > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground font-medium">Resumed</span>
+                    <div className="flex items-center gap-2 text-xs">
+                      <RotateCcw className="h-3 w-3" />
+                      <span>{task.resumeCount} time{task.resumeCount === 1 ? '' : 's'}</span>
+                    </div>
                   </div>
                 )}
 

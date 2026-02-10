@@ -226,15 +226,16 @@ The application ships with **zero development defaults** — all environment-spe
 
 #### Frontend (`promptdev-frontend/.env.local`)
 
-| Variable              | Description                |
-| --------------------- | -------------------------- |
-| `NEXT_PUBLIC_API_URL` | Backend API URL            |
-| `AUTH_SECRET`         | NextAuth.js session secret |
-| `AUTH_GITHUB_ID`      | GitHub OAuth client ID     |
-| `AUTH_GITHUB_SECRET`  | GitHub OAuth client secret |
-| `AUTH_GOOGLE_ID`      | Google OAuth client ID     |
-| `AUTH_GOOGLE_SECRET`  | Google OAuth client secret |
-| `GITHUB_TOKEN`        | Shared Copilot SDK token   |
+| Variable              | Description                                 |
+| --------------------- | ------------------------------------------- |
+| `NEXTAUTH_URL`        | Public URL (e.g., `http://localhost:3000`) |
+| `NEXT_PUBLIC_API_URL` | Backend API URL                             |
+| `AUTH_SECRET`         | NextAuth.js session secret                  |
+| `AUTH_GITHUB_ID`      | GitHub OAuth client ID                      |
+| `AUTH_GITHUB_SECRET`  | GitHub OAuth client secret                  |
+| `AUTH_GOOGLE_ID`      | Google OAuth client ID                      |
+| `AUTH_GOOGLE_SECRET`  | Google OAuth client secret                  |
+| `GITHUB_TOKEN`        | Shared Copilot SDK token                    |
 
 #### Slack Bot (`promptdev-bot/.env`)
 

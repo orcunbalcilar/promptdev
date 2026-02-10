@@ -194,7 +194,9 @@ export async function listAvailableModels(
     const client = await getClientForUser(userGithubToken);
     const models = await client.listModels();
     // log model ids for debugging
-    console.log(`[Copilot] Models from SDK: ${models.map((m: { id: string }) => m.id).join(", ")}`);
+    console.log(
+      `[Copilot] Models from SDK: ${models.map((m: { id: string }) => m.id).join(", ")}`,
+    );
     return models.map((m: { id: string; name?: string }) => ({
       id: m.id,
       name: m.name ?? m.id,

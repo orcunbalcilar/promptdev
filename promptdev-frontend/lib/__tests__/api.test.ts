@@ -7,6 +7,7 @@ import {
   cancelTask,
   retryTask,
   startTask,
+  resumeTask,
   getRepositories,
   getBranches,
   getDefaultBranch,
@@ -175,6 +176,50 @@ describe('API Client', () => {
 
       expect(mockFetch.mock.calls[0][0]).toBe(`${API_BASE}/tasks/task-1/start`)
       expect(mockFetch.mock.calls[0][1].method).toBe('POST')
+    })
+  })
+
+  describe('resumeTask', () => {
+    it('should POST /tasks/:id/resume with resumePrompt and trigger execute', async () => {
+      const resumed = { id: 'task-1', status: 'PENDING', resumeCount: 1, resumePrompt: 'Fix the tests' }
+      mockFetch.mockResolvedValue(jsonResponse(resumed))
+
+      const result = await resumeTask('task-1', 'Fix the tests')
+
+      // resumeTask makes 2 fetch calls: one to backend resume, one to execute route
+      expect(mockFetch).toHaveBeenCalledTimes(2)
+      const [url, opts] = mockFetch.mock.calls[0]
+      expect(url).toBe(`${API_BASE}/tasks/task-1/resume`)
+      expect(opts.method).toBe('POST')
+      const body = JSON.parse(opts.body)
+      expect(body.resumePrompt).toBe('Fix the tests')
+      expect(result.resumeCount).toBe(1)
+
+      // Second call triggers execution
+      expect(mockFetch.mock.calls[1][0]).toBe('/api/tasks/task-1/execute')
+      expect(mockFetch.mock.calls[1][1].method).toBe('POST')
+    })
+
+    it('should include new task fields in response', async () => {
+      const resumed = {
+        id: 'task-1',
+        status: 'PENDING',
+        resumeCount: 2,
+        resumePrompt: 'Improve performance',
+        jiraIssueKey: 'PROJ-123',
+        reviewEnabled: true,
+        reviewModelId: 'gpt-5.2',
+        skills: 'react,testing',
+      }
+      mockFetch.mockResolvedValue(jsonResponse(resumed))
+
+      const result = await resumeTask('task-1', 'Improve performance')
+
+      expect(result.jiraIssueKey).toBe('PROJ-123')
+      expect(result.reviewEnabled).toBe(true)
+      expect(result.reviewModelId).toBe('gpt-5.2')
+      expect(result.skills).toBe('react,testing')
+      expect(result.resumeCount).toBe(2)
     })
   })
 

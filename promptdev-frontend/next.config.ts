@@ -13,6 +13,15 @@ const nextConfig: NextConfig = {
 
   // Standalone output for Docker/Podman container deployments
   output: "standalone",
+
+  // Include external packages in standalone output
+  // Required for packages in serverExternalPackages that need node_modules at runtime
+  outputFileTracingIncludes: {
+    "/*": [
+      "node_modules/@github/copilot-sdk/**/*",
+      "node_modules/@github/copilot/**/*",
+    ],
+  },
 };
 
 export default nextConfig;

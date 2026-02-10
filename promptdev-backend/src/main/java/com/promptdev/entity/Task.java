@@ -115,6 +115,60 @@ public class Task {
     @Column(name = "scheduled_job_id")
     private UUID scheduledJobId;
 
+    // ── Jira integration fields ────────────────────────────────────
+
+    /** Jira issue key (e.g., PROJ-123) linked to this task */
+    @Column(name = "jira_issue_key")
+    private String jiraIssueKey;
+
+    // ── Review feature fields ──────────────────────────────────────
+
+    /** Whether auto-review is enabled for this task */
+    @Column(name = "review_enabled")
+    @Builder.Default
+    private Boolean reviewEnabled = true;
+
+    /** Model ID used for reviewing (defaults to same model if null) */
+    @Column(name = "review_model_id")
+    private String reviewModelId;
+
+    // ── Session resume fields ──────────────────────────────────────
+
+    /** If this task was resumed, the prompt used to resume */
+    @Column(name = "resume_prompt", columnDefinition = "TEXT")
+    private String resumePrompt;
+
+    /** Number of times this session was resumed */
+    @Column(name = "resume_count")
+    @Builder.Default
+    private Integer resumeCount = 0;
+
+    // ── Ephemeral workspace fields ─────────────────────────────────
+
+    /** Encrypted environment variables JSON for workspace (e.g., secrets, envs) */
+    @Column(name = "environment_variables_encrypted", columnDefinition = "TEXT")
+    private String environmentVariablesEncrypted;
+
+    /** Commit message pattern (e.g., "[PROJ-123] {message}") */
+    @Column(name = "commit_message_pattern")
+    private String commitMessagePattern;
+
+    /** Boot script instructions for workspace setup */
+    @Column(name = "boot_script", columnDefinition = "TEXT")
+    private String bootScript;
+
+    // ── Skills fields ──────────────────────────────────────────────
+
+    /** JSON array of skill names to activate for this task */
+    @Column(name = "skills", columnDefinition = "TEXT")
+    private String skills;
+
+    // ── Multiple repositories support ──────────────────────────────
+
+    /** JSON array of additional repository slugs for multi-repo tasks */
+    @Column(name = "additional_repositories", columnDefinition = "TEXT")
+    private String additionalRepositories;
+
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("timestamp ASC")
     @Builder.Default

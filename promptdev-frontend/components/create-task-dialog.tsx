@@ -32,7 +32,7 @@ import {
 } from "@/lib/api";
 import { COPILOT_MODELS, DEFAULT_MODEL_ID } from "@/lib/copilot/models";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FolderOpen, FolderPlus, GitBranch, Plus, RefreshCcw } from "lucide-react";
+import { FolderOpen, FolderPlus, GitBranch, Plus, RefreshCcw, Shield, Bug, Cog, BookOpen } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 export function CreateTaskDialog() {
@@ -47,6 +47,13 @@ export function CreateTaskDialog() {
   const [newProjectDir, setNewProjectDir] = useState("");
   const [iterative, setIterative] = useState(false);
   const [maxIterations, setMaxIterations] = useState(10);
+  const [reviewEnabled, setReviewEnabled] = useState(true);
+  const [reviewModelId, setReviewModelId] = useState("");
+  const [jiraIssueKey, setJiraIssueKey] = useState("");
+  const [commitMessagePattern, setCommitMessagePattern] = useState("");
+  const [envVars, setEnvVars] = useState("");
+  const [bootScript, setBootScript] = useState("");
+  const [skills, setSkills] = useState("");
 
   const queryClient = useQueryClient();
 
@@ -91,6 +98,13 @@ export function CreateTaskDialog() {
     setNewProjectDir("");
     setIterative(false);
     setMaxIterations(10);
+    setReviewEnabled(true);
+    setReviewModelId("");
+    setJiraIssueKey("");
+    setCommitMessagePattern("");
+    setEnvVars("");
+    setBootScript("");
+    setSkills("");
   }, []);
 
   const createMutation = useMutation({
@@ -146,6 +160,13 @@ export function CreateTaskDialog() {
       completionCriteria: iterative
         ? (formData.get("completionCriteria") as string) || undefined
         : undefined,
+      reviewEnabled,
+      reviewModelId: reviewModelId || undefined,
+      jiraIssueKey: jiraIssueKey || undefined,
+      commitMessagePattern: commitMessagePattern || undefined,
+      envVars: envVars || undefined,
+      bootScript: bootScript || undefined,
+      skills: skills || undefined,
     });
   };
 
@@ -258,11 +279,11 @@ export function CreateTaskDialog() {
                     title="Create a new local project"
                     checked={!!newProjectName}
                     onChange={(e) => {
-                      if (!e.target.checked) {
+                      if (e.target.checked) {
+                        setNewProjectName("my-new-project");
+                      } else {
                         setNewProjectName("");
                         setNewProjectDir("");
-                      } else {
-                        setNewProjectName("my-new-project");
                       }
                     }}
                     className="h-4 w-4 rounded border-gray-300"
@@ -453,6 +474,182 @@ export function CreateTaskDialog() {
                 </div>
               </div>
             )}
+
+            {/* Review Toggle */}
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              <input
+                type="checkbox"
+                id="reviewEnabled"
+                title="Enable automatic review"
+                checked={reviewEnabled}
+                onChange={(e) => setReviewEnabled(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <div className="flex-1">
+                <Label htmlFor="reviewEnabled" className="cursor-pointer">
+                  <span className="flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Auto Review
+                  </span>
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Automatically review generated code and fix issues before committing.
+                </p>
+              </div>
+            </div>
+
+            {/* Review Model (shown when review is enabled) */}
+            {reviewEnabled && (
+              <div className="grid gap-2 pl-4 border-l-2 border-primary/20">
+                <Label>Review Model (optional)</Label>
+                <Select value={reviewModelId || "__same__"} onValueChange={(v) => setReviewModelId(v === "__same__" ? "" : v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Use same model as task" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__same__">Same as task model</SelectItem>
+                    {COPILOT_MODELS.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Optionally use a different model for review (e.g., a faster model for quick reviews).
+                </p>
+              </div>
+            )}
+
+            {/* Jira Issue Key */}
+            <div className="grid gap-2">
+              <Label htmlFor="jiraIssueKey">
+                <span className="flex items-center gap-2">
+                  <Bug className="h-4 w-4" />
+                  Jira Issue Key (optional)
+                </span>
+              </Label>
+              <Input
+                id="jiraIssueKey"
+                value={jiraIssueKey}
+                onChange={(e) => setJiraIssueKey(e.target.value)}
+                placeholder="PROJ-123"
+              />
+              <p className="text-xs text-muted-foreground">
+                Link this task to a Jira issue. The agent will update the issue status and add PR links.
+              </p>
+            </div>
+
+            {/* Advanced Options Collapsible */}
+            <details className="rounded-lg border">
+              <summary className="px-3 py-2.5 cursor-pointer text-sm font-medium flex items-center gap-2">
+                <Cog className="h-4 w-4" />
+                Advanced Options
+              </summary>
+              <div className="px-3 pb-3 grid gap-4 border-t pt-3">
+                {/* Commit Message Pattern */}
+                <div className="grid gap-2">
+                  <Label htmlFor="commitMessagePattern">Commit Message Pattern</Label>
+                  <Input
+                    id="commitMessagePattern"
+                    value={commitMessagePattern}
+                    onChange={(e) => setCommitMessagePattern(e.target.value)}
+                    placeholder="feat({{scope}}): {{message}}"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Template for commit messages. Use {"{{scope}}"} and {"{{message}}"} placeholders.
+                  </p>
+                </div>
+
+                {/* Environment Variables */}
+                <div className="grid gap-2">
+                  <Label htmlFor="envVars">Environment Variables</Label>
+                  <Textarea
+                    id="envVars"
+                    value={envVars}
+                    onChange={(e) => setEnvVars(e.target.value)}
+                    rows={3}
+                    placeholder={"DATABASE_URL=postgresql://...\nAPI_KEY=sk-..."}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    One per line (KEY=VALUE). These are encrypted at rest and injected during execution.
+                  </p>
+                </div>
+
+                {/* Boot Script */}
+                <div className="grid gap-2">
+                  <Label htmlFor="bootScript">Boot Script</Label>
+                  <Textarea
+                    id="bootScript"
+                    value={bootScript}
+                    onChange={(e) => setBootScript(e.target.value)}
+                    rows={3}
+                    placeholder={"npm install\nnpm run build"}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Shell commands to run before the agent starts. Useful for installing dependencies.
+                  </p>
+                </div>
+
+                {/* Skills */}
+                <div className="grid gap-2">
+                  <Label>
+                    <span className="flex items-center gap-2">
+                      <BookOpen className="h-4 w-4" />
+                      Agent Skills
+                    </span>
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Select skills to give the AI agent domain-specific guidance for this task.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { id: 'react', label: 'React', description: 'React component best practices' },
+                      { id: 'nextjs', label: 'Next.js', description: 'Next.js patterns & App Router' },
+                      { id: 'typescript', label: 'TypeScript', description: 'Type-safe development' },
+                      { id: 'java', label: 'Java', description: 'Java & Spring Boot' },
+                      { id: 'python', label: 'Python', description: 'Python best practices' },
+                      { id: 'testing', label: 'Testing', description: 'Comprehensive testing strategies' },
+                      { id: 'database', label: 'Database', description: 'DB design & query optimization' },
+                      { id: 'security', label: 'Security', description: 'Security audit & vulnerability detection' },
+                      { id: 'api', label: 'API Design', description: 'REST API design & implementation' },
+                      { id: 'docker', label: 'Docker', description: 'Containerization & deployment' },
+                      { id: 'performance', label: 'Performance', description: 'Performance optimization' },
+                      { id: 'playwright', label: 'Playwright', description: 'Browser automation & E2E testing' },
+                    ].map((skill) => {
+                      const selected = skills.split(',').map(s => s.trim()).filter(Boolean).includes(skill.id)
+                      return (
+                        <button
+                          type="button"
+                          key={skill.id}
+                          title={skill.description}
+                          onClick={() => {
+                            const current = skills.split(',').map(s => s.trim()).filter(Boolean)
+                            const next = selected
+                              ? current.filter(s => s !== skill.id)
+                              : [...current, skill.id]
+                            setSkills(next.join(', '))
+                          }}
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
+                            selected
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'bg-muted/50 text-muted-foreground border-muted hover:bg-muted hover:text-foreground'
+                          }`}
+                        >
+                          <BookOpen className="h-3 w-3" />
+                          {skill.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {skills && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Selected: <span className="font-medium text-foreground">{skills}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </details>
           </div>
           <DialogFooter>
             <Button

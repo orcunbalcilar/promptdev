@@ -1,15 +1,28 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useSession, signOut } from "next-auth/react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { useBackendUser } from "@/hooks/useBackendUser";
+import { getUserProfile, updateUserSettings } from "@/lib/user";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Check,
@@ -23,59 +36,79 @@ import {
   Save,
   Shield,
   Zap,
-} from "lucide-react"
-import { useRouter } from "next/navigation"
-import { getUserProfile, updateUserSettings } from "@/lib/user"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { useBackendUser } from "@/hooks/useBackendUser"
+  Bug,
+} from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+function SaveButtonIcon({ isPending, isSuccess }: Readonly<{ isPending: boolean; isSuccess: boolean }>) {
+  if (isPending) return <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+  if (isSuccess) return <Check className="h-4 w-4 mr-2" />
+  return <Save className="h-4 w-4 mr-2" />
+}
+
+function getByokPlaceholder(providerType: string): string {
+  if (providerType === "azure") return "https://your-resource.openai.azure.com"
+  if (providerType === "anthropic") return "https://api.anthropic.com"
+  return "https://api.openai.com/v1"
+}
 
 export default function SettingsPage() {
-  const router = useRouter()
-  const { data: session } = useSession()
-  const queryClient = useQueryClient()
+  const router = useRouter();
+  const { data: session } = useSession();
+  const queryClient = useQueryClient();
 
   // Get the actual database user ID (not the OAuth provider ID)
-  const { userId, isLoading: isLoadingBackendUser, error: backendUserError } = useBackendUser()
+  const {
+    userId,
+    isLoading: isLoadingBackendUser,
+    error: backendUserError,
+  } = useBackendUser();
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["userProfile", userId],
     queryFn: () => getUserProfile(userId!),
     enabled: !!userId,
-  })
+  });
 
   // --- Bitbucket form state ---
-  const [bitbucketUrl, setBitbucketUrl] = useState("")
-  const [bitbucketProjectKey, setBitbucketProjectKey] = useState("")
-  const [bitbucketUsername, setBitbucketUsername] = useState("")
-  const [bitbucketToken, setBitbucketToken] = useState("")
-  const [showBitbucketToken, setShowBitbucketToken] = useState(false)
+  const [bitbucketUrl, setBitbucketUrl] = useState("");
+  const [bitbucketProjectKey, setBitbucketProjectKey] = useState("");
+  const [bitbucketUsername, setBitbucketUsername] = useState("");
+  const [bitbucketToken, setBitbucketToken] = useState("");
+  const [showBitbucketToken, setShowBitbucketToken] = useState(false);
 
   // --- Copilot token state ---
-  const [copilotToken, setCopilotToken] = useState("")
-  const [showCopilotToken, setShowCopilotToken] = useState(false)
+  const [copilotToken, setCopilotToken] = useState("");
+  const [showCopilotToken, setShowCopilotToken] = useState(false);
 
   // --- BYOK provider state ---
-  const [byokProviderType, setByokProviderType] = useState("")
-  const [byokBaseUrl, setByokBaseUrl] = useState("")
-  const [byokApiKey, setByokApiKey] = useState("")
-  const [showByokApiKey, setShowByokApiKey] = useState(false)
-  const [byokAzureApiVersion, setByokAzureApiVersion] = useState("")
+  const [byokProviderType, setByokProviderType] = useState("");
+  const [byokBaseUrl, setByokBaseUrl] = useState("");
+  const [byokApiKey, setByokApiKey] = useState("");
+  const [showByokApiKey, setShowByokApiKey] = useState(false);
+  const [byokAzureApiVersion, setByokAzureApiVersion] = useState("");
+
+  // --- Jira Server state ---
+  const [jiraUrl, setJiraUrl] = useState("");
+  const [jiraProjectKey, setJiraProjectKey] = useState("");
+  const [jiraUsername, setJiraUsername] = useState("");
+  const [jiraToken, setJiraToken] = useState("");
+  const [showJiraToken, setShowJiraToken] = useState(false);
 
   // Populate form when profile loads
-  const [initialized, setInitialized] = useState(false)
+  const [initialized, setInitialized] = useState(false);
   if (profile && !initialized) {
-    setBitbucketUrl(profile.bitbucketUrl ?? "")
-    setBitbucketProjectKey(profile.bitbucketProjectKey ?? "")
-    setBitbucketUsername(profile.bitbucketUsername ?? "")
-    setByokProviderType(profile.byokProviderType ?? "")
-    setByokBaseUrl(profile.byokBaseUrl ?? "")
-    setInitialized(true)
+    setBitbucketUrl(profile.bitbucketUrl ?? "");
+    setBitbucketProjectKey(profile.bitbucketProjectKey ?? "");
+    setBitbucketUsername(profile.bitbucketUsername ?? "");
+    setByokProviderType(profile.byokProviderType ?? "");
+    setByokBaseUrl(profile.byokBaseUrl ?? "");
+    setJiraUrl(profile.jiraUrl ?? "");
+    setJiraProjectKey(profile.jiraProjectKey ?? "");
+    setJiraUsername(profile.jiraUsername ?? "");
+    setInitialized(true);
   }
 
   // --- Save mutations ---
@@ -88,10 +121,10 @@ export default function SettingsPage() {
         bitbucketToken: bitbucketToken || undefined,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["userProfile", userId] })
-      setBitbucketToken("")
+      queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
+      setBitbucketToken("");
     },
-  })
+  });
 
   const saveCopilotToken = useMutation({
     mutationFn: () =>
@@ -99,10 +132,10 @@ export default function SettingsPage() {
         copilotToken: copilotToken || undefined,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["userProfile", userId] })
-      setCopilotToken("")
+      queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
+      setCopilotToken("");
     },
-  })
+  });
 
   const saveByokProvider = useMutation({
     mutationFn: () =>
@@ -113,17 +146,31 @@ export default function SettingsPage() {
         byokAzureApiVersion: byokAzureApiVersion || undefined,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["userProfile", userId] })
-      setByokApiKey("")
+      queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
+      setByokApiKey("");
     },
-  })
+  });
+
+  const saveJira = useMutation({
+    mutationFn: () =>
+      updateUserSettings(userId!, {
+        jiraUrl: jiraUrl || undefined,
+        jiraProjectKey: jiraProjectKey || undefined,
+        jiraUsername: jiraUsername || undefined,
+        jiraToken: jiraToken || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
+      setJiraToken("");
+    },
+  });
 
   if (isLoading || isLoadingBackendUser) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   if (backendUserError) {
@@ -133,7 +180,8 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle>Error</CardTitle>
             <CardDescription>
-              Failed to sync user with backend. Please try signing out and signing in again.
+              Failed to sync user with backend. Please try signing out and
+              signing in again.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -144,7 +192,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -191,20 +239,27 @@ export default function SettingsPage() {
               Profile
             </CardTitle>
             <CardDescription>
-              Your account information from {profile?.provider ?? "your provider"}.
+              Your account information from{" "}
+              {profile?.provider ?? "your provider"}.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={profile?.avatarUrl ?? session?.user?.image ?? undefined} />
+                <AvatarImage
+                  src={profile?.avatarUrl ?? session?.user?.image ?? undefined}
+                />
                 <AvatarFallback className="text-lg">
                   {profile?.name?.charAt(0)?.toUpperCase() ?? "U"}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-medium text-lg">{profile?.name ?? session?.user?.name}</p>
-                <p className="text-sm text-muted-foreground">{profile?.email ?? session?.user?.email}</p>
+                <p className="font-medium text-lg">
+                  {profile?.name ?? session?.user?.name}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {profile?.email ?? session?.user?.email}
+                </p>
                 <Badge variant="secondary" className="mt-1 capitalize">
                   {profile?.provider ?? "oauth"}
                 </Badge>
@@ -221,8 +276,8 @@ export default function SettingsPage() {
               Bitbucket Configuration
             </CardTitle>
             <CardDescription>
-              Connect your Bitbucket Server instance. These settings are saved once and used for all your tasks.
-              Tokens are encrypted at rest.
+              Connect your Bitbucket Server instance. These settings are saved
+              once and used for all your tasks. Tokens are encrypted at rest.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -268,7 +323,9 @@ export default function SettingsPage() {
                   <Input
                     id="bitbucket-token"
                     type={showBitbucketToken ? "text" : "password"}
-                    placeholder={profile?.bitbucketTokenSet ? "••••••••" : "Enter token"}
+                    placeholder={
+                      profile?.bitbucketTokenSet ? "••••••••" : "Enter token"
+                    }
                     value={bitbucketToken}
                     onChange={(e) => setBitbucketToken(e.target.value)}
                   />
@@ -279,7 +336,11 @@ export default function SettingsPage() {
                     className="absolute right-1 top-1 h-7 w-7 p-0"
                     onClick={() => setShowBitbucketToken(!showBitbucketToken)}
                   >
-                    {showBitbucketToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showBitbucketToken ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -290,13 +351,7 @@ export default function SettingsPage() {
                 onClick={() => saveBitbucket.mutate()}
                 disabled={saveBitbucket.isPending}
               >
-                {saveBitbucket.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : saveBitbucket.isSuccess ? (
-                  <Check className="h-4 w-4 mr-2" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
+                <SaveButtonIcon isPending={saveBitbucket.isPending} isSuccess={saveBitbucket.isSuccess} />
                 Save Bitbucket Settings
               </Button>
             </div>
@@ -311,11 +366,14 @@ export default function SettingsPage() {
               GitHub Copilot Token
             </CardTitle>
             <CardDescription>
-              Set a personal GitHub token for isolated Copilot sessions. Supported token types:
-              <code className="mx-1 text-xs bg-muted px-1 rounded">gho_</code>,
-              <code className="mx-1 text-xs bg-muted px-1 rounded">ghu_</code>,
-              <code className="mx-1 text-xs bg-muted px-1 rounded">github_pat_</code>.
-              Your token is encrypted at rest and never exposed via the API.
+              Set a personal GitHub token for isolated Copilot sessions.
+              Supported token types:{" "}
+              <code className="text-xs bg-muted px-1 rounded">gho_</code>,{" "}
+              <code className="text-xs bg-muted px-1 rounded">ghu_</code>,{" "}
+              <code className="text-xs bg-muted px-1 rounded">
+                github_pat_
+              </code>{" "}
+              . Your token is encrypted at rest and never exposed via the API.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -333,7 +391,11 @@ export default function SettingsPage() {
                 <Input
                   id="copilot-token"
                   type={showCopilotToken ? "text" : "password"}
-                  placeholder={profile?.copilotTokenSet ? "••••••••" : "github_pat_... or gho_..."}
+                  placeholder={
+                    profile?.copilotTokenSet
+                      ? "••••••••"
+                      : "github_pat_... or gho_..."
+                  }
                   value={copilotToken}
                   onChange={(e) => setCopilotToken(e.target.value)}
                 />
@@ -344,12 +406,17 @@ export default function SettingsPage() {
                   className="absolute right-1 top-1 h-7 w-7 p-0"
                   onClick={() => setShowCopilotToken(!showCopilotToken)}
                 >
-                  {showCopilotToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showCopilotToken ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                If set, each Copilot session will use your personal token instead of the shared server token.
-                This enables per-user session isolation and personal usage tracking.
+                If set, each Copilot session will use your personal token
+                instead of the shared server token. This enables per-user
+                session isolation and personal usage tracking.
               </p>
             </div>
 
@@ -358,13 +425,7 @@ export default function SettingsPage() {
                 onClick={() => saveCopilotToken.mutate()}
                 disabled={saveCopilotToken.isPending}
               >
-                {saveCopilotToken.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : saveCopilotToken.isSuccess ? (
-                  <Check className="h-4 w-4 mr-2" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
+                <SaveButtonIcon isPending={saveCopilotToken.isPending} isSuccess={saveCopilotToken.isSuccess} />
                 Save Copilot Token
               </Button>
             </div>
@@ -379,15 +440,19 @@ export default function SettingsPage() {
               Custom AI Provider (BYOK)
             </CardTitle>
             <CardDescription>
-              Bring your own API key to use any OpenAI-compatible, Azure, or Anthropic provider.
-              This allows connecting to on-prem or cloud-hosted models. API keys are encrypted at rest.
+              Bring your own API key to use any OpenAI-compatible, Azure, or
+              Anthropic provider. This allows connecting to on-prem or
+              cloud-hosted models. API keys are encrypted at rest.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="byok-provider">Provider Type</Label>
-                <Select value={byokProviderType} onValueChange={setByokProviderType}>
+                <Select
+                  value={byokProviderType}
+                  onValueChange={setByokProviderType}
+                >
                   <SelectTrigger id="byok-provider">
                     <SelectValue placeholder="Select provider type" />
                   </SelectTrigger>
@@ -402,13 +467,7 @@ export default function SettingsPage() {
                 <Label htmlFor="byok-url">Base URL</Label>
                 <Input
                   id="byok-url"
-                  placeholder={
-                    byokProviderType === "azure"
-                      ? "https://your-resource.openai.azure.com"
-                      : byokProviderType === "anthropic"
-                        ? "https://api.anthropic.com"
-                        : "https://api.openai.com/v1"
-                  }
+                  placeholder={getByokPlaceholder(byokProviderType)}
                   value={byokBaseUrl}
                   onChange={(e) => setByokBaseUrl(e.target.value)}
                 />
@@ -427,7 +486,11 @@ export default function SettingsPage() {
                   <Input
                     id="byok-key"
                     type={showByokApiKey ? "text" : "password"}
-                    placeholder={profile?.byokApiKeySet ? "••••••••" : "sk-... or your API key"}
+                    placeholder={
+                      profile?.byokApiKeySet
+                        ? "••••••••"
+                        : "sk-... or your API key"
+                    }
                     value={byokApiKey}
                     onChange={(e) => setByokApiKey(e.target.value)}
                   />
@@ -438,7 +501,11 @@ export default function SettingsPage() {
                     className="absolute right-1 top-1 h-7 w-7 p-0"
                     onClick={() => setShowByokApiKey(!showByokApiKey)}
                   >
-                    {showByokApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showByokApiKey ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -456,8 +523,9 @@ export default function SettingsPage() {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              For local models (Ollama, vLLM), use the OpenAI-compatible type with your local endpoint
-              (e.g., http://localhost:11434/v1). No API key is needed for local providers.
+              For local models (Ollama, vLLM), use the OpenAI-compatible type
+              with your local endpoint (e.g., http://localhost:11434/v1). No API
+              key is needed for local providers.
             </p>
 
             <div className="flex justify-end">
@@ -488,15 +556,120 @@ export default function SettingsPage() {
               <div className="space-y-1">
                 <p className="text-sm font-medium">Security note</p>
                 <p className="text-xs text-muted-foreground">
-                  All sensitive tokens (Bitbucket, GitHub/Copilot) are encrypted using AES-256-GCM before being
-                  stored in the database. Tokens are never returned in API responses — only a boolean indicator
-                  showing whether a token has been set.
+                  All sensitive tokens (Bitbucket, GitHub/Copilot, Jira) are
+                  encrypted using AES-256-GCM before being stored in the
+                  database. Tokens are never returned in API responses — only a
+                  boolean indicator showing whether a token has been set.
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Jira Server Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bug className="h-5 w-5" />
+              Jira Server Configuration
+            </CardTitle>
+            <CardDescription>
+              Connect your Jira Server instance to automatically link tasks to
+              Jira issues. The agent will update issue status and add comments
+              with PR links.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="jira-url">Jira Server URL</Label>
+                <Input
+                  id="jira-url"
+                  placeholder="https://jira.yourcompany.com"
+                  value={jiraUrl}
+                  onChange={(e) => setJiraUrl(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="jira-project">Default Project Key</Label>
+                <Input
+                  id="jira-project"
+                  placeholder="MYPROJECT"
+                  value={jiraProjectKey}
+                  onChange={(e) => setJiraProjectKey(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="jira-user">Username</Label>
+                <Input
+                  id="jira-user"
+                  placeholder="your.username"
+                  value={jiraUsername}
+                  onChange={(e) => setJiraUsername(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="jira-token">
+                  Personal Access Token
+                  {profile?.jiraTokenSet && (
+                    <Badge variant="outline" className="ml-2 text-xs">
+                      <Check className="h-3 w-3 mr-1" />
+                      Set
+                    </Badge>
+                  )}
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="jira-token"
+                    type={showJiraToken ? "text" : "password"}
+                    placeholder={
+                      profile?.jiraTokenSet ? "••••••••" : "Enter PAT"
+                    }
+                    value={jiraToken}
+                    onChange={(e) => setJiraToken(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1 h-7 w-7 p-0"
+                    onClick={() => setShowJiraToken(!showJiraToken)}
+                  >
+                    {showJiraToken ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Jira Server (not Cloud). Uses Basic auth with your personal access
+              token. The agent communicates with Jira via the REST API v2.
+            </p>
+
+            <div className="flex justify-end">
+              <Button
+                onClick={() => saveJira.mutate()}
+                disabled={saveJira.isPending}
+              >
+                {saveJira.isPending && (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                )}
+                {saveJira.isSuccess && (
+                  <Check className="h-4 w-4 mr-2" />
+                )}
+                {!saveJira.isPending && !saveJira.isSuccess && (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Save Jira Settings
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
-  )
+  );
 }

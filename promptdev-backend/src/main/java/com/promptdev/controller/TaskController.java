@@ -98,4 +98,22 @@ public class TaskController {
         TaskResponse response = taskService.startTask(taskId);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * Resume a completed or failed session with a new prompt.
+     * This allows users to continue working on a task with additional instructions.
+     */
+    @PostMapping("/{taskId}/resume")
+    public ResponseEntity<TaskResponse> resumeTask(
+            @PathVariable UUID taskId,
+            @RequestBody java.util.Map<String, String> body) {
+        // Support both "resumePrompt" (frontend convention) and "prompt" (legacy)
+        String resumePrompt = body.getOrDefault("resumePrompt", body.get("prompt"));
+        if (resumePrompt == null || resumePrompt.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        log.info("Resuming task {}: {}", taskId, resumePrompt);
+        TaskResponse response = taskService.resumeTask(taskId, resumePrompt);
+        return ResponseEntity.ok(response);
+    }
 }

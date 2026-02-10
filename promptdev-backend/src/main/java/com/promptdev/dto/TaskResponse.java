@@ -43,6 +43,15 @@ public class TaskResponse {
     private String completionCriteria;
     private String steps;
     private UUID scheduledJobId;
+    private String jiraIssueKey;
+    private Boolean reviewEnabled;
+    private String reviewModelId;
+    private String resumePrompt;
+    private Integer resumeCount;
+    private String commitMessagePattern;
+    private String bootScript;
+    private String skills;
+    private String additionalRepositories;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime completedAt;

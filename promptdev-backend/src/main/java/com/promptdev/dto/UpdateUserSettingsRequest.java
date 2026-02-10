@@ -33,4 +33,11 @@ public class UpdateUserSettingsRequest {
     private String byokApiKey;
     /** Azure API version (only for azure provider type) */
     private String byokAzureApiVersion;
+
+    // Jira settings
+    private String jiraUrl;
+    private String jiraProjectKey;
+    private String jiraUsername;
+    /** Raw Jira token — will be encrypted before storage */
+    private String jiraToken;
 }

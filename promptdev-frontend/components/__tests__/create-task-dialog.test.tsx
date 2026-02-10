@@ -187,4 +187,122 @@ describe('CreateTaskDialog', () => {
       expect(screen.getByText('AI Model')).toBeInTheDocument()
     })
   })
+
+  describe('New features: review, jira, skills', () => {
+    it('should show Auto Review toggle', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<CreateTaskDialog />)
+
+      await user.click(screen.getByRole('button', { name: /new task/i }))
+
+      expect(screen.getByText('Auto Review')).toBeInTheDocument()
+    })
+
+    it('should have review toggle enabled by default', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<CreateTaskDialog />)
+
+      await user.click(screen.getByRole('button', { name: /new task/i }))
+
+      const checkbox = screen.getByTitle('Enable automatic review')
+      expect(checkbox).toBeChecked()
+    })
+
+    it('should show review model selector when review is enabled', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<CreateTaskDialog />)
+
+      await user.click(screen.getByRole('button', { name: /new task/i }))
+
+      // Review is enabled by default, so review model should be visible
+      expect(screen.getByText('Review Model (optional)')).toBeInTheDocument()
+    })
+
+    it('should hide review model selector when review is disabled', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<CreateTaskDialog />)
+
+      await user.click(screen.getByRole('button', { name: /new task/i }))
+
+      // Uncheck the review toggle
+      const checkbox = screen.getByTitle('Enable automatic review')
+      await user.click(checkbox)
+
+      await waitFor(() => {
+        expect(screen.queryByText('Review Model (optional)')).not.toBeInTheDocument()
+      })
+    })
+
+    it('should show Jira Issue Key field', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<CreateTaskDialog />)
+
+      await user.click(screen.getByRole('button', { name: /new task/i }))
+
+      expect(screen.getByText(/jira issue key/i)).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('PROJ-123')).toBeInTheDocument()
+    })
+
+    it('should show Advanced Options section', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<CreateTaskDialog />)
+
+      await user.click(screen.getByRole('button', { name: /new task/i }))
+
+      expect(screen.getByText('Advanced Options')).toBeInTheDocument()
+    })
+
+    it('should show commit message pattern in advanced options', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<CreateTaskDialog />)
+
+      await user.click(screen.getByRole('button', { name: /new task/i }))
+
+      // Open the details/summary
+      await user.click(screen.getByText('Advanced Options'))
+
+      await waitFor(() => {
+        expect(screen.getByText('Commit Message Pattern')).toBeInTheDocument()
+      })
+    })
+
+    it('should show environment variables in advanced options', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<CreateTaskDialog />)
+
+      await user.click(screen.getByRole('button', { name: /new task/i }))
+
+      await user.click(screen.getByText('Advanced Options'))
+
+      await waitFor(() => {
+        expect(screen.getByText('Environment Variables')).toBeInTheDocument()
+      })
+    })
+
+    it('should show boot script in advanced options', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<CreateTaskDialog />)
+
+      await user.click(screen.getByRole('button', { name: /new task/i }))
+
+      await user.click(screen.getByText('Advanced Options'))
+
+      await waitFor(() => {
+        expect(screen.getByText('Boot Script')).toBeInTheDocument()
+      })
+    })
+
+    it('should show agent skills in advanced options', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<CreateTaskDialog />)
+
+      await user.click(screen.getByRole('button', { name: /new task/i }))
+
+      await user.click(screen.getByText('Advanced Options'))
+
+      await waitFor(() => {
+        expect(screen.getByText('Agent Skills')).toBeInTheDocument()
+      })
+    })
+  })
 })
