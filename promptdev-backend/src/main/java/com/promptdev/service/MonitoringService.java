@@ -230,6 +230,14 @@ public class MonitoringService {
     }
 
     /**
+     * Find a single session by its SDK-assigned session ID.
+     */
+    @Transactional(readOnly = true)
+    public java.util.Optional<CopilotSession> getSessionBySDKId(String sdkSessionId) {
+        return sessionRepository.findBySdkSessionId(sdkSessionId);
+    }
+
+    /**
      * Get operations for a specific session.
      */
     @Transactional(readOnly = true)

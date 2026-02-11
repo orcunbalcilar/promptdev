@@ -71,6 +71,11 @@ public class TaskMapper {
                 .details(event.getDetails())
                 .codeSnippet(event.getCodeSnippet())
                 .filePath(event.getFilePath())
+                .actionType(event.getActionType())
+                .fileChanges(event.getFileChanges())
+                .toolName(event.getToolName())
+                .toolInput(event.getToolInput())
+                .toolOutput(event.getToolOutput())
                 .timestamp(event.getTimestamp())
                 .build();
     }

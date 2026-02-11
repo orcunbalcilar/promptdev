@@ -24,5 +24,10 @@ public class TaskEventResponse {
     private String details;
     private String codeSnippet;
     private String filePath;
+    private String actionType;
+    private String fileChanges;
+    private String toolName;
+    private String toolInput;
+    private String toolOutput;
     private LocalDateTime timestamp;
 }

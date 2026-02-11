@@ -2,7 +2,7 @@
  * API client for the PromptDev backend.
  */
 
-const API_BASE_URL =
+export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
 export type TaskStatus =
@@ -16,6 +16,8 @@ export type TaskStatus =
   | "COMPLETED"
   | "FAILED"
   | "CANCELLED"
+  | "TRIAGING"
+  | "REVIEWING"
   | "ITERATION_PENDING"
   | "VALIDATING";
 
@@ -23,7 +25,14 @@ export type EventType =
   | "TASK_CREATED"
   | "TASK_QUEUED"
   | "AGENT_STARTED"
+  | "AGENT_THINKING"
+  | "CODE_GENERATING"
   | "CODE_GENERATED"
+  | "FILE_CREATED"
+  | "FILE_MODIFIED"
+  | "FILE_DELETED"
+  | "GIT_CHECKOUT"
+  | "GIT_BRANCH_CREATED"
   | "GIT_COMMIT"
   | "GIT_PUSH"
   | "PR_CREATED"
@@ -43,7 +52,17 @@ export type EventType =
   | "STEP_VALIDATION_FAILED"
   | "TESTS_RUNNING"
   | "TESTS_PASSED"
-  | "TESTS_FAILED";
+  | "TESTS_FAILED"
+  | "REVIEWING_STARTED"
+  | "REVIEWING_COMPLETED"
+  | "REVIEWING_FAILED"
+  | "TRIAGING_STARTED"
+  | "TRIAGING_COMPLETED"
+  | "DEPENDENCY_INSTALLED"
+  | "AGENT_TOOL_CALL"
+  | "AGENT_TOOL_RESULT"
+  | "COMMAND_EXECUTED"
+  | "TEST_RESULT";
 
 export type WorkspaceType = "LOCAL" | "BITBUCKET";
 
@@ -105,6 +124,11 @@ export interface TaskEvent {
   details?: string;
   codeSnippet?: string;
   filePath?: string;
+  actionType?: string;
+  fileChanges?: string;
+  toolName?: string;
+  toolInput?: string;
+  toolOutput?: string;
   timestamp: string;
 }
 
@@ -162,6 +186,7 @@ export interface ScheduledJob {
   modelId?: string;
   enabled: boolean;
   maxIterations: number;
+  startAt?: string;
   lastRunAt?: string;
   nextRunAt?: string;
   lastTaskId?: string;
@@ -181,6 +206,8 @@ export interface CreateScheduledJobRequest {
   targetBranch?: string;
   modelId?: string;
   maxIterations?: number;
+  startAt?: string;
+  enabled?: boolean;
 }
 
 export interface PagedResponse<T> {
@@ -414,4 +441,14 @@ export async function deleteScheduledJob(jobId: string): Promise<void> {
   return apiFetch<void>(`/scheduled-jobs/${jobId}`, {
     method: "DELETE",
   });
+}
+
+export async function runScheduledJobNow(jobId: string): Promise<Task> {
+  return apiFetch<Task>(`/scheduled-jobs/${jobId}/run`, {
+    method: "POST",
+  });
+}
+
+export async function getScheduledJobHistory(jobId: string): Promise<Task[]> {
+  return apiFetch<Task[]>(`/scheduled-jobs/${jobId}/history`);
 }

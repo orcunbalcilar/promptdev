@@ -18,19 +18,18 @@ interface KanbanColumn {
 const columns: KanbanColumn[] = [
   {
     title: "Pending",
-    statuses: ["PENDING", "QUEUED"],
+    statuses: ["PENDING", "QUEUED", "TRIAGING"],
     color: "bg-muted/50 border-muted",
   },
   {
     title: "In Progress",
-    statuses: [
-      "IN_PROGRESS",
-      "CODE_GENERATED",
-      "COMMITTING",
-      "PUSHING",
-      "CREATING_PR",
-    ],
+    statuses: ["IN_PROGRESS", "VALIDATING", "ITERATION_PENDING"],
     color: "bg-blue-50/50 border-blue-100",
+  },
+  {
+    title: "Review",
+    statuses: ["REVIEWING", "CODE_GENERATED", "COMMITTING", "PUSHING", "CREATING_PR"],
+    color: "bg-teal-50/50 border-teal-100",
   },
   {
     title: "Completed",
@@ -53,7 +52,7 @@ export function KanbanBoard({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 h-full">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 h-full">
       {columns.map((column) => {
         const columnTasks = getTasksForColumn(column);
         return (

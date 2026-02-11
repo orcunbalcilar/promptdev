@@ -189,6 +189,13 @@ export async function getMonitoringSessions(page = 0, size = 20): Promise<Pagina
 }
 
 /**
+ * Get a single monitoring session by its SDK session ID.
+ */
+export async function getMonitoringSessionDetails(sdkSessionId: string): Promise<MonitoringSession> {
+  return monitoringFetch<MonitoringSession>(`/sessions/${sdkSessionId}/details`)
+}
+
+/**
  * Get operations for a session.
  */
 export async function getSessionOperations(sdkSessionId: string): Promise<MonitoringOperation[]> {

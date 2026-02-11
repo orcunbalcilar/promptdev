@@ -3,21 +3,111 @@
 import { CreateTaskDialog } from "@/components/create-task-dialog";
 import { KanbanBoard } from "@/components/kanban-board";
 import { Button } from "@/components/ui/button";
-import { getTasks, type Task } from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
-import { Activity, Bot, CalendarClock, Loader2, RefreshCw, Settings, Zap } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { API_BASE_URL, getTasks, type Task, type TaskStatus } from "@/lib/api";
+import { toast } from "sonner";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Activity, Bot, CalendarClock, Loader2, RefreshCw, Search, Settings, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+
+const STATUS_GROUPS: { label: string; statuses: TaskStatus[] }[] = [
+  { label: "Pending", statuses: ["PENDING", "QUEUED", "TRIAGING"] },
+  { label: "In Progress", statuses: ["IN_PROGRESS", "VALIDATING", "ITERATION_PENDING"] },
+  { label: "Review", statuses: ["REVIEWING", "CODE_GENERATED", "COMMITTING", "PUSHING", "CREATING_PR"] },
+  { label: "Completed", statuses: ["COMPLETED"] },
+  { label: "Failed", statuses: ["FAILED", "CANCELLED"] },
+];
 
 export default function Dashboard() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [workspaceFilter, setWorkspaceFilter] = useState<string>("all");
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["tasks"],
     queryFn: () => getTasks(0, 100),
-    refetchInterval: 5000,
+    refetchInterval: 30_000, // 30s fallback polling
   });
 
+  // SSE subscription for real-time task updates
+  useEffect(() => {
+    const eventSource = new EventSource(`${API_BASE_URL}/stream/tasks`);
+
+    eventSource.addEventListener("task-update", (event) => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+
+      // Show toast notifications for task completions/failures
+      try {
+        const data = JSON.parse(event.data) as { taskId?: string; status?: string; title?: string };
+        if (data.status === "COMPLETED") {
+          toast.success(`Task completed: ${data.title ?? "Task"}`, {
+            action: data.taskId ? {
+              label: "View",
+              onClick: () => router.push(`/tasks/${data.taskId}`),
+            } : undefined,
+          });
+        } else if (data.status === "FAILED") {
+          toast.error(`Task failed: ${data.title ?? "Task"}`, {
+            action: data.taskId ? {
+              label: "View",
+              onClick: () => router.push(`/tasks/${data.taskId}`),
+            } : undefined,
+          });
+        }
+      } catch {
+        // Event data may not be JSON — just invalidate
+      }
+    });
+
+    eventSource.onerror = () => {
+      // SSE failed — 30s polling is the fallback
+    };
+
+    return () => eventSource.close();
+  }, [queryClient, router]);
+
   const tasks = data?.content ?? [];
+
+  // Client-side filtering
+  const filteredTasks = useMemo(() => {
+    let result = tasks;
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (t) =>
+          t.title.toLowerCase().includes(q) ||
+          t.prompt.toLowerCase().includes(q),
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== "all") {
+      const group = STATUS_GROUPS.find((g) => g.label === statusFilter);
+      if (group) {
+        result = result.filter((t) => group.statuses.includes(t.status));
+      }
+    }
+
+    // Workspace type filter
+    if (workspaceFilter !== "all") {
+      result = result.filter((t) => t.workspaceType === workspaceFilter);
+    }
+
+    return result;
+  }, [tasks, searchQuery, statusFilter, workspaceFilter]);
 
   const handleTaskClick = (task: Task) => {
     router.push(`/tasks/${task.id}`);
@@ -131,7 +221,60 @@ export default function Dashboard() {
             );
           }
 
-          return <KanbanBoard tasks={tasks} onTaskClick={handleTaskClick} />;
+          return (
+            <>
+              {/* Search & Filter Bar */}
+              <div className="flex flex-wrap items-center gap-3 mb-6">
+                <div className="relative flex-1 min-w-50 max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    placeholder="Search tasks..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-37.5">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    {STATUS_GROUPS.map((g) => (
+                      <SelectItem key={g.label} value={g.label}>
+                        {g.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={workspaceFilter} onValueChange={setWorkspaceFilter}>
+                  <SelectTrigger className="w-37.5">
+                    <SelectValue placeholder="Workspace" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Workspaces</SelectItem>
+                    <SelectItem value="BITBUCKET">Bitbucket</SelectItem>
+                    <SelectItem value="LOCAL">Local</SelectItem>
+                  </SelectContent>
+                </Select>
+                {(searchQuery || statusFilter !== "all" || workspaceFilter !== "all") && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setStatusFilter("all");
+                      setWorkspaceFilter("all");
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+
+              <KanbanBoard tasks={filteredTasks} onTaskClick={handleTaskClick} />
+            </>
+          );
         })()}
       </main>
     </div>

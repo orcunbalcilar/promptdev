@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   queueOperation,
   flushOperations,
+  getMonitoringSessionDetails,
 } from '@/lib/monitoring'
 
 // Mock global fetch
@@ -88,6 +89,35 @@ describe('Monitoring Client', () => {
       mockFetch.mockClear()
       await flushOperations()
       expect(mockFetch).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('getMonitoringSessionDetails', () => {
+    it('should GET /monitoring/sessions/:sdkSessionId/details', async () => {
+      const session = {
+        id: 'sess-1',
+        sdkSessionId: 'sdk-abc-123',
+        model: 'claude-sonnet-4',
+        status: 'ACTIVE',
+        totalInputTokens: 1500,
+        totalOutputTokens: 3000,
+        messageCount: 10,
+        toolExecutionCount: 5,
+        errorCount: 0,
+        source: 'vscode',
+        createdAt: '2026-02-10T12:00:00Z',
+      }
+      mockFetch.mockResolvedValue({
+        ok: true,
+        text: () => Promise.resolve(JSON.stringify(session)),
+      })
+
+      const result = await getMonitoringSessionDetails('sdk-abc-123')
+
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      const url = mockFetch.mock.calls[0][0] as string
+      expect(url).toContain('/monitoring/sessions/sdk-abc-123/details')
+      expect(result).toEqual(session)
     })
   })
 })

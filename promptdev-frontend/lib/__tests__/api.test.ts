@@ -16,6 +16,8 @@ import {
   getScheduledJobs,
   toggleScheduledJob,
   deleteScheduledJob,
+  runScheduledJobNow,
+  getScheduledJobHistory,
   subscribeToTaskEvents,
   ApiError,
 } from '@/lib/api'
@@ -358,6 +360,35 @@ describe('API Client', () => {
 
       expect(mockFetch.mock.calls[0][0]).toBe(`${API_BASE}/scheduled-jobs/job-1`)
       expect(mockFetch.mock.calls[0][1].method).toBe('DELETE')
+    })
+  })
+
+  describe('runScheduledJobNow', () => {
+    it('should POST /scheduled-jobs/:id/run', async () => {
+      const task = { id: 'task-99', title: 'Triggered task', status: 'PENDING' }
+      mockFetch.mockResolvedValue(jsonResponse(task))
+
+      const result = await runScheduledJobNow('job-1')
+
+      expect(mockFetch.mock.calls[0][0]).toBe(`${API_BASE}/scheduled-jobs/job-1/run`)
+      expect(mockFetch.mock.calls[0][1].method).toBe('POST')
+      expect(result).toEqual(task)
+    })
+  })
+
+  describe('getScheduledJobHistory', () => {
+    it('should GET /scheduled-jobs/:id/history', async () => {
+      const tasks = [
+        { id: 'task-1', title: 'Run 1', status: 'COMPLETED' },
+        { id: 'task-2', title: 'Run 2', status: 'FAILED' },
+      ]
+      mockFetch.mockResolvedValue(jsonResponse(tasks))
+
+      const result = await getScheduledJobHistory('job-1')
+
+      expect(mockFetch.mock.calls[0][0]).toBe(`${API_BASE}/scheduled-jobs/job-1/history`)
+      expect(result).toHaveLength(2)
+      expect(result[0].status).toBe('COMPLETED')
     })
   })
 

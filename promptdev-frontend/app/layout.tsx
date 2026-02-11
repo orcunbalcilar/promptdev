@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 };
 
 import Providers from "./providers";
+import { CommandPalette } from "@/components/command-palette";
 
 export default function RootLayout({
   children,
@@ -29,7 +30,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <CommandPalette />
+        </Providers>
       </body>
     </html>
   );

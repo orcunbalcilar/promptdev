@@ -30,9 +30,11 @@ import {
   type Repository,
   type WorkspaceType,
 } from "@/lib/api";
+import { getJiraIssue, type JiraIssue } from "@/lib/jira";
 import { COPILOT_MODELS, DEFAULT_MODEL_ID } from "@/lib/copilot/models";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FolderOpen, FolderPlus, GitBranch, Plus, RefreshCcw, Shield, Bug, Cog, BookOpen } from "lucide-react";
+import { FolderOpen, FolderPlus, GitBranch, Plus, RefreshCcw, Shield, Bug, Cog, BookOpen, Loader2, Lightbulb, ExternalLink } from "lucide-react";
+import { Suggestions, Suggestion } from "@/components/ai-elements/suggestion";
 import { useCallback, useEffect, useState } from "react";
 
 export function CreateTaskDialog() {
@@ -54,6 +56,9 @@ export function CreateTaskDialog() {
   const [envVars, setEnvVars] = useState("");
   const [bootScript, setBootScript] = useState("");
   const [skills, setSkills] = useState("");
+  const [triageIssue, setTriageIssue] = useState<JiraIssue | null>(null);
+  const [triageLoading, setTriageLoading] = useState(false);
+  const [triageError, setTriageError] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -105,7 +110,41 @@ export function CreateTaskDialog() {
     setEnvVars("");
     setBootScript("");
     setSkills("");
+    setTriageIssue(null);
+    setTriageLoading(false);
+    setTriageError(null);
   }, []);
+
+  const handleFetchAndTriage = async () => {
+    if (!jiraIssueKey.trim()) return;
+    setTriageLoading(true);
+    setTriageError(null);
+    setTriageIssue(null);
+    try {
+      const issue = await getJiraIssue(jiraIssueKey.trim());
+      setTriageIssue(issue);
+      // Auto-populate the title input
+      const titleInput = document.getElementById("title") as HTMLInputElement;
+      if (titleInput && !titleInput.value) {
+        const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+        nativeSetter?.call(titleInput, `[${issue.key}] ${issue.fields.summary}`);
+        titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      // Auto-populate the prompt textarea
+      const promptTextarea = document.getElementById("prompt") as HTMLTextAreaElement;
+      if (promptTextarea) {
+        const description = issue.fields.description || "No description provided.";
+        const triagePrompt = `## Jira Issue: ${issue.key} - ${issue.fields.summary}\n\n### Original Description:\n${description}\n\n### Implementation Instructions:\nImplement the changes described in the Jira issue above. Ensure:\n- All acceptance criteria are met\n- Existing tests continue to pass\n- New functionality is properly tested\n- Code follows project conventions`;
+        const nativeSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+        nativeSetter?.call(promptTextarea, triagePrompt);
+        promptTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    } catch (err) {
+      setTriageError(err instanceof Error ? err.message : "Failed to fetch Jira issue");
+    } finally {
+      setTriageLoading(false);
+    }
+  };
 
   const createMutation = useMutation({
     mutationFn: async (data: CreateTaskRequest) => {
@@ -179,7 +218,7 @@ export function CreateTaskDialog() {
       }}
     >
       <DialogTrigger asChild>
-        <Button>
+        <Button data-create-task-trigger>
           <Plus className="h-4 w-4 mr-2" />
           New Task
         </Button>
@@ -215,6 +254,43 @@ export function CreateTaskDialog() {
                 rows={4}
                 placeholder="Create a login page with email and password fields..."
               />
+              <Suggestions className="mt-1">
+                <Suggestion
+                  suggestion="Add comprehensive unit tests for the authentication module"
+                  onClick={(s) => {
+                    const el = document.getElementById("prompt") as HTMLTextAreaElement;
+                    if (el) { const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set; setter?.call(el, s); el.dispatchEvent(new Event('input', { bubbles: true })); }
+                  }}
+                />
+                <Suggestion
+                  suggestion="Create a new REST API endpoint with full CRUD operations"
+                  onClick={(s) => {
+                    const el = document.getElementById("prompt") as HTMLTextAreaElement;
+                    if (el) { const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set; setter?.call(el, s); el.dispatchEvent(new Event('input', { bubbles: true })); }
+                  }}
+                />
+                <Suggestion
+                  suggestion="Refactor this component to improve performance and readability"
+                  onClick={(s) => {
+                    const el = document.getElementById("prompt") as HTMLTextAreaElement;
+                    if (el) { const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set; setter?.call(el, s); el.dispatchEvent(new Event('input', { bubbles: true })); }
+                  }}
+                />
+                <Suggestion
+                  suggestion="Fix the bug in the data fetching layer and add proper error handling"
+                  onClick={(s) => {
+                    const el = document.getElementById("prompt") as HTMLTextAreaElement;
+                    if (el) { const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set; setter?.call(el, s); el.dispatchEvent(new Event('input', { bubbles: true })); }
+                  }}
+                />
+                <Suggestion
+                  suggestion="Update dependencies, fix deprecations, and run security audit"
+                  onClick={(s) => {
+                    const el = document.getElementById("prompt") as HTMLTextAreaElement;
+                    if (el) { const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set; setter?.call(el, s); el.dispatchEvent(new Event('input', { bubbles: true })); }
+                  }}
+                />
+              </Suggestions>
             </div>
 
             {/* Workspace Type */}
@@ -529,15 +605,112 @@ export function CreateTaskDialog() {
                   Jira Issue Key (optional)
                 </span>
               </Label>
-              <Input
-                id="jiraIssueKey"
-                value={jiraIssueKey}
-                onChange={(e) => setJiraIssueKey(e.target.value)}
-                placeholder="PROJ-123"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="jiraIssueKey"
+                  value={jiraIssueKey}
+                  onChange={(e) => {
+                    setJiraIssueKey(e.target.value);
+                    if (triageIssue && e.target.value !== triageIssue.key) {
+                      setTriageIssue(null);
+                      setTriageError(null);
+                    }
+                  }}
+                  placeholder="PROJ-123"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!jiraIssueKey.trim() || triageLoading}
+                  onClick={handleFetchAndTriage}
+                  className="shrink-0"
+                >
+                  {triageLoading ? (
+                    <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" />Fetching...</>
+                  ) : (
+                    <><ExternalLink className="h-4 w-4 mr-1.5" />Fetch &amp; Triage</>
+                  )}
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground">
-                Link this task to a Jira issue. The agent will update the issue status and add PR links.
+                Link this task to a Jira issue. Click &quot;Fetch &amp; Triage&quot; to review and refine the issue details before starting.
               </p>
+
+              {/* Triage Error */}
+              {triageError && (
+                <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  {triageError}
+                </div>
+              )}
+
+              {/* Triage Panel */}
+              {triageIssue && (
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-4 mt-1">
+                  {/* Original Issue Details (read-only) */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold flex items-center gap-2">
+                      <Bug className="h-4 w-4 text-muted-foreground" />
+                      Original Jira Issue
+                    </h4>
+                    <div className="rounded-md border bg-background/60 p-3 space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{triageIssue.key}</span>
+                        <span className="text-xs text-muted-foreground">{triageIssue.fields.issuetype.name}</span>
+                        <span className="text-xs text-muted-foreground">•</span>
+                        <span className="text-xs text-muted-foreground">{triageIssue.fields.status.name}</span>
+                        {triageIssue.fields.priority && (
+                          <>
+                            <span className="text-xs text-muted-foreground">•</span>
+                            <span className="text-xs text-muted-foreground">{triageIssue.fields.priority.name}</span>
+                          </>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium">{triageIssue.fields.summary}</p>
+                      {triageIssue.fields.description && (
+                        <p className="text-xs text-muted-foreground whitespace-pre-wrap line-clamp-6">
+                          {triageIssue.fields.description}
+                        </p>
+                      )}
+                      {!triageIssue.fields.description && (
+                        <p className="text-xs text-muted-foreground italic">No description provided in Jira.</p>
+                      )}
+                      {triageIssue.fields.labels && triageIssue.fields.labels.length > 0 && (
+                        <div className="flex gap-1 flex-wrap pt-1">
+                          {triageIssue.fields.labels.map((label) => (
+                            <span key={label} className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium">
+                              {label}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Improvement Suggestions */}
+                  <div className="rounded-md border border-yellow-500/30 bg-yellow-500/5 px-3 py-2.5">
+                    <h4 className="text-xs font-semibold flex items-center gap-1.5 text-yellow-600 dark:text-yellow-400 mb-1.5">
+                      <Lightbulb className="h-3.5 w-3.5" />
+                      Suggestions for a better prompt
+                    </h4>
+                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                      {!triageIssue.fields.description && (
+                        <li className="text-yellow-600 dark:text-yellow-400 font-medium">Add a detailed description — the Jira issue has none</li>
+                      )}
+                      <li>Add specific acceptance criteria for the implementation</li>
+                      <li>Mention technical constraints or architectural requirements</li>
+                      <li>Specify test requirements (unit tests, integration tests, E2E)</li>
+                      <li>Define edge cases or error handling expectations</li>
+                      <li>Reference related files or components that should be modified</li>
+                    </ul>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    ✓ Title and prompt have been pre-filled from the Jira issue. Edit them above to add more detail before creating the task.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Advanced Options Collapsible */}

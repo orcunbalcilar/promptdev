@@ -13,7 +13,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:validate}
+      ddl-auto: ${JPA_DDL_AUTO:update} # use 'validate' in production to avoid accidental schema changes
     show-sql: false
     properties:
       hibernate:

@@ -10,8 +10,10 @@ import {
 } from "@/components/ui/card";
 import type { Task, TaskStatus } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Ban,
+  Bot,
   CheckCircle2,
   Clock,
   FolderOpen,
@@ -20,6 +22,7 @@ import {
   Loader2,
   RefreshCcw,
   Search,
+  Shield,
   XCircle,
 } from "lucide-react";
 
@@ -44,6 +47,12 @@ const statusConfig: Record<
     className: "text-muted-foreground border-dashed",
   },
   QUEUED: { label: "Queued", variant: "secondary", icon: Clock },
+  TRIAGING: {
+    label: "Triaging",
+    variant: "default",
+    icon: Search,
+    className: "bg-orange-600 hover:bg-orange-700",
+  },
   IN_PROGRESS: {
     label: "In Progress",
     variant: "default",
@@ -62,6 +71,12 @@ const statusConfig: Record<
     label: "Creating PR",
     variant: "default",
     icon: GitPullRequest,
+  },
+  REVIEWING: {
+    label: "Reviewing",
+    variant: "default",
+    icon: Shield,
+    className: "bg-teal-600 hover:bg-teal-700",
   },
   COMPLETED: {
     label: "Completed",
@@ -125,6 +140,11 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
         <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5em]">
           {task.prompt}
         </p>
+        {task.status === "FAILED" && task.errorMessage && (
+          <p className="text-xs text-destructive line-clamp-1 mt-1.5 font-mono bg-destructive/5 rounded px-1.5 py-0.5">
+            {task.errorMessage}
+          </p>
+        )}
       </CardContent>
       <CardFooter className="p-4 pt-0 text-xs text-muted-foreground flex justify-between items-center">
         <div className="flex items-center gap-2">
@@ -142,9 +162,51 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
               {task.currentIteration ?? 0}/{task.maxIterations}
             </Badge>
           )}
+          {task.modelId && (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5">
+              <Bot className="h-2.5 w-2.5" />
+              {task.modelId.split('/').pop()?.split('-').slice(0, 2).join('-') ?? task.modelId}
+            </Badge>
+          )}
         </div>
-        <div title={new Date(task.createdAt).toLocaleString()}>
-          {new Date(task.createdAt).toLocaleDateString()}
+        <div className="flex items-center gap-2">
+          {task.pullRequestUrl && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-6 w-6"
+              asChild
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            >
+              <a
+                href={task.pullRequestUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open Pull Request"
+              >
+                <GitPullRequest className="h-3 w-3" />
+              </a>
+            </Button>
+          )}
+          {task.completedAt && task.createdAt && (
+            <span className="flex items-center gap-0.5 text-muted-foreground" title="Duration">
+              <Clock className="h-2.5 w-2.5" />
+              {(() => {
+                const ms = new Date(task.completedAt).getTime() - new Date(task.createdAt).getTime();
+                const mins = Math.floor(ms / 60000);
+                const secs = Math.floor((ms % 60000) / 1000);
+                return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+              })()}
+            </span>
+          )}
+          {!task.completedAt && ['IN_PROGRESS', 'REVIEWING', 'TRIAGING', 'VALIDATING'].includes(task.status) && (
+            <span className="flex items-center gap-0.5 text-blue-600" title="Running">
+              <Loader2 className="h-2.5 w-2.5 animate-spin" />
+            </span>
+          )}
+          <div title={new Date(task.createdAt).toLocaleString()}>
+            {new Date(task.createdAt).toLocaleDateString()}
+          </div>
         </div>
       </CardFooter>
     </Card>

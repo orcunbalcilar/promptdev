@@ -44,6 +44,21 @@ public class TaskEvent {
     @Column(name = "file_path")
     private String filePath;
 
+    @Column(name = "action_type")
+    private String actionType;
+
+    @Column(name = "file_changes", columnDefinition = "TEXT")
+    private String fileChanges;
+
+    @Column(name = "tool_name")
+    private String toolName;
+
+    @Column(name = "tool_input", columnDefinition = "TEXT")
+    private String toolInput;
+
+    @Column(name = "tool_output", columnDefinition = "TEXT")
+    private String toolOutput;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime timestamp;

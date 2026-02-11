@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import {
@@ -44,6 +44,7 @@ import {
   CheckCircle2,
   XCircle,
   CircleDot,
+  Shield,
 } from 'lucide-react'
 import {
   getMonitoringDashboard,
@@ -53,7 +54,27 @@ import {
   type MonitoringSession,
   type MonitoringOperation,
   type PaginatedResponse,
+  getMonitoringOperations,
 } from '@/lib/monitoring'
+import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
+import {
+  StackTrace,
+  StackTraceHeader,
+  StackTraceError,
+  StackTraceErrorType,
+  StackTraceErrorMessage,
+  StackTraceContent,
+  StackTraceFrames,
+  StackTraceExpandButton,
+} from '@/components/ai-elements/stack-trace'
+import {
+  ProgressBar,
+  ProgressBarLabel,
+  ProgressBarValue,
+  ProgressBarTrack,
+  ProgressBarFill,
+} from '@/components/ai-elements/progress-bar'
+import { StatusIndicator } from '@/components/ai-elements/status-indicator'
 
 // ── Constants ───────────────────────────────────────────────────
 
@@ -525,6 +546,131 @@ function SessionDetail({
     return <CheckCircle2 className="h-4 w-4 text-green-500" />
   }
 
+  function getToolState(op: MonitoringOperation) {
+    if (op.success === false || op.operationType === 'TOOL_EXECUTION_ERROR') {
+      return 'output-error' as const
+    }
+    if (op.operationType === 'TOOL_EXECUTION_END') {
+      return 'output-available' as const
+    }
+    return 'input-available' as const
+  }
+
+  function renderToolOperation(op: MonitoringOperation) {
+    const state = getToolState(op)
+
+    return (
+      <Tool key={op.id}>
+        <ToolHeader
+          title={op.toolName ?? op.operationType}
+          type="tool-invocation"
+          state={state}
+        />
+        <ToolContent>
+          {op.message && (
+            <ToolInput input={{ message: op.message }} />
+          )}
+          {(op.errorMessage || op.message) && (
+            <ToolOutput
+              output={op.errorMessage ? undefined : (op.message ?? undefined)}
+              errorText={op.errorMessage ?? undefined}
+            />
+          )}
+          {(op.inputTokens != null || op.outputTokens != null) && (
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              {op.inputTokens != null && <span>In: {op.inputTokens}</span>}
+              {op.outputTokens != null && <span>Out: {op.outputTokens}</span>}
+            </div>
+          )}
+          {op.durationMs != null && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {op.durationMs}ms
+            </span>
+          )}
+        </ToolContent>
+      </Tool>
+    )
+  }
+
+  function renderErrorOperation(op: MonitoringOperation) {
+    const traceText = op.errorMessage
+      ? `${op.operationType}: ${op.errorMessage}`
+      : op.message ?? op.operationType
+
+    return (
+      <StackTrace key={op.id} trace={traceText} defaultOpen={false}>
+        <StackTraceHeader>
+          <StackTraceError>
+            <StackTraceErrorType />
+            <StackTraceErrorMessage />
+          </StackTraceError>
+          <StackTraceExpandButton />
+        </StackTraceHeader>
+        <StackTraceContent>
+          <StackTraceFrames />
+          {op.durationMs != null && (
+            <div className="flex items-center gap-1 px-3 pb-3 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              {op.durationMs}ms
+            </div>
+          )}
+        </StackTraceContent>
+      </StackTrace>
+    )
+  }
+
+  function renderDefaultOperation(op: MonitoringOperation) {
+    return (
+      <div
+        key={op.id}
+        className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+      >
+        <div className="mt-0.5">
+          {getOperationIcon(op)}
+        </div>
+        <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="outline"
+              className={OP_TYPE_CONFIG[op.operationType] ?? 'bg-muted'}
+            >
+              {op.operationType}
+            </Badge>
+            {op.toolName && (
+              <Badge variant="secondary" className="font-mono text-xs">
+                {op.toolName}
+              </Badge>
+            )}
+            {op.durationMs != null && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {op.durationMs}ms
+              </span>
+            )}
+          </div>
+          {op.message && (
+            <p className="text-sm text-muted-foreground truncate">{op.message}</p>
+          )}
+          {op.errorMessage && (
+            <p className="text-xs text-destructive font-mono break-all">
+              {op.errorMessage}
+            </p>
+          )}
+          {(op.inputTokens != null || op.outputTokens != null) && (
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              {op.inputTokens != null && <span>In: {op.inputTokens}</span>}
+              {op.outputTokens != null && <span>Out: {op.outputTokens}</span>}
+            </div>
+          )}
+        </div>
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
+          {formatDate(op.timestamp)}
+        </span>
+      </div>
+    )
+  }
+
   function renderOperations() {
     if (isLoading) {
       return (
@@ -542,54 +688,15 @@ function SessionDetail({
     }
     return (
       <div className="space-y-2">
-        {operations.map((op) => (
-          <div
-            key={op.id}
-            className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-          >
-            <div className="mt-0.5">
-              {getOperationIcon(op)}
-            </div>
-            <div className="flex-1 min-w-0 space-y-1">
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="outline"
-                  className={OP_TYPE_CONFIG[op.operationType] ?? 'bg-muted'}
-                >
-                  {op.operationType}
-                </Badge>
-                {op.toolName && (
-                  <Badge variant="secondary" className="font-mono text-xs">
-                    {op.toolName}
-                  </Badge>
-                )}
-                {op.durationMs != null && (
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {op.durationMs}ms
-                  </span>
-                )}
-              </div>
-              {op.message && (
-                <p className="text-sm text-muted-foreground truncate">{op.message}</p>
-              )}
-              {op.errorMessage && (
-                <p className="text-xs text-destructive font-mono break-all">
-                  {op.errorMessage}
-                </p>
-              )}
-              {(op.inputTokens != null || op.outputTokens != null) && (
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  {op.inputTokens != null && <span>In: {op.inputTokens}</span>}
-                  {op.outputTokens != null && <span>Out: {op.outputTokens}</span>}
-                </div>
-              )}
-            </div>
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {formatDate(op.timestamp)}
-            </span>
-          </div>
-        ))}
+        {operations.map((op) => {
+          if (op.operationType.includes('TOOL')) {
+            return renderToolOperation(op)
+          }
+          if (op.operationType === 'ERROR' || op.operationType === 'TOOL_EXECUTION_ERROR' || (op.success === false && op.errorMessage)) {
+            return renderErrorOperation(op)
+          }
+          return renderDefaultOperation(op)
+        })}
       </div>
     )
   }
@@ -601,14 +708,43 @@ function SessionDetail({
   const statusCfg = STATUS_CONFIG[session.status] ?? STATUS_CONFIG.ENDED
   const StatusIcon = statusCfg.icon
 
+  const sessionProgress = useMemo(() => {
+    if (session.status === 'ENDED') return 100
+    if (session.status === 'ERROR') return 100
+    if (!operations?.length) return 0
+    const completedOps = operations.filter(
+      (op) => op.operationType === 'TOOL_EXECUTION_END' || op.operationType === 'SESSION_DESTROYED' || op.operationType === 'MESSAGE_RECEIVED'
+    ).length
+    const totalOps = operations.length
+    return totalOps > 0 ? Math.round((completedOps / totalOps) * 100) : 0
+  }, [session.status, operations])
+
+  const sessionStatusIndicator: 'streaming' | 'submitted' | 'error' | 'complete' = useMemo(() => {
+    if (session.status === 'ACTIVE') return 'streaming'
+    if (session.status === 'ERROR') return 'error'
+    return 'complete'
+  }, [session.status])
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={onBack}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back to Sessions
         </Button>
+        <StatusIndicator status={sessionStatusIndicator} showIcon />
       </div>
+
+      {/* Session Progress */}
+      <ProgressBar value={sessionProgress}>
+        <ProgressBarLabel>
+          <span>Session Progress</span>
+          <ProgressBarValue>{sessionProgress}%</ProgressBarValue>
+        </ProgressBarLabel>
+        <ProgressBarTrack>
+          <ProgressBarFill value={sessionProgress} />
+        </ProgressBarTrack>
+      </ProgressBar>
 
       {/* Session Info */}
       <Card>
@@ -686,6 +822,188 @@ function SessionDetail({
           {renderOperations()}
         </CardContent>
       </Card>
+    </div>
+  )
+}
+
+// ── Reviews Tab ─────────────────────────────────────────────────
+
+function ReviewsTab({ days }: Readonly<{ days: number }>) {
+  const { data: operations, isLoading } = useQuery<PaginatedResponse<MonitoringOperation>>({
+    queryKey: ['monitoring-review-operations', days],
+    queryFn: () => getMonitoringOperations(0, 200),
+    refetchInterval: 15000,
+  })
+
+  const reviewOps = useMemo(() => {
+    if (!operations?.content) return []
+    return operations.content.filter(
+      (op) =>
+        op.operationType.includes('REVIEW') ||
+        op.operationType === 'CODE_REVIEW'
+    )
+  }, [operations])
+
+  const stats = useMemo(() => {
+    let passed = 0
+    let failed = 0
+    const issueMap = new Map<string, number>()
+
+    for (const op of reviewOps) {
+      if (op.success === false || op.errorMessage) {
+        failed++
+      } else {
+        passed++
+      }
+      // Collect common issues from messages
+      if (op.message) {
+        const words = op.message
+          .split(/[,;.!?]+/)
+          .map((w) => w.trim())
+          .filter((w) => w.length > 3 && w.length < 80)
+        for (const word of words.slice(0, 3)) {
+          issueMap.set(word, (issueMap.get(word) ?? 0) + 1)
+        }
+      }
+    }
+
+    const topIssues = Array.from(issueMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+
+    return { passed, failed, total: passed + failed, topIssues }
+  }, [reviewOps])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <MetricCard
+          title="Total Reviews"
+          value={stats.total}
+          icon={Shield}
+        />
+        <MetricCard
+          title="Passed"
+          value={stats.passed}
+          subtitle={stats.total > 0 ? `${Math.round((stats.passed / stats.total) * 100)}% pass rate` : undefined}
+          icon={CheckCircle2}
+        />
+        <MetricCard
+          title="Failed"
+          value={stats.failed}
+          icon={XCircle}
+        />
+      </div>
+
+      {/* Review Sessions Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Review Sessions
+          </CardTitle>
+          <CardDescription>
+            {reviewOps.length} review operations in the last {days} days
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {reviewOps.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              No review operations recorded yet. Enable review on a task to start.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Message</TableHead>
+                  <TableHead>Model</TableHead>
+                  <TableHead className="text-right">Duration</TableHead>
+                  <TableHead>Time</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {reviewOps.slice(0, 50).map((op) => {
+                  const hasFailed = op.success === false || !!op.errorMessage
+                  return (
+                    <TableRow key={op.id}>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={hasFailed
+                            ? 'bg-red-500/10 text-red-700 border-red-200'
+                            : 'bg-green-500/10 text-green-700 border-green-200'
+                          }
+                        >
+                          {hasFailed
+                            ? <><XCircle className="h-3 w-3 mr-1" />Failed</>
+                            : <><CheckCircle2 className="h-3 w-3 mr-1" />Passed</>
+                          }
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-xs">
+                          {op.operationType}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
+                        {op.message || op.errorMessage || '—'}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-xs">
+                        {op.model || '—'}
+                      </TableCell>
+                      <TableCell className="text-right text-xs text-muted-foreground tabular-nums">
+                        {op.durationMs == null ? '—' : `${op.durationMs}ms`}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {formatDate(op.timestamp)}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Common Issues */}
+      {stats.topIssues.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Common Review Findings
+            </CardTitle>
+            <CardDescription>Most frequently reported issues</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {stats.topIssues.map(([issue, count]) => (
+                <div
+                  key={issue}
+                  className="flex items-center justify-between p-2 rounded-lg border hover:bg-muted/50 transition-colors"
+                >
+                  <span className="text-sm truncate flex-1">{issue}</span>
+                  <Badge variant="secondary" className="ml-2 tabular-nums">
+                    {count}×
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
@@ -792,6 +1110,7 @@ export default function MonitoringPage() {
               <TabsList>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="sessions">Sessions</TabsTrigger>
+                <TabsTrigger value="reviews">Reviews</TabsTrigger>
                 <TabsTrigger value="errors">Errors</TabsTrigger>
               </TabsList>
 
@@ -844,6 +1163,10 @@ export default function MonitoringPage() {
                     </CardContent>
                   </Card>
                 )}
+              </TabsContent>
+
+              <TabsContent value="reviews" className="space-y-4">
+                <ReviewsTab days={days} />
               </TabsContent>
 
               <TabsContent value="errors" className="space-y-4">

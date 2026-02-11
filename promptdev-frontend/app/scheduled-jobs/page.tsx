@@ -27,13 +27,16 @@ import {
   deleteScheduledJob,
   getBranches,
   getRepositories,
+  getScheduledJobHistory,
   getScheduledJobs,
+  runScheduledJobNow,
   toggleScheduledJob,
   type Branch,
   type CreateScheduledJobRequest,
   type Repository,
   type ScheduledJob,
   type ScheduledJobType,
+  type Task,
   type WorkspaceType,
 } from "@/lib/api";
 import { COPILOT_MODELS, DEFAULT_MODEL_ID } from "@/lib/copilot/models";
@@ -42,11 +45,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   CalendarClock,
+  ChevronDown,
+  ChevronRight,
   Clock,
   Code2,
   FileText,
   GitBranch,
   Loader2,
+  Play,
   Plus,
   Power,
   Search,
@@ -58,6 +64,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const JOB_TYPE_CONFIG: Record<
   ScheduledJobType,
@@ -77,12 +84,40 @@ const JOB_TYPE_CONFIG: Record<
 };
 
 const CRON_PRESETS = [
+  { label: "Every 15 minutes", value: "0 */15 * * * *" },
+  { label: "Every 30 minutes", value: "0 */30 * * * *" },
+  { label: "Every hour", value: "0 0 * * * *" },
+  { label: "Every 2 hours", value: "0 0 */2 * * *" },
+  { label: "Every 4 hours", value: "0 0 */4 * * *" },
+  { label: "Every 6 hours", value: "0 0 */6 * * *" },
+  { label: "Every 12 hours", value: "0 0 */12 * * *" },
   { label: "Every day at 2 AM", value: "0 0 2 * * *" },
+  { label: "Every day at 9 AM", value: "0 0 9 * * *" },
+  { label: "Weekdays at 9 AM", value: "0 0 9 * * MON-FRI" },
   { label: "Every Monday at 9 AM", value: "0 0 9 * * MON" },
   { label: "Every Friday at 5 PM", value: "0 0 17 * * FRI" },
-  { label: "Every 6 hours", value: "0 0 */6 * * *" },
   { label: "1st of every month", value: "0 0 0 1 * *" },
+  { label: "Custom", value: "custom" },
 ];
+
+/** Returns a human-readable description for a cron expression. */
+function describeCron(cron: string): string {
+  const preset = CRON_PRESETS.find((p) => p.value === cron);
+  if (preset && preset.value !== "custom") return preset.label;
+  // Attempt a rough description from common patterns
+  const parts = cron.trim().split(/\s+/);
+  if (parts.length < 6) return cron;
+  const [, min, hour, dom, , dow] = parts;
+  if (min.startsWith("*/")) return `Every ${min.slice(2)} minutes`;
+  if (hour.startsWith("*/")) return `Every ${hour.slice(2)} hours`;
+  if (dow !== "*" && dow !== "?") {
+    const dayName = dow;
+    return `${dayName} at ${hour}:${min.padStart(2, "0")}`;
+  }
+  if (dom !== "*" && dom !== "?") return `Day ${dom} of month at ${hour}:${min.padStart(2, "0")}`;
+  if (hour !== "*") return `Daily at ${hour}:${min.padStart(2, "0")}`;
+  return cron;
+}
 
 function CreateJobDialog() {
   const [open, setOpen] = useState(false);
@@ -94,6 +129,9 @@ function CreateJobDialog() {
   const [cronExpression, setCronExpression] = useState("0 0 2 * * MON");
   const [sourceBranch, setSourceBranch] = useState("main");
   const [targetBranch, setTargetBranch] = useState("main");
+  const [startAt, setStartAt] = useState("");
+  const [enabled, setEnabled] = useState(true);
+  const [selectedPreset, setSelectedPreset] = useState("0 0 2 * * *");
 
   const queryClient = useQueryClient();
 
@@ -127,6 +165,9 @@ function CreateJobDialog() {
     setCronExpression("0 0 2 * * MON");
     setSourceBranch("main");
     setTargetBranch("main");
+    setStartAt("");
+    setEnabled(true);
+    setSelectedPreset("0 0 2 * * *");
   }, []);
 
   const createMutation = useMutation({
@@ -157,6 +198,8 @@ function CreateJobDialog() {
         (formData.get("maxIterations") as string) || "10",
         10,
       ),
+      startAt: startAt || undefined,
+      enabled,
     });
   };
 
@@ -243,7 +286,15 @@ function CreateJobDialog() {
             {/* Cron Expression */}
             <div className="grid gap-2">
               <Label>Schedule (Cron Expression)</Label>
-              <Select value={cronExpression} onValueChange={setCronExpression}>
+              <Select
+                value={selectedPreset}
+                onValueChange={(v) => {
+                  setSelectedPreset(v);
+                  if (v !== "custom") {
+                    setCronExpression(v);
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -255,12 +306,63 @@ function CreateJobDialog() {
                   ))}
                 </SelectContent>
               </Select>
+              {selectedPreset === "custom" && (
+                <Input
+                  value={cronExpression}
+                  onChange={(e) => setCronExpression(e.target.value)}
+                  placeholder="0 0 2 * * MON"
+                  className="font-mono text-xs"
+                />
+              )}
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {describeCron(cronExpression)}
+              </p>
+            </div>
+
+            {/* Start Date */}
+            <div className="grid gap-2">
+              <Label htmlFor="startAt">
+                <span className="flex items-center gap-2">
+                  <CalendarClock className="h-4 w-4" />
+                  Start Date (optional)
+                </span>
+              </Label>
               <Input
-                value={cronExpression}
-                onChange={(e) => setCronExpression(e.target.value)}
-                placeholder="0 0 2 * * MON"
+                id="startAt"
+                type="datetime-local"
+                value={startAt}
+                onChange={(e) => setStartAt(e.target.value)}
                 className="font-mono text-xs"
               />
+              <p className="text-xs text-muted-foreground">
+                If set, the job won&apos;t execute until this date. Leave empty to start immediately.
+              </p>
+            </div>
+
+            {/* Enabled Toggle */}
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              <input
+                type="checkbox"
+                id="jobEnabled"
+                title="Enable job immediately"
+                checked={enabled}
+                onChange={(e) => setEnabled(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <div className="flex-1">
+                <Label htmlFor="jobEnabled" className="cursor-pointer">
+                  <span className="flex items-center gap-2">
+                    <Power className="h-4 w-4" />
+                    Enable Job
+                  </span>
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {enabled
+                    ? "Job will start running on schedule immediately after creation."
+                    : "Job will be created in disabled state. You can enable it later."}
+                </p>
+              </div>
             </div>
 
             {/* Workspace */}
@@ -405,8 +507,19 @@ function CreateJobDialog() {
   );
 }
 
+const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  COMPLETED: "default",
+  IN_PROGRESS: "secondary",
+  QUEUED: "secondary",
+  PENDING: "outline",
+  FAILED: "destructive",
+  CANCELLED: "outline",
+};
+
 function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const [historyOpen, setHistoryOpen] = useState(false);
   const cfg = JOB_TYPE_CONFIG[job.jobType] ?? JOB_TYPE_CONFIG.CUSTOM;
   const Icon = cfg.icon;
 
@@ -421,6 +534,22 @@ function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["scheduled-jobs"] }),
   });
+
+  const runNowMutation = useMutation({
+    mutationFn: () => runScheduledJobNow(job.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["scheduled-jobs"] });
+      toast.success(`Job "${job.name}" triggered successfully`);
+    },
+  });
+
+  const { data: history = [] } = useQuery<Task[]>({
+    queryKey: ["scheduled-job-history", job.id],
+    queryFn: () => getScheduledJobHistory(job.id),
+    enabled: historyOpen,
+  });
+
+  const recentHistory = history.slice(0, 3);
 
   return (
     <Card
@@ -467,6 +596,16 @@ function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
           </div>
         )}
 
+        {job.startAt && (
+          <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <CalendarClock className="h-3 w-3" />
+            Starts:{" "}
+            <span className="font-medium text-foreground">
+              {new Date(job.startAt).toLocaleString()}
+            </span>
+          </div>
+        )}
+
         {job.lastRunAt && (
           <div className="text-xs text-muted-foreground">
             Last run: {new Date(job.lastRunAt).toLocaleString()}
@@ -474,6 +613,19 @@ function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
         )}
 
         <div className="flex items-center gap-2 pt-2 border-t">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => runNowMutation.mutate()}
+            disabled={runNowMutation.isPending}
+          >
+            {runNowMutation.isPending ? (
+              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+            ) : (
+              <Play className="h-3 w-3 mr-1" />
+            )}
+            Run Now
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -496,6 +648,53 @@ function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
           >
             <Trash2 className="h-3 w-3" />
           </Button>
+        </div>
+
+        {/* Execution History */}
+        <div className="border-t pt-2">
+          <button
+            type="button"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors w-full"
+            onClick={() => setHistoryOpen((v) => !v)}
+          >
+            {historyOpen ? (
+              <ChevronDown className="h-3 w-3" />
+            ) : (
+              <ChevronRight className="h-3 w-3" />
+            )}
+            History
+          </button>
+          {historyOpen && (
+            <div className="mt-2 space-y-1.5">
+              {recentHistory.length === 0 ? (
+                <p className="text-xs text-muted-foreground pl-4">
+                  No executions yet
+                </p>
+              ) : (
+                recentHistory.map((task) => (
+                  <button
+                    key={task.id}
+                    type="button"
+                    className="flex items-center gap-2 w-full text-left rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors"
+                    onClick={() => router.push(`/tasks/${task.id}`)}
+                  >
+                    <span className="text-xs truncate flex-1 min-w-0">
+                      {task.title}
+                    </span>
+                    <Badge
+                      variant={STATUS_VARIANT[task.status] ?? "outline"}
+                      className="text-[10px] shrink-0"
+                    >
+                      {task.status}
+                    </Badge>
+                    <span className="text-[10px] text-muted-foreground shrink-0">
+                      {new Date(task.createdAt).toLocaleDateString()}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

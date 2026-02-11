@@ -77,6 +77,17 @@ public class MonitoringController {
     }
 
     /**
+     * Get a single session by its SDK session ID.
+     */
+    @GetMapping("/sessions/{sdkSessionId}/details")
+    public ResponseEntity<CopilotSession> getSessionDetails(
+            @PathVariable String sdkSessionId) {
+        return monitoringService.getSessionBySDKId(sdkSessionId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
      * Get operations for a specific session.
      */
     @GetMapping("/sessions/{sdkSessionId}/operations")

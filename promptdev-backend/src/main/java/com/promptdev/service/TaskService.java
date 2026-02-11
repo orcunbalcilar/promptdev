@@ -158,6 +158,28 @@ public class TaskService {
                 task.setCurrentAttempt(task.getCurrentAttempt() + 1);
             }
             case CODE_GENERATED -> task.setStatus(TaskStatus.CODE_GENERATED);
+            case REVIEWING_STARTED -> {
+                task.setStatus(TaskStatus.REVIEWING);
+                log.info("Task {} entering code review", task.getId());
+            }
+            case REVIEWING_COMPLETED -> {
+                // Review passed, continue to commit step
+                task.setStatus(TaskStatus.COMMITTING);
+                log.info("Task {} code review completed, proceeding to commit", task.getId());
+            }
+            case REVIEWING_FAILED -> {
+                task.setStatus(TaskStatus.FAILED);
+                task.setErrorMessage("Code review failed: " + callback.getMessage());
+                log.warn("Task {} code review failed: {}", task.getId(), callback.getMessage());
+            }
+            case TRIAGING_STARTED -> {
+                task.setStatus(TaskStatus.TRIAGING);
+                log.info("Task {} entering triage", task.getId());
+            }
+            case TRIAGING_COMPLETED -> {
+                task.setStatus(TaskStatus.IN_PROGRESS);
+                log.info("Task {} triage completed, moving to in-progress", task.getId());
+            }
             case GIT_COMMIT -> task.setStatus(TaskStatus.COMMITTING);
             case GIT_PUSH -> task.setStatus(TaskStatus.PUSHING);
             case PR_CREATED -> {
