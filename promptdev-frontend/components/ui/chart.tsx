@@ -84,28 +84,38 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-      itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
-  })
-  .join("\n")}
-}
-`
-          )
-          .join("\n"),
-      }}
-    />
-  )
+  // Validate color values to avoid CSS injection/XSS.
+  const isSafeColor = (c: unknown) => {
+    if (typeof c !== "string") return false
+    // allow hex, rgb/rgba, hsl/hsla, css variables, and named colors (simple check)
+    const hex = /^#([0-9a-f]{3,8})$/i
+    const rgb = /^rgba?\((?:\s*\d+\s*,){2,3}\s*(?:\d+|0|1|0?\.\d+)\s*\)$/i
+    const hsl = /^hsla?\(/i
+    const cssVar = /^var\(--[a-z0-9-_]+\)$/i
+    const named = /^[a-z-]+$/i
+    return hex.test(c as string) || rgb.test(c as string) || hsl.test(c as string) || cssVar.test(c as string) || named.test(c as string)
+  }
+
+  const cssString = Object.entries(THEMES)
+    .map(([theme, prefix]) => {
+      const body = colorConfig
+        .map(([key, itemConfig]) => {
+          const color =
+            (itemConfig.theme && (itemConfig.theme as Record<string, string>)[theme]) || itemConfig.color
+          if (!color || !isSafeColor(color)) return ""
+          return `  --color-${key}: ${color};`
+        })
+        .filter(Boolean)
+        .join("\n")
+
+      if (!body) return ""
+
+      return `${prefix} [data-chart=${id}] {\n${body}\n}`
+    })
+    .filter(Boolean)
+    .join("\n\n")
+
+  return <style>{cssString}</style>
 }
 
 const ChartTooltip = RechartsPrimitive.Tooltip
