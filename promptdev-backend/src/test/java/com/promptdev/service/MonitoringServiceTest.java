@@ -474,6 +474,35 @@ class MonitoringServiceTest {
             assertThat(dashboard.getTotalInputTokens()).isZero();
             assertThat(dashboard.getTotalOutputTokens()).isZero();
         }
+
+        @Test
+        @DisplayName("should handle null avgDurationMs in tool usage stats")
+        void shouldHandleNullAvgDuration() {
+            when(sessionRepository.count()).thenReturn(1L);
+            when(sessionRepository.countByStatus(any())).thenReturn(0L);
+            when(operationRepository.count()).thenReturn(5L);
+            when(sessionRepository.totalInputTokensSince(any())).thenReturn(0L);
+            when(sessionRepository.totalOutputTokensSince(any())).thenReturn(0L);
+            when(operationRepository.countByTypeSince(any())).thenReturn(List.of());
+            when(sessionRepository.countByModelSince(any())).thenReturn(List.of());
+            when(sessionRepository.countBySourceSince(any())).thenReturn(List.of());
+            when(operationRepository.toolUsageStatsSince(any())).thenReturn(
+                    List.<Object[]>of(
+                            new Object[]{"createFile", 10L, null},
+                            new Object[]{"readFile", 5L, 200.0}
+                    )
+            );
+            when(operationRepository.dailyOperationCounts(any())).thenReturn(List.of());
+            when(operationRepository.findErrors(any())).thenReturn(new PageImpl<>(List.of()));
+
+            MonitoringDashboardResponse dashboard = monitoringService.getDashboard(7);
+
+            assertThat(dashboard.getTopTools()).hasSize(2);
+            assertThat(dashboard.getTopTools().get(0).getToolName()).isEqualTo("createFile");
+            assertThat(dashboard.getTopTools().get(0).getAvgDurationMs()).isZero();
+            assertThat(dashboard.getTopTools().get(1).getToolName()).isEqualTo("readFile");
+            assertThat(dashboard.getTopTools().get(1).getAvgDurationMs()).isEqualTo(200.0);
+        }
     }
 
     @Nested

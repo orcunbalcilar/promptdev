@@ -179,7 +179,7 @@ public class MonitoringService {
                         .map(row -> MonitoringDashboardResponse.ToolUsageStat.builder()
                                 .toolName((String) row[0])
                                 .executionCount((Long) row[1])
-                                .avgDurationMs((Double) row[2])
+                                .avgDurationMs(row[2] != null ? ((Number) row[2]).doubleValue() : 0.0)
                                 .build())
                         .toList();
 

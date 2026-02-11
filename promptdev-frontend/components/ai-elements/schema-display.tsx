@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { ChevronRightIcon } from "lucide-react";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -64,38 +64,54 @@ export const SchemaDisplay = ({
   className,
   children,
   ...props
-}: SchemaDisplayProps) => (
-  <SchemaDisplayContext.Provider
-    value={{ description, method, parameters, path, requestBody, responseBody }}
-  >
-    <div
-      className={cn(
-        "overflow-hidden rounded-lg border bg-background",
-        className
-      )}
-      {...props}
-    >
-      {children ?? (
-        <>
-          <SchemaDisplayHeader>
-            <div className="flex items-center gap-3">
-              <SchemaDisplayMethod />
-              <SchemaDisplayPath />
-            </div>
-          </SchemaDisplayHeader>
-          {description && <SchemaDisplayDescription />}
-          <SchemaDisplayContent>
-            {parameters && parameters.length > 0 && <SchemaDisplayParameters />}
-            {requestBody && requestBody.length > 0 && <SchemaDisplayRequest />}
-            {responseBody && responseBody.length > 0 && (
-              <SchemaDisplayResponse />
-            )}
-          </SchemaDisplayContent>
-        </>
-      )}
-    </div>
-  </SchemaDisplayContext.Provider>
-);
+}: SchemaDisplayProps) => {
+  const contextValue = useMemo(
+    () => ({
+      description,
+      method,
+      parameters,
+      path,
+      requestBody,
+      responseBody,
+    }),
+    [description, method, parameters, path, requestBody, responseBody]
+  );
+
+  return (
+    <SchemaDisplayContext.Provider value={contextValue}>
+      <div
+        className={cn(
+          "overflow-hidden rounded-lg border bg-background",
+          className
+        )}
+        {...props}
+      >
+        {children ?? (
+          <>
+            <SchemaDisplayHeader>
+              <div className="flex items-center gap-3">
+                <SchemaDisplayMethod />
+                <SchemaDisplayPath />
+              </div>
+            </SchemaDisplayHeader>
+            {description && <SchemaDisplayDescription />}
+            <SchemaDisplayContent>
+              {parameters && parameters.length > 0 && (
+                <SchemaDisplayParameters />
+              )}
+              {requestBody && requestBody.length > 0 && (
+                <SchemaDisplayRequest />
+              )}
+              {responseBody && responseBody.length > 0 && (
+                <SchemaDisplayResponse />
+              )}
+            </SchemaDisplayContent>
+          </>
+        )}
+      </div>
+    </SchemaDisplayContext.Provider>
+  );
+};
 
 export type SchemaDisplayHeaderProps = HTMLAttributes<HTMLDivElement>;
 
@@ -156,20 +172,12 @@ export const SchemaDisplayPath = ({
     '<span class="text-blue-600 dark:text-blue-400">{$1}</span>'
   );
 
-  if (children) {
-    return (
-      <span className={cn("font-mono text-sm", className)} {...props}>
-        {children}
-      </span>
-    );
-  }
-
   return (
     <span
       className={cn("font-mono text-sm", className)}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: "needed for parameter highlighting"
       // oxlint-disable-next-line eslint-plugin-react(no-danger)
-      dangerouslySetInnerHTML={{ __html: highlightedPath }}
+      dangerouslySetInnerHTML={{ __html: children ?? highlightedPath }}
       {...props}
     />
   );

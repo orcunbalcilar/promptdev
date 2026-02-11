@@ -1,5 +1,6 @@
 package com.promptdev.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -41,6 +42,7 @@ public class CopilotSession {
     /** Optional task association */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id")
+    @JsonIgnore
     private Task task;
 
     @Enumerated(EnumType.STRING)
@@ -81,6 +83,7 @@ public class CopilotSession {
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("timestamp ASC")
     @Builder.Default
+    @JsonIgnore
     private List<CopilotOperation> operations = new ArrayList<>();
 
     @CreationTimestamp
