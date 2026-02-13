@@ -104,6 +104,11 @@ public class ScheduledJobService {
         log.info("Scheduled job deleted: {}", jobId);
     }
 
+    @Transactional(readOnly = true)
+    public List<TaskResponse> getJobHistory(UUID jobId) {
+        return taskService.getTasksByScheduledJobId(jobId);
+    }
+
     /**
      * Execute due scheduled jobs. Called by the scheduler.
      */

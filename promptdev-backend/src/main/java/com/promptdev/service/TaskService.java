@@ -111,6 +111,14 @@ public class TaskService {
         return taskMapper.toEventResponses(events);
     }
 
+    @Transactional(readOnly = true)
+    public List<TaskResponse> getTasksByScheduledJobId(UUID scheduledJobId) {
+        return taskRepository.findByScheduledJobIdOrderByCreatedAtDesc(scheduledJobId)
+                .stream()
+                .map(taskMapper::toResponseWithoutEvents)
+                .toList();
+    }
+
     @Transactional
     public TaskResponse processAgentCallback(AgentCallbackRequest callback) {
         log.info("Processing callback for task {}: {}", callback.getTaskId(), callback.getEventType());
