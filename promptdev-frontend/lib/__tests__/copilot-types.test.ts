@@ -9,6 +9,7 @@ describe('CopilotEventType', () => {
     'assistant.reasoning',
     'assistant.reasoning_delta',
     'assistant.turn_start',
+    'assistant.turn_end',
     'assistant.intent',
     'assistant.usage',
     'tool.execution_start',
@@ -85,6 +86,20 @@ describe('TypedCopilotEvent', () => {
       data: {},
     }
     expect(event.type).toBe('assistant.turn_start')
+  })
+
+  it('should accept assistant turn end event', () => {
+    const event: TypedCopilotEvent = {
+      id: '2b',
+      type: 'assistant.turn_end',
+      timestamp: new Date().toISOString(),
+      sessionId: 'session-1',
+      data: {
+        turnId: 'turn-1',
+      },
+    }
+    expect(event.type).toBe('assistant.turn_end')
+    expect((event.data as { turnId: string }).turnId).toBe('turn-1')
   })
 
   it('should accept tool execution complete event', () => {

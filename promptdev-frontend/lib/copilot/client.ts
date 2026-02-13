@@ -249,6 +249,7 @@ const KNOWN_EVENT_TYPES = new Set<CopilotEventType>([
   "assistant.reasoning",
   "assistant.reasoning_delta",
   "assistant.turn_start",
+  "assistant.turn_end",
   "assistant.intent",
   "assistant.usage",
   "tool.execution_start",

@@ -10,6 +10,7 @@ export type CopilotEventType =
   | 'assistant.reasoning'
   | 'assistant.reasoning_delta'
   | 'assistant.turn_start'
+  | 'assistant.turn_end'
   | 'assistant.intent'
   | 'assistant.usage'
   | 'tool.execution_start'
@@ -152,6 +153,15 @@ export interface AssistantTurnStartEvent extends CopilotEvent {
   data: Record<string, unknown>
 }
 
+// Assistant turn end event
+export interface AssistantTurnEndEvent extends CopilotEvent {
+  type: 'assistant.turn_end'
+  data: {
+    turnId: string
+    [key: string]: unknown
+  }
+}
+
 // Assistant intent event
 export interface AssistantIntentEvent extends CopilotEvent {
   type: 'assistant.intent'
@@ -202,6 +212,7 @@ export type TypedCopilotEvent =
   | AssistantReasoningEvent
   | AssistantReasoningDeltaEvent
   | AssistantTurnStartEvent
+  | AssistantTurnEndEvent
   | AssistantIntentEvent
   | AssistantUsageEvent
   | ToolExecutionStartEvent
