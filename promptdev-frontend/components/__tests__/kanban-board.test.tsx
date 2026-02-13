@@ -40,14 +40,14 @@ beforeEach(() => {
 })
 
 describe('KanbanBoard', () => {
-  it('renders 5 kanban columns: Pending, In Progress, Review, Completed, Failed', () => {
+  it('renders 5 kanban columns: Pending, In Progress, Review, Completed, Stopped', () => {
     renderWithProviders(<KanbanBoard tasks={[]} />)
 
     expect(screen.getByRole('heading', { name: 'Pending' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'In Progress' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Review' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Completed' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Failed' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Stopped' })).toBeInTheDocument()
   })
 
   it('places PENDING tasks in the Pending column', () => {
@@ -113,20 +113,20 @@ describe('KanbanBoard', () => {
     expect(column).toHaveTextContent('Done Task')
   })
 
-  it('places FAILED tasks in the Failed column', () => {
+  it('places FAILED tasks in the Stopped column', () => {
     const task = createTask({ title: 'Failed Task', status: 'FAILED' })
     renderWithProviders(<KanbanBoard tasks={[task]} />)
 
-    const heading = screen.getByRole('heading', { name: 'Failed' })
+    const heading = screen.getByRole('heading', { name: 'Stopped' })
     const column = heading.closest('.flex.flex-col')!
     expect(column).toHaveTextContent('Failed Task')
   })
 
-  it('places CANCELLED tasks in the Failed column', () => {
+  it('places CANCELLED tasks in the Stopped column', () => {
     const task = createTask({ title: 'Cancelled Task', status: 'CANCELLED' })
     renderWithProviders(<KanbanBoard tasks={[task]} />)
 
-    const heading = screen.getByRole('heading', { name: 'Failed' })
+    const heading = screen.getByRole('heading', { name: 'Stopped' })
     const column = heading.closest('.flex.flex-col')!
     expect(column).toHaveTextContent('Cancelled Task')
   })
@@ -158,9 +158,9 @@ describe('KanbanBoard', () => {
     const completedColumn = screen.getByRole('heading', { name: 'Completed' }).closest('.flex.flex-col')!
     expect(completedColumn.querySelector('.text-xs')).toHaveTextContent('2')
 
-    // Failed column: 1 task
-    const failedColumn = screen.getByRole('heading', { name: 'Failed' }).closest('.flex.flex-col')!
-    expect(failedColumn.querySelector('.text-xs')).toHaveTextContent('1')
+    // Stopped column: 1 task
+    const stoppedColumn = screen.getByRole('heading', { name: 'Stopped' }).closest('.flex.flex-col')!
+    expect(stoppedColumn.querySelector('.text-xs')).toHaveTextContent('1')
   })
 
   it('calls onTaskClick when a task card is clicked', async () => {

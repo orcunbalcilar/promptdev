@@ -88,8 +88,10 @@ function getProgressWidth(current: number, max: number): string {
 const statusColors: Record<string, string> = {
   PENDING: 'text-yellow-500 bg-yellow-500/10 border-yellow-200',
   QUEUED: 'text-blue-500 bg-blue-500/10 border-blue-200',
+  TRIAGING: 'text-orange-600 bg-orange-600/10 border-orange-200',
   IN_PROGRESS: 'text-blue-600 bg-blue-600/10 border-blue-200',
   CODE_GENERATED: 'text-purple-600 bg-purple-600/10 border-purple-200',
+  REVIEWING: 'text-teal-600 bg-teal-600/10 border-teal-200',
   COMMITTING: 'text-indigo-600 bg-indigo-600/10 border-indigo-200',
   PUSHING: 'text-indigo-600 bg-indigo-600/10 border-indigo-200',
   CREATING_PR: 'text-cyan-600 bg-cyan-600/10 border-cyan-200',
@@ -117,6 +119,37 @@ function formatTokenCount(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
   if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
   return String(n)
+}
+
+function TaskHeaderActions({ task, showResumeForm, setShowResumeForm, onRetry, onCancel }: Readonly<{
+  task: { id: string; status: string; resumeCount?: number | null }
+  showResumeForm: boolean
+  setShowResumeForm: (v: boolean) => void
+  onRetry: () => void
+  onCancel: () => void
+}>) {
+  return (
+    <div className="flex items-center gap-2">
+      {(task.status === 'COMPLETED' || task.status === 'FAILED') && (
+        <Button variant="outline" size="sm" onClick={() => setShowResumeForm(!showResumeForm)}>
+          <RotateCcw className="h-4 w-4 mr-2" />
+          {task.status === 'COMPLETED' ? 'Continue' : 'Resume'}{task.resumeCount ? ` (${task.resumeCount})` : ''}
+        </Button>
+      )}
+      {(task.status === 'FAILED' || task.status === 'CANCELLED') && (
+        <Button variant="outline" size="sm" onClick={onRetry}>
+          <Play className="h-4 w-4 mr-2" />
+          Retry
+        </Button>
+      )}
+      {['PENDING', 'QUEUED', 'IN_PROGRESS', 'TRIAGING', 'REVIEWING', 'VALIDATING', 'ITERATION_PENDING', 'CODE_GENERATED', 'COMMITTING', 'PUSHING', 'CREATING_PR'].includes(task.status) && (
+        <Button variant="destructive" size="sm" onClick={onCancel}>
+          <Ban className="h-4 w-4 mr-2" />
+          Cancel
+        </Button>
+      )}
+    </div>
+  )
 }
 
 function SessionMetricsCard({ session }: Readonly<{ session: MonitoringSession }>) {
@@ -312,26 +345,13 @@ export default function TaskDetailPage() {
                 </Badge>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {(task.status === 'COMPLETED' || task.status === 'FAILED') && (
-                <Button variant="outline" size="sm" onClick={() => setShowResumeForm(!showResumeForm)}>
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Resume{task.resumeCount ? ` (${task.resumeCount})` : ''}
-                </Button>
-              )}
-              {(task.status === 'FAILED' || task.status === 'CANCELLED') && (
-                <Button variant="outline" size="sm" onClick={handleRetry}>
-                  <Play className="h-4 w-4 mr-2" />
-                  Retry
-                </Button>
-              )}
-              {['PENDING', 'QUEUED', 'IN_PROGRESS'].includes(task.status) && (
-                <Button variant="destructive" size="sm" onClick={handleCancel}>
-                  <Ban className="h-4 w-4 mr-2" />
-                  Cancel
-                </Button>
-              )}
-            </div>
+            <TaskHeaderActions
+              task={task}
+              showResumeForm={showResumeForm}
+              setShowResumeForm={setShowResumeForm}
+              onRetry={handleRetry}
+              onCancel={handleCancel}
+            />
           </div>
         </div>
       </header>

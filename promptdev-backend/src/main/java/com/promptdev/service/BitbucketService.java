@@ -130,14 +130,20 @@ public class BitbucketService {
      */
     public List<BranchResponse> listBranches(String projectKey, String repoSlug, String filterText) {
         log.info("Listing branches in {}/{}", projectKey, repoSlug);
-        String uri = filterText != null && !filterText.isBlank()
+        boolean hasFilter = filterText != null && !filterText.isBlank();
+        String uri = hasFilter
                 ? "/projects/{projectKey}/repos/{repoSlug}/branches?filterText={filter}&limit=100"
                 : "/projects/{projectKey}/repos/{repoSlug}/branches?limit=100";
 
-        PagedResponse<BranchResponse> response = bitbucketRestClient.get()
-                .uri(uri, projectKey, repoSlug, filterText)
-                .retrieve()
-                .body(new ParameterizedTypeReference<>() {});
+        PagedResponse<BranchResponse> response = hasFilter
+                ? bitbucketRestClient.get()
+                        .uri(uri, projectKey, repoSlug, filterText)
+                        .retrieve()
+                        .body(new ParameterizedTypeReference<>() {})
+                : bitbucketRestClient.get()
+                        .uri(uri, projectKey, repoSlug)
+                        .retrieve()
+                        .body(new ParameterizedTypeReference<>() {});
         return response != null ? response.values() : Collections.emptyList();
     }
 

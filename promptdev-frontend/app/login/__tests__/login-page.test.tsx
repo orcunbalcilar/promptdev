@@ -1,21 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 // Mock next-auth/react
 const mockSignIn = vi.fn()
+const mockUseSession = vi.fn()
 vi.mock('next-auth/react', () => ({
   signIn: (...args: unknown[]) => mockSignIn(...args),
+  useSession: () => mockUseSession(),
 }))
 
-// Mock next/navigation
+// Mock next/navigation — use mutable var so tests can change search params without vi.resetModules()
+const mockReplace = vi.fn()
+let searchParamsString = ''
 vi.mock('next/navigation', () => ({
-  useSearchParams: () => new URLSearchParams(),
-  useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(searchParamsString),
+  useRouter: () => ({ push: vi.fn(), replace: mockReplace }),
 }))
 
 beforeEach(() => {
   vi.clearAllMocks()
+  searchParamsString = ''
+  // Default: unauthenticated session
+  mockUseSession.mockReturnValue({ data: null, status: 'unauthenticated' })
 })
 
 // Dynamic import after mocks
@@ -74,23 +81,9 @@ describe('LoginPage', () => {
   })
 
   it('should display error message for OAuthAccountNotLinked', async () => {
-    vi.mocked(await import('next/navigation')).useSearchParams = () =>
-      new URLSearchParams('error=OAuthAccountNotLinked') as ReturnType<typeof URLSearchParams.prototype.entries> & URLSearchParams
+    searchParamsString = 'error=OAuthAccountNotLinked'
 
-    // Re-mock with error params
-    vi.doMock('next/navigation', () => ({
-      useSearchParams: () => new URLSearchParams('error=OAuthAccountNotLinked'),
-      useRouter: () => ({ push: vi.fn() }),
-    }))
-
-    // Clear module cache so it picks up new mock
-    vi.resetModules()
-    vi.mock('next-auth/react', () => ({
-      signIn: (...args: unknown[]) => mockSignIn(...args),
-    }))
-
-    const mod = await import('@/app/login/page')
-    const LoginPage = mod.default
+    const LoginPage = await getLoginPage()
     render(<LoginPage />)
 
     expect(screen.getByText(/already associated with another provider/i)).toBeInTheDocument()
@@ -101,5 +94,46 @@ describe('LoginPage', () => {
     render(<LoginPage />)
 
     expect(screen.getByText(/by signing in/i)).toBeInTheDocument()
+  })
+
+  it('should render sign in title as an h1 heading', async () => {
+    const LoginPage = await getLoginPage()
+    render(<LoginPage />)
+
+    expect(screen.getByRole('heading', { level: 1, name: /sign in to promptdev/i })).toBeInTheDocument()
+  })
+
+  it('should render content inside a main landmark', async () => {
+    const LoginPage = await getLoginPage()
+    render(<LoginPage />)
+
+    expect(screen.getByRole('main')).toBeInTheDocument()
+  })
+
+  it('should redirect authenticated users to home', async () => {
+    mockUseSession.mockReturnValue({
+      data: { user: { name: 'Test' } },
+      status: 'authenticated',
+    })
+
+    const LoginPage = await getLoginPage()
+    render(<LoginPage />)
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith('/')
+    })
+  })
+
+  it('should show loading spinner while session is loading', async () => {
+    mockUseSession.mockReturnValue({
+      data: null,
+      status: 'loading',
+    })
+
+    const LoginPage = await getLoginPage()
+    render(<LoginPage />)
+
+    // Should not show sign-in buttons when loading
+    expect(screen.queryByRole('button', { name: /continue with github/i })).not.toBeInTheDocument()
   })
 })

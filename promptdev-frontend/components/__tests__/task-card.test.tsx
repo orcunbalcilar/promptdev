@@ -173,12 +173,12 @@ describe('TaskCard', () => {
     expect(screen.queryByTitle('Open Pull Request')).not.toBeInTheDocument()
   })
 
-  it('shows shortened model badge when modelId is set', () => {
+  it('shows full model name badge when modelId is set', () => {
     const task = createTask({ modelId: 'anthropic/claude-sonnet-4' })
     renderWithProviders(<TaskCard task={task} />)
 
-    // The component splits by '/' takes last part, then splits by '-' and takes first 2 segments
-    expect(screen.getByText('claude-sonnet')).toBeInTheDocument()
+    // The component splits by '/' and takes the last segment
+    expect(screen.getByText('claude-sonnet-4')).toBeInTheDocument()
   })
 
   it('shows error preview when task status is FAILED and errorMessage is set', () => {
@@ -217,5 +217,35 @@ describe('TaskCard', () => {
     renderWithProviders(<TaskCard task={task} />)
 
     expect(screen.getByTitle('Running')).toBeInTheDocument()
+  })
+
+  it('shows duration for CANCELLED tasks using updatedAt as fallback', () => {
+    const createdAt = '2026-02-10T12:00:00Z'
+    const updatedAt = '2026-02-10T12:03:15Z' // 3 minutes 15 seconds later
+    const task = createTask({ status: 'CANCELLED', createdAt, updatedAt, completedAt: undefined })
+    renderWithProviders(<TaskCard task={task} />)
+
+    const durationEl = screen.getByTitle('Duration')
+    expect(durationEl).toBeInTheDocument()
+    expect(durationEl).toHaveTextContent('3m 15s')
+  })
+
+  it('shows duration for FAILED tasks using updatedAt as fallback', () => {
+    const createdAt = '2026-02-10T12:00:00Z'
+    const updatedAt = '2026-02-10T12:01:45Z' // 1 minute 45 seconds later
+    const task = createTask({ status: 'FAILED', createdAt, updatedAt, completedAt: undefined })
+    renderWithProviders(<TaskCard task={task} />)
+
+    const durationEl = screen.getByTitle('Duration')
+    expect(durationEl).toBeInTheDocument()
+    expect(durationEl).toHaveTextContent('1m 45s')
+  })
+
+  it('displays model badge without vendor prefix', () => {
+    const task = createTask({ modelId: 'openai/gpt-5-mini' })
+    renderWithProviders(<TaskCard task={task} />)
+
+    // Should show 'gpt-5-mini' (after splitting by '/' and taking last segment)
+    expect(screen.getByText('gpt-5-mini')).toBeInTheDocument()
   })
 })

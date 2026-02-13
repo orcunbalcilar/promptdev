@@ -9,10 +9,10 @@ globalThis.ResizeObserver ??= class ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
-} as any
+} as unknown as typeof globalThis.ResizeObserver
 
 // jsdom doesn't implement scrollIntoView
-Element.prototype.scrollIntoView ??= function () {} as any
+Element.prototype.scrollIntoView ??= function () {} as typeof Element.prototype.scrollIntoView
 
 // ============================================================================
 // Mocks

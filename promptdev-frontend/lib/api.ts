@@ -252,10 +252,10 @@ async function apiFetch<T>(
     );
   }
 
-  // Handle empty responses
+  // Handle empty responses (e.g. 204 No Content)
   const text = await response.text();
   if (!text) {
-    return {} as T;
+    return undefined as T;
   }
 
   return JSON.parse(text) as T;

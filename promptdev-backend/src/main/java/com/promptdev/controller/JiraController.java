@@ -54,6 +54,9 @@ public class JiraController {
             @PathVariable String issueKey,
             @RequestBody Map<String, String> body) {
         String transitionId = body.get("transitionId");
+        if (transitionId == null || transitionId.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
         log.info("Transitioning issue {} with transition {}", issueKey, transitionId);
         jiraService.transitionIssue(issueKey, transitionId);
         return ResponseEntity.noContent().build();
@@ -64,6 +67,9 @@ public class JiraController {
             @PathVariable String issueKey,
             @RequestBody Map<String, String> body) {
         String comment = body.get("comment");
+        if (comment == null || comment.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
         log.info("Adding comment to issue: {}", issueKey);
         jiraService.addComment(issueKey, comment);
         return ResponseEntity.noContent().build();
@@ -74,6 +80,9 @@ public class JiraController {
             @PathVariable String issueKey,
             @RequestBody Map<String, String> body) {
         String username = body.get("username");
+        if (username == null || username.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
         log.info("Assigning issue {} to user {}", issueKey, username);
         jiraService.assignIssue(issueKey, username);
         return ResponseEntity.noContent().build();

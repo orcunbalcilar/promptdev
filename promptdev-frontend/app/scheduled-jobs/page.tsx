@@ -70,7 +70,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 const JOB_TYPE_CONFIG: Record<
@@ -133,7 +133,7 @@ function CreateJobDialog() {
   const [localPath, setLocalPath] = useState("");
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL_ID);
   const [jobType, setJobType] = useState<ScheduledJobType>("MAINTENANCE");
-  const [cronExpression, setCronExpression] = useState("0 0 2 * * MON");
+  const [cronExpression, setCronExpression] = useState("0 0 2 * * *");
   const [sourceBranch, setSourceBranch] = useState("main");
   const [targetBranch, setTargetBranch] = useState("main");
   const [startAt, setStartAt] = useState("");
@@ -154,14 +154,16 @@ function CreateJobDialog() {
     enabled: open && workspaceType === "BITBUCKET" && selectedRepo.length > 0,
   });
 
-  useEffect(() => {
-    if (branches.length > 0) {
-      const def = branches.find((b) => b.isDefault);
-      const id = def?.displayId ?? branches[0]?.displayId ?? "main";
-      setSourceBranch(id);
-      setTargetBranch(id);
-    }
-  }, [branches]);
+  // Derive default branch from query result and sync to local state during render
+  // (React pattern: "adjusting state based on props" — https://react.dev/learn/you-might-not-need-an-effect)
+  const defaultBranchId = branches.length > 0
+    ? (branches.find((b) => b.isDefault)?.displayId ?? branches[0]?.displayId ?? "main")
+    : null;
+
+  if (defaultBranchId && sourceBranch === "main" && defaultBranchId !== "main") {
+    setSourceBranch(defaultBranchId);
+    setTargetBranch(defaultBranchId);
+  }
 
   const resetForm = useCallback(() => {
     setWorkspaceType("BITBUCKET");
@@ -169,7 +171,7 @@ function CreateJobDialog() {
     setLocalPath("");
     setSelectedModel(DEFAULT_MODEL_ID);
     setJobType("MAINTENANCE");
-    setCronExpression("0 0 2 * * MON");
+    setCronExpression("0 0 2 * * *");
     setSourceBranch("main");
     setTargetBranch("main");
     setStartAt("");
@@ -593,14 +595,20 @@ function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
 
   const toggleMutation = useMutation({
     mutationFn: () => toggleScheduledJob(job.id),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["scheduled-jobs"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["scheduled-jobs"] });
+      toast.success(`Job "${job.name}" ${job.enabled ? 'disabled' : 'enabled'} successfully`);
+    },
+    onError: () => toast.error(`Failed to toggle job "${job.name}"`),
   });
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteScheduledJob(job.id),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["scheduled-jobs"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["scheduled-jobs"] });
+      toast.success(`Job "${job.name}" deleted`);
+    },
+    onError: () => toast.error(`Failed to delete job "${job.name}"`),
   });
 
   const runNowMutation = useMutation({
@@ -609,6 +617,7 @@ function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
       queryClient.invalidateQueries({ queryKey: ["scheduled-jobs"] });
       toast.success(`Job "${job.name}" triggered successfully`);
     },
+    onError: () => toast.error(`Failed to trigger job "${job.name}"`),
   });
 
   const { data: history = [] } = useQuery<Task[]>({

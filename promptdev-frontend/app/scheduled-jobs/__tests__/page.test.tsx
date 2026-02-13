@@ -217,4 +217,36 @@ describe('ScheduledJobsPage', () => {
       expect(mockToggleScheduledJob).toHaveBeenCalledWith('job-1')
     })
   })
+
+  it('should show Run Now buttons for each job', async () => {
+    renderWithProviders(<ScheduledJobsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Weekly Code Review')).toBeInTheDocument()
+    })
+
+    const runNowButtons = screen.getAllByText('Run Now')
+    expect(runNowButtons.length).toBeGreaterThanOrEqual(1)
+
+    // Delete buttons are icon-only with destructive class
+    const allButtons = screen.getAllByRole('button')
+    const destructiveButtons = allButtons.filter(b => b.classList.contains('text-destructive'))
+    expect(destructiveButtons.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('should show correct default cron description when creating job', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<ScheduledJobsPage />)
+
+    await user.click(screen.getByRole('button', { name: /new scheduled job/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Create Scheduled Job')).toBeInTheDocument()
+    })
+
+    // Default preset is "Every day at 2 AM" (cron "0 0 2 * * *")
+    // Text may appear in select value, option, and description
+    const matches = screen.getAllByText(/every day at 2 am/i)
+    expect(matches.length).toBeGreaterThanOrEqual(1)
+  })
 })

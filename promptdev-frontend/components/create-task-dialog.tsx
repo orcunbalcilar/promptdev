@@ -838,7 +838,7 @@ export function CreateTaskDialog() {
                 createMutation.isPending ||
                 (workspaceType === "BITBUCKET" && !selectedRepo) ||
                 (workspaceType === "LOCAL" && !newProjectName && !localPath) ||
-                (workspaceType === "LOCAL" && !!newProjectName && (!newProjectName || !newProjectDir))
+                (workspaceType === "LOCAL" && !!newProjectName && !newProjectDir)
               }
             >
               {createMutation.isPending ? "Creating..." : "Create Task"}

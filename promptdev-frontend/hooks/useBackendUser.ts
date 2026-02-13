@@ -29,10 +29,14 @@ export function useBackendUser() {
         user?: typeof session.user & { provider?: string } 
       };
       const provider = sessionWithProvider.user?.provider || "github"; // fallback to github
-      const providerAccountId = session.user.id!; // OAuth provider ID
-      const email = session.user.email!;
+      const providerAccountId = session.user.id ?? "";
+      const email = session.user.email ?? "";
       const name = session.user.name || undefined;
       const avatarUrl = session.user.image || undefined;
+
+      if (!providerAccountId || !email) {
+        throw new Error("Session missing required user fields (id, email)");
+      }
 
       // Sync with backend - this will create user if not exists
       const profile = await syncUser({

@@ -7,10 +7,10 @@ import type { ReviewResult } from '@/components/review-results'
 // ============================================================================
 
 vi.mock('@/components/ai-elements/code-block', () => ({
-  CodeBlockContainer: ({ children }: any) => <div data-testid="code-block">{children}</div>,
-  CodeBlockHeader: ({ children }: any) => <div>{children}</div>,
-  CodeBlockTitle: ({ children }: any) => <div>{children}</div>,
-  CodeBlockContent: ({ code }: any) => <pre>{code}</pre>,
+  CodeBlockContainer: ({ children }: Readonly<{ children: React.ReactNode }>) => <div data-testid="code-block">{children}</div>,
+  CodeBlockHeader: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
+  CodeBlockTitle: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
+  CodeBlockContent: ({ code }: Readonly<{ code: string }>) => <pre>{code}</pre>,
 }))
 
 // ============================================================================

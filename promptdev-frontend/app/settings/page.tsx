@@ -40,7 +40,8 @@ import {
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 function SaveButtonIcon({ isPending, isSuccess }: Readonly<{ isPending: boolean; isSuccess: boolean }>) {
   if (isPending) return <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -99,17 +100,19 @@ export default function SettingsPage() {
 
   // Populate form when profile loads
   const [initialized, setInitialized] = useState(false);
-  if (profile && !initialized) {
-    setBitbucketUrl(profile.bitbucketUrl ?? "");
-    setBitbucketProjectKey(profile.bitbucketProjectKey ?? "");
-    setBitbucketUsername(profile.bitbucketUsername ?? "");
-    setByokProviderType(profile.byokProviderType ?? "");
-    setByokBaseUrl(profile.byokBaseUrl ?? "");
-    setJiraUrl(profile.jiraUrl ?? "");
-    setJiraProjectKey(profile.jiraProjectKey ?? "");
-    setJiraUsername(profile.jiraUsername ?? "");
-    setInitialized(true);
-  }
+  useEffect(() => {
+    if (profile && !initialized) {
+      setBitbucketUrl(profile.bitbucketUrl ?? "");
+      setBitbucketProjectKey(profile.bitbucketProjectKey ?? "");
+      setBitbucketUsername(profile.bitbucketUsername ?? "");
+      setByokProviderType(profile.byokProviderType ?? "");
+      setByokBaseUrl(profile.byokBaseUrl ?? "");
+      setJiraUrl(profile.jiraUrl ?? "");
+      setJiraProjectKey(profile.jiraProjectKey ?? "");
+      setJiraUsername(profile.jiraUsername ?? "");
+      setInitialized(true);
+    }
+  }, [profile, initialized]);
 
   // --- Save mutations ---
   const saveBitbucket = useMutation({
@@ -123,7 +126,9 @@ export default function SettingsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
       setBitbucketToken("");
+      toast.success("Bitbucket settings saved");
     },
+    onError: () => toast.error("Failed to save Bitbucket settings"),
   });
 
   const saveCopilotToken = useMutation({
@@ -134,7 +139,9 @@ export default function SettingsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
       setCopilotToken("");
+      toast.success("Copilot token saved");
     },
+    onError: () => toast.error("Failed to save Copilot token"),
   });
 
   const saveByokProvider = useMutation({
@@ -148,7 +155,9 @@ export default function SettingsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
       setByokApiKey("");
+      toast.success("Provider settings saved");
     },
+    onError: () => toast.error("Failed to save provider settings"),
   });
 
   const saveJira = useMutation({
@@ -162,7 +171,9 @@ export default function SettingsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
       setJiraToken("");
+      toast.success("Jira settings saved");
     },
+    onError: () => toast.error("Failed to save Jira settings"),
   });
 
   if (isLoading || isLoadingBackendUser) {
@@ -349,7 +360,7 @@ export default function SettingsPage() {
             <div className="flex justify-end">
               <Button
                 onClick={() => saveBitbucket.mutate()}
-                disabled={saveBitbucket.isPending}
+                disabled={saveBitbucket.isPending || !userId}
               >
                 <SaveButtonIcon isPending={saveBitbucket.isPending} isSuccess={saveBitbucket.isSuccess} />
                 Save Bitbucket Settings
@@ -423,7 +434,7 @@ export default function SettingsPage() {
             <div className="flex justify-end">
               <Button
                 onClick={() => saveCopilotToken.mutate()}
-                disabled={saveCopilotToken.isPending}
+                disabled={saveCopilotToken.isPending || !userId}
               >
                 <SaveButtonIcon isPending={saveCopilotToken.isPending} isSuccess={saveCopilotToken.isSuccess} />
                 Save Copilot Token
@@ -531,17 +542,9 @@ export default function SettingsPage() {
             <div className="flex justify-end">
               <Button
                 onClick={() => saveByokProvider.mutate()}
-                disabled={saveByokProvider.isPending}
+                disabled={saveByokProvider.isPending || !userId}
               >
-                {saveByokProvider.isPending && (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                )}
-                {saveByokProvider.isSuccess && (
-                  <Check className="h-4 w-4 mr-2" />
-                )}
-                {!saveByokProvider.isPending && !saveByokProvider.isSuccess && (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
+                <SaveButtonIcon isPending={saveByokProvider.isPending} isSuccess={saveByokProvider.isSuccess} />
                 Save Provider Settings
               </Button>
             </div>
@@ -653,17 +656,9 @@ export default function SettingsPage() {
             <div className="flex justify-end">
               <Button
                 onClick={() => saveJira.mutate()}
-                disabled={saveJira.isPending}
+                disabled={saveJira.isPending || !userId}
               >
-                {saveJira.isPending && (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                )}
-                {saveJira.isSuccess && (
-                  <Check className="h-4 w-4 mr-2" />
-                )}
-                {!saveJira.isPending && !saveJira.isSuccess && (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
+                <SaveButtonIcon isPending={saveJira.isPending} isSuccess={saveJira.isSuccess} />
                 Save Jira Settings
               </Button>
             </div>

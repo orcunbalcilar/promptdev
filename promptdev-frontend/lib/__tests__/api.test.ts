@@ -457,12 +457,12 @@ describe('API Client', () => {
   // ===========================================================================
 
   describe('empty response handling', () => {
-    it('should return empty object for empty response body', async () => {
+    it('should return undefined for empty response body', async () => {
       mockFetch.mockResolvedValue(emptyResponse())
 
       const result = await deleteScheduledJob('job-1')
 
-      expect(result).toEqual({})
+      expect(result).toBeUndefined()
     })
   })
 })

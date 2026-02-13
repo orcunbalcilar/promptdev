@@ -23,9 +23,13 @@ const createWrapper = () => {
     },
   });
 
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+  function TestQueryProvider({ children }: Readonly<{ children: ReactNode }>) {
+    return (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+  }
+
+  return TestQueryProvider;
 };
 
 describe("useBackendUser", () => {

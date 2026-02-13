@@ -3,6 +3,7 @@
 import {
   ArrowLeft,
   Bot,
+  RefreshCw,
   Settings,
   Sparkles,
   Trash2,
@@ -74,7 +75,8 @@ import type {
 } from "@/lib/copilot/types";
 import { cn } from "@/lib/utils";
 
-// Copilot slash commands
+// Copilot slash commands (used by command help display)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- available for slash command UI
 const COPILOT_COMMANDS = [
   {
     name: "/model",
@@ -115,7 +117,7 @@ const stateColors: Record<SessionState, string> = {
 /**
  * Tool execution display component
  */
-function ToolExecution({ tool }: { tool: CopilotToolExecution }) {
+function ToolExecution({ tool }: Readonly<{ tool: CopilotToolExecution }>) {
   const getToolState = () => {
     switch (tool.state) {
       case "pending":
@@ -707,18 +709,42 @@ export default function CopilotAgentPage() {
               </div>
             </>
           ) : (
-            // Loading state
+            // Loading state — show error with retry if session creation failed
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center space-y-4">
-                <div className="bg-muted/50 p-6 rounded-full w-fit mx-auto animate-pulse">
-                  <Bot className="h-12 w-12 text-muted-foreground" />
-                </div>
-                <h2 className="text-xl font-semibold">
-                  Initializing Copilot...
-                </h2>
-                <p className="text-muted-foreground">
-                  Setting up your AI agent session
-                </p>
+                {error ? (
+                  <>
+                    <div className="bg-destructive/10 p-6 rounded-full w-fit mx-auto">
+                      <XCircle className="h-12 w-12 text-destructive" />
+                    </div>
+                    <h2 className="text-xl font-semibold">Failed to Initialize</h2>
+                    <p className="text-muted-foreground max-w-sm">
+                      {error}
+                    </p>
+                    <div className="flex items-center justify-center gap-2">
+                      <Button variant="outline" onClick={() => setShowStartDialog(true)}>
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Back
+                      </Button>
+                      <Button onClick={handleStartSession}>
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Retry
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-muted/50 p-6 rounded-full w-fit mx-auto animate-pulse">
+                      <Bot className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                    <h2 className="text-xl font-semibold">
+                      Initializing Copilot...
+                    </h2>
+                    <p className="text-muted-foreground">
+                      Setting up your AI agent session
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           )}

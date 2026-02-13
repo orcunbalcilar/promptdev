@@ -252,6 +252,9 @@ export const Persona: FC<PersonaProps> = memo(
     const speakingInput = useStateMachineInput(rive, stateMachine, "speaking");
     const asleepInput = useStateMachineInput(rive, stateMachine, "asleep");
 
+    // Rive state machine inputs are mutable external system objects —
+    // setting .value drives the animation state machine directly.
+    /* eslint-disable react-hooks/immutability */
     useEffect(() => {
       if (listeningInput) {
         listeningInput.value = state === "listening";
@@ -266,6 +269,7 @@ export const Persona: FC<PersonaProps> = memo(
         asleepInput.value = state === "asleep";
       }
     }, [state, listeningInput, thinkingInput, speakingInput, asleepInput]);
+    /* eslint-enable react-hooks/immutability */
 
     const Component = source.hasModel ? PersonaWithModel : PersonaWithoutModel;
 

@@ -25,7 +25,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         session.user.id = token.sub!;
         session.user.image = token.picture as string | undefined;
         // Add provider to session for backend sync
-        (session.user as any).provider = token.provider;
+        (session.user as Record<string, unknown>).provider = token.provider;
       }
       return session;
     },

@@ -1,25 +1,45 @@
 "use client"
 
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Zap } from "lucide-react"
-import { useSearchParams } from "next/navigation"
-import { Suspense } from "react"
+import { Zap, Loader2 } from "lucide-react"
+import { useSearchParams, useRouter } from "next/navigation"
+import { Suspense, useEffect } from "react"
 
 function LoginForm() {
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") ?? "/"
   const error = searchParams.get("error")
+  const router = useRouter()
+  const { status } = useSession()
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace(callbackUrl)
+    }
+  }, [status, callbackUrl, router])
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (status === "authenticated") {
+    return null
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <main className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit">
             <Zap className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">Sign in to PromptDev</CardTitle>
+          <CardTitle asChild><h1 className="text-2xl font-bold">Sign in to PromptDev</h1></CardTitle>
           <CardDescription>
             AI-powered development platform. Sign in with your GitHub or Google account to continue.
           </CardDescription>
@@ -63,7 +83,7 @@ function LoginForm() {
           </p>
         </CardContent>
       </Card>
-    </div>
+    </main>
   )
 }
 

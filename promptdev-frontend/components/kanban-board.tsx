@@ -37,7 +37,7 @@ const columns: KanbanColumn[] = [
     color: "bg-green-50/50 border-green-100",
   },
   {
-    title: "Failed",
+    title: "Stopped",
     statuses: ["FAILED", "CANCELLED"],
     color: "bg-red-50/50 border-red-100",
   },

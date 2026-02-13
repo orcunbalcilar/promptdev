@@ -2,14 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import type { TaskEvent, Task, EventType } from '@/lib/api'
 
+// Shared mock prop types
+type MockChildrenProps = Readonly<{ children: React.ReactNode }>
+type MockNameProps = Readonly<{ name: string }>
+
 // ============================================================================
 // Mocks — ai-elements (Shiki won't work in jsdom)
 // ============================================================================
 
 vi.mock('@/components/ai-elements/file-tree', () => ({
-  FileTree: ({ children }: any) => <div data-testid="file-tree">{children}</div>,
-  FileTreeFile: ({ name }: any) => <div data-testid="file-tree-file">{name}</div>,
-  FileTreeFolder: ({ name, children }: any) => (
+  FileTree: ({ children }: MockChildrenProps) => <div data-testid="file-tree">{children}</div>,
+  FileTreeFile: ({ name }: MockNameProps) => <div data-testid="file-tree-file">{name}</div>,
+  FileTreeFolder: ({ name, children }: Readonly<{ name: string; children: React.ReactNode }>) => (
     <div data-testid="file-tree-folder">
       <span>{name}</span>
       {children}
@@ -18,33 +22,33 @@ vi.mock('@/components/ai-elements/file-tree', () => ({
 }))
 
 vi.mock('@/components/ai-elements/code-block', () => ({
-  CodeBlock: ({ children }: any) => <div data-testid="code-block">{children}</div>,
-  CodeBlockHeader: ({ children }: any) => <div>{children}</div>,
-  CodeBlockTitle: ({ children }: any) => <div>{children}</div>,
-  CodeBlockFilename: ({ children }: any) => <span>{children}</span>,
-  CodeBlockActions: ({ children }: any) => <div>{children}</div>,
+  CodeBlock: ({ children }: MockChildrenProps) => <div data-testid="code-block">{children}</div>,
+  CodeBlockHeader: ({ children }: MockChildrenProps) => <div>{children}</div>,
+  CodeBlockTitle: ({ children }: MockChildrenProps) => <div>{children}</div>,
+  CodeBlockFilename: ({ children }: MockChildrenProps) => <span>{children}</span>,
+  CodeBlockActions: ({ children }: MockChildrenProps) => <div>{children}</div>,
   CodeBlockCopyButton: () => <button>Copy</button>,
 }))
 
 vi.mock('@/components/ai-elements/commit', () => ({
-  Commit: ({ children }: any) => <div data-testid="commit">{children}</div>,
-  CommitHeader: ({ children }: any) => <div>{children}</div>,
-  CommitHash: ({ children }: any) => <span data-testid="commit-hash">{children}</span>,
-  CommitMessage: ({ children }: any) => <span data-testid="commit-message">{children}</span>,
-  CommitInfo: ({ children }: any) => <div>{children}</div>,
-  CommitMetadata: ({ children }: any) => <div>{children}</div>,
+  Commit: ({ children }: MockChildrenProps) => <div data-testid="commit">{children}</div>,
+  CommitHeader: ({ children }: MockChildrenProps) => <div>{children}</div>,
+  CommitHash: ({ children }: MockChildrenProps) => <span data-testid="commit-hash">{children}</span>,
+  CommitMessage: ({ children }: MockChildrenProps) => <span data-testid="commit-message">{children}</span>,
+  CommitInfo: ({ children }: MockChildrenProps) => <div>{children}</div>,
+  CommitMetadata: ({ children }: MockChildrenProps) => <div>{children}</div>,
   CommitTimestamp: () => <span data-testid="commit-timestamp" />,
-  CommitContent: ({ children }: any) => <div>{children}</div>,
-  CommitFiles: ({ children }: any) => <div>{children}</div>,
-  CommitFile: ({ children }: any) => <div>{children}</div>,
-  CommitFileInfo: ({ children }: any) => <div>{children}</div>,
-  CommitFileStatus: ({ status }: any) => <span data-testid="commit-file-status">{status}</span>,
+  CommitContent: ({ children }: MockChildrenProps) => <div>{children}</div>,
+  CommitFiles: ({ children }: MockChildrenProps) => <div>{children}</div>,
+  CommitFile: ({ children }: MockChildrenProps) => <div>{children}</div>,
+  CommitFileInfo: ({ children }: MockChildrenProps) => <div>{children}</div>,
+  CommitFileStatus: ({ status }: Readonly<{ status: string }>) => <span data-testid="commit-file-status">{status}</span>,
   CommitFileIcon: () => <span />,
-  CommitFilePath: ({ children }: any) => <span data-testid="commit-file-path">{children}</span>,
+  CommitFilePath: ({ children }: MockChildrenProps) => <span data-testid="commit-file-path">{children}</span>,
 }))
 
 vi.mock('@/components/ai-elements/package-info', () => ({
-  PackageInfo: ({ name, newVersion, changeType }: any) => (
+  PackageInfo: ({ name, newVersion, changeType }: Readonly<{ name: string; newVersion?: string; changeType: string }>) => (
     <div data-testid="package-info">
       {changeType}: {name}
       {newVersion && `@${newVersion}`}
@@ -53,19 +57,19 @@ vi.mock('@/components/ai-elements/package-info', () => ({
 }))
 
 vi.mock('@/components/ai-elements/terminal', () => ({
-  Terminal: ({ output }: any) => <div data-testid="terminal">{output}</div>,
+  Terminal: ({ output }: Readonly<{ output: string }>) => <div data-testid="terminal">{output}</div>,
 }))
 
 vi.mock('@/components/ai-elements/test-results', () => ({
-  TestResults: ({ children }: any) => <div data-testid="test-results">{children}</div>,
-  TestResultsHeader: ({ children }: any) => <div>{children}</div>,
+  TestResults: ({ children }: MockChildrenProps) => <div data-testid="test-results">{children}</div>,
+  TestResultsHeader: ({ children }: MockChildrenProps) => <div>{children}</div>,
   TestResultsSummary: () => <div data-testid="test-results-summary" />,
   TestResultsDuration: () => <span />,
-  TestResultsContent: ({ children }: any) => <div>{children}</div>,
-  TestSuite: ({ children }: any) => <div data-testid="test-suite">{children}</div>,
+  TestResultsContent: ({ children }: MockChildrenProps) => <div>{children}</div>,
+  TestSuite: ({ children }: MockChildrenProps) => <div data-testid="test-suite">{children}</div>,
   TestSuiteName: () => <span />,
-  TestSuiteContent: ({ children }: any) => <div>{children}</div>,
-  Test: ({ name, status }: any) => (
+  TestSuiteContent: ({ children }: MockChildrenProps) => <div>{children}</div>,
+  Test: ({ name, status }: Readonly<{ name: string; status: string }>) => (
     <div data-testid="test-case">
       {name}: {status}
     </div>

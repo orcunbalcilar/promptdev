@@ -298,4 +298,47 @@ describe('SettingsPage', () => {
     // Verify the security note mentions Jira alongside other tokens
     expect(screen.getByText(/Bitbucket, GitHub\/Copilot, Jira/)).toBeInTheDocument()
   })
+
+  it('should have save buttons with userId guard (disabled attr)', async () => {
+    const SettingsPage = await getSettingsPage()
+    renderWithProviders(<SettingsPage />)
+
+    // Wait for profile to load
+    const btn = await screen.findByRole('button', { name: /save bitbucket settings/i })
+    // Once profile loads, buttons should be enabled (userId is available)
+    expect(btn).toBeEnabled()
+  })
+
+  it('should call updateUserSettings when saving and handle failure', async () => {
+    mockUpdateUserSettings.mockRejectedValueOnce(new Error('Save failed'))
+    const SettingsPage = await getSettingsPage()
+    const user = userEvent.setup()
+    renderWithProviders(<SettingsPage />)
+
+    const btn = await screen.findByRole('button', { name: /save bitbucket settings/i })
+    await user.click(btn)
+
+    // Verify the mutation was attempted even when it fails
+    await waitFor(() => {
+      expect(mockUpdateUserSettings).toHaveBeenCalled()
+    })
+  })
+
+  it('should have BYOK provider section', async () => {
+    const SettingsPage = await getSettingsPage()
+    renderWithProviders(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Custom AI Provider (BYOK)')).toBeInTheDocument()
+    })
+  })
+
+  it('should have Save Provider Settings button', async () => {
+    const SettingsPage = await getSettingsPage()
+    renderWithProviders(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /save provider settings/i })).toBeInTheDocument()
+    })
+  })
 })

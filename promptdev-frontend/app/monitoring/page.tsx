@@ -708,7 +708,8 @@ function SessionDetail({
   const statusCfg = STATUS_CONFIG[session.status] ?? STATUS_CONFIG.ENDED
   const StatusIcon = statusCfg.icon
 
-  const sessionProgress = useMemo(() => {
+  // Derive progress from session status and operations (React Compiler handles memoization)
+  const sessionProgress = (() => {
     if (session.status === 'ENDED') return 100
     if (session.status === 'ERROR') return 100
     if (!operations?.length) return 0
@@ -717,13 +718,14 @@ function SessionDetail({
     ).length
     const totalOps = operations.length
     return totalOps > 0 ? Math.round((completedOps / totalOps) * 100) : 0
-  }, [session.status, operations])
+  })()
 
-  const sessionStatusIndicator: 'streaming' | 'submitted' | 'error' | 'complete' = useMemo(() => {
+  // Derive status indicator from session status (React Compiler handles memoization)
+  const sessionStatusIndicator: 'streaming' | 'submitted' | 'error' | 'complete' = (() => {
     if (session.status === 'ACTIVE') return 'streaming'
     if (session.status === 'ERROR') return 'error'
     return 'complete'
-  }, [session.status])
+  })()
 
   return (
     <div className="space-y-6">

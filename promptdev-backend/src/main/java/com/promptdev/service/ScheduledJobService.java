@@ -147,6 +147,14 @@ public class ScheduledJobService {
 
             } catch (Exception e) {
                 log.error("Failed to execute scheduled job {}: {}", job.getId(), e.getMessage(), e);
+                // Advance nextRunAt so failed jobs don't retry endlessly on the same slot
+                try {
+                    CronExpression cron = CronExpression.parse(job.getCronExpression());
+                    job.setNextRunAt(cron.next(LocalDateTime.now()));
+                    scheduledJobRepository.save(job);
+                } catch (Exception cronEx) {
+                    log.error("Failed to reschedule job {}: {}", job.getId(), cronEx.getMessage());
+                }
             }
         }
     }

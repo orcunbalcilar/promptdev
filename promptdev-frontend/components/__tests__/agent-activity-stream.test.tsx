@@ -1,14 +1,35 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import type { TaskEvent, Task, EventType } from '@/lib/api'
+
+// ============================================================================
+// Shared mock prop types
+// ============================================================================
+
+type WithChildren = { children?: ReactNode }
+type WithNameModel = { name?: string; model?: string }
+type WithTitleState = { title?: string; state?: string }
+type WithInput = { input?: unknown }
+type WithOutputError = { output?: unknown; errorText?: string }
+type WithOutput = { output?: string }
+type WithCodeLang = { code?: string; language?: string }
+type WithStatus = { status?: string }
+type WithNameStatus = { name?: string; status?: string }
+type WithCount = { count?: number }
+type WithLabelStatusDesc = { label?: string; status?: string; description?: string }
+type WithTrace = { children?: ReactNode; trace?: string }
+type WithPkgInfo = { name?: string; newVersion?: string; changeType?: string }
+type WithCompleted = { completed?: boolean }
+type WithChildrenCompleted = { children?: ReactNode; completed?: boolean }
 
 // ============================================================================
 // Mocks — ai-elements (Shiki won't work in jsdom)
 // ============================================================================
 
 vi.mock('@/components/ai-elements/agent', () => ({
-  Agent: ({ children }: any) => <div data-testid="agent">{children}</div>,
-  AgentHeader: ({ name, model }: any) => (
+  Agent: ({ children }: WithChildren) => <div data-testid="agent">{children}</div>,
+  AgentHeader: ({ name, model }: WithNameModel) => (
     <div data-testid="agent-header">
       {name} - {model}
     </div>
@@ -16,25 +37,25 @@ vi.mock('@/components/ai-elements/agent', () => ({
 }))
 
 vi.mock('@/components/ai-elements/reasoning', () => ({
-  Reasoning: ({ children }: any) => <div data-testid="reasoning">{children}</div>,
+  Reasoning: ({ children }: WithChildren) => <div data-testid="reasoning">{children}</div>,
   ReasoningTrigger: () => <button data-testid="reasoning-trigger">Thinking</button>,
-  ReasoningContent: ({ children }: any) => (
+  ReasoningContent: ({ children }: WithChildren) => (
     <div data-testid="reasoning-content">{children}</div>
   ),
 }))
 
 vi.mock('@/components/ai-elements/tool', () => ({
-  Tool: ({ children }: any) => <div data-testid="tool">{children}</div>,
-  ToolHeader: ({ title, state }: any) => (
+  Tool: ({ children }: WithChildren) => <div data-testid="tool">{children}</div>,
+  ToolHeader: ({ title, state }: WithTitleState) => (
     <div data-testid="tool-header">
       {title} ({state})
     </div>
   ),
-  ToolContent: ({ children }: any) => <div data-testid="tool-content">{children}</div>,
-  ToolInput: ({ input }: any) => (
+  ToolContent: ({ children }: WithChildren) => <div data-testid="tool-content">{children}</div>,
+  ToolInput: ({ input }: WithInput) => (
     <div data-testid="tool-input">{JSON.stringify(input)}</div>
   ),
-  ToolOutput: ({ output, errorText }: any) => (
+  ToolOutput: ({ output, errorText }: WithOutputError) => (
     <div data-testid="tool-output">
       {errorText ?? JSON.stringify(output)}
     </div>
@@ -42,20 +63,20 @@ vi.mock('@/components/ai-elements/tool', () => ({
 }))
 
 vi.mock('@/components/ai-elements/terminal', () => ({
-  Terminal: ({ output }: any) => <div data-testid="terminal">{output}</div>,
+  Terminal: ({ output }: WithOutput) => <div data-testid="terminal">{output}</div>,
 }))
 
 vi.mock('@/components/ai-elements/code-block', () => ({
-  CodeBlockContainer: ({ children }: any) => (
+  CodeBlockContainer: ({ children }: WithChildren) => (
     <div data-testid="code-block-container">{children}</div>
   ),
-  CodeBlockHeader: ({ children }: any) => (
+  CodeBlockHeader: ({ children }: WithChildren) => (
     <div data-testid="code-block-header">{children}</div>
   ),
-  CodeBlockTitle: ({ children }: any) => (
+  CodeBlockTitle: ({ children }: WithChildren) => (
     <div data-testid="code-block-title">{children}</div>
   ),
-  CodeBlockContent: ({ code, language }: any) => (
+  CodeBlockContent: ({ code, language }: WithCodeLang) => (
     <pre data-testid="code-block-content" data-language={language}>
       {code}
     </pre>
@@ -63,50 +84,50 @@ vi.mock('@/components/ai-elements/code-block', () => ({
 }))
 
 vi.mock('@/components/ai-elements/commit', () => ({
-  Commit: ({ children }: any) => <div data-testid="commit">{children}</div>,
-  CommitHeader: ({ children }: any) => <div data-testid="commit-header">{children}</div>,
-  CommitHash: ({ children }: any) => <span data-testid="commit-hash">{children}</span>,
-  CommitMessage: ({ children }: any) => (
+  Commit: ({ children }: WithChildren) => <div data-testid="commit">{children}</div>,
+  CommitHeader: ({ children }: WithChildren) => <div data-testid="commit-header">{children}</div>,
+  CommitHash: ({ children }: WithChildren) => <span data-testid="commit-hash">{children}</span>,
+  CommitMessage: ({ children }: WithChildren) => (
     <span data-testid="commit-message">{children}</span>
   ),
-  CommitInfo: ({ children }: any) => <div data-testid="commit-info">{children}</div>,
-  CommitContent: ({ children }: any) => (
+  CommitInfo: ({ children }: WithChildren) => <div data-testid="commit-info">{children}</div>,
+  CommitContent: ({ children }: WithChildren) => (
     <div data-testid="commit-content">{children}</div>
   ),
-  CommitFiles: ({ children }: any) => <div data-testid="commit-files">{children}</div>,
-  CommitFile: ({ children }: any) => <div data-testid="commit-file">{children}</div>,
-  CommitFileInfo: ({ children }: any) => (
+  CommitFiles: ({ children }: WithChildren) => <div data-testid="commit-files">{children}</div>,
+  CommitFile: ({ children }: WithChildren) => <div data-testid="commit-file">{children}</div>,
+  CommitFileInfo: ({ children }: WithChildren) => (
     <div data-testid="commit-file-info">{children}</div>
   ),
-  CommitFileStatus: ({ status }: any) => (
+  CommitFileStatus: ({ status }: WithStatus) => (
     <span data-testid="commit-file-status">{status}</span>
   ),
-  CommitFilePath: ({ children }: any) => (
+  CommitFilePath: ({ children }: WithChildren) => (
     <span data-testid="commit-file-path">{children}</span>
   ),
-  CommitFileChanges: ({ children }: any) => (
+  CommitFileChanges: ({ children }: WithChildren) => (
     <div data-testid="commit-file-changes">{children}</div>
   ),
-  CommitFileAdditions: ({ count }: any) => (
+  CommitFileAdditions: ({ count }: WithCount) => (
     <span data-testid="commit-file-additions">+{count}</span>
   ),
-  CommitFileDeletions: ({ count }: any) => (
+  CommitFileDeletions: ({ count }: WithCount) => (
     <span data-testid="commit-file-deletions">-{count}</span>
   ),
 }))
 
 vi.mock('@/components/ai-elements/test-results', () => ({
-  TestResults: ({ children }: any) => (
+  TestResults: ({ children }: WithChildren) => (
     <div data-testid="test-results">{children}</div>
   ),
-  TestResultsHeader: ({ children }: any) => (
+  TestResultsHeader: ({ children }: WithChildren) => (
     <div data-testid="test-results-header">{children}</div>
   ),
   TestResultsSummary: () => <div data-testid="test-results-summary" />,
-  TestResultsContent: ({ children }: any) => (
+  TestResultsContent: ({ children }: WithChildren) => (
     <div data-testid="test-results-content">{children}</div>
   ),
-  Test: ({ name, status }: any) => (
+  Test: ({ name, status }: WithNameStatus) => (
     <div data-testid="test-case">
       {name}: {status}
     </div>
@@ -114,58 +135,58 @@ vi.mock('@/components/ai-elements/test-results', () => ({
 }))
 
 vi.mock('@/components/ai-elements/plan', () => ({
-  Plan: ({ children }: any) => <div data-testid="plan">{children}</div>,
-  PlanHeader: ({ children }: any) => <div data-testid="plan-header">{children}</div>,
-  PlanTitle: ({ children }: any) => <span data-testid="plan-title">{children}</span>,
-  PlanDescription: ({ children }: any) => (
+  Plan: ({ children }: WithChildren) => <div data-testid="plan">{children}</div>,
+  PlanHeader: ({ children }: WithChildren) => <div data-testid="plan-header">{children}</div>,
+  PlanTitle: ({ children }: WithChildren) => <span data-testid="plan-title">{children}</span>,
+  PlanDescription: ({ children }: WithChildren) => (
     <span data-testid="plan-description">{children}</span>
   ),
-  PlanContent: ({ children }: any) => <div data-testid="plan-content">{children}</div>,
-  PlanAction: ({ children }: any) => <div data-testid="plan-action">{children}</div>,
+  PlanContent: ({ children }: WithChildren) => <div data-testid="plan-content">{children}</div>,
+  PlanAction: ({ children }: WithChildren) => <div data-testid="plan-action">{children}</div>,
   PlanTrigger: () => <button data-testid="plan-trigger">Toggle</button>,
 }))
 
 vi.mock('@/components/ai-elements/chain-of-thought', () => ({
-  ChainOfThought: ({ children }: any) => (
+  ChainOfThought: ({ children }: WithChildren) => (
     <div data-testid="chain-of-thought">{children}</div>
   ),
-  ChainOfThoughtHeader: ({ children }: any) => (
+  ChainOfThoughtHeader: ({ children }: WithChildren) => (
     <div data-testid="chain-of-thought-header">{children}</div>
   ),
-  ChainOfThoughtStep: ({ label, status, description }: any) => (
+  ChainOfThoughtStep: ({ label, status, description }: WithLabelStatusDesc) => (
     <div data-testid="chain-of-thought-step" data-status={status}>
       {label}
       {description && <span>{description}</span>}
     </div>
   ),
-  ChainOfThoughtContent: ({ children }: any) => (
+  ChainOfThoughtContent: ({ children }: WithChildren) => (
     <div data-testid="chain-of-thought-content">{children}</div>
   ),
 }))
 
 vi.mock('@/components/ai-elements/stack-trace', () => ({
-  StackTrace: ({ children, trace }: any) => (
+  StackTrace: ({ children, trace }: WithTrace) => (
     <div data-testid="stack-trace" data-trace={trace}>
       {children}
     </div>
   ),
-  StackTraceHeader: ({ children }: any) => (
+  StackTraceHeader: ({ children }: WithChildren) => (
     <div data-testid="stack-trace-header">{children}</div>
   ),
-  StackTraceError: ({ children }: any) => (
+  StackTraceError: ({ children }: WithChildren) => (
     <div data-testid="stack-trace-error">{children}</div>
   ),
   StackTraceErrorType: () => <span data-testid="stack-trace-error-type" />,
   StackTraceErrorMessage: () => <span data-testid="stack-trace-error-message" />,
-  StackTraceContent: ({ children }: any) => (
+  StackTraceContent: ({ children }: WithChildren) => (
     <div data-testid="stack-trace-content">{children}</div>
   ),
   StackTraceFrames: () => <div data-testid="stack-trace-frames" />,
-  StackTraceExpandButton: () => <button data-testid="stack-trace-expand" />,
+  StackTraceExpandButton: () => <button data-testid="stack-trace-expand" aria-label="Expand stack trace" />,
 }))
 
 vi.mock('@/components/ai-elements/package-info', () => ({
-  PackageInfo: ({ name, newVersion, changeType }: any) => (
+  PackageInfo: ({ name, newVersion, changeType }: WithPkgInfo) => (
     <div data-testid="package-info">
       {changeType}: {name}
       {newVersion && `@${newVersion}`}
@@ -174,25 +195,25 @@ vi.mock('@/components/ai-elements/package-info', () => ({
 }))
 
 vi.mock('@/components/ai-elements/checkpoint', () => ({
-  Checkpoint: ({ children }: any) => (
+  Checkpoint: ({ children }: WithChildren) => (
     <div data-testid="checkpoint">{children}</div>
   ),
-  CheckpointIcon: ({ children }: any) => (
+  CheckpointIcon: ({ children }: WithChildren) => (
     <span data-testid="checkpoint-icon">{children}</span>
   ),
 }))
 
 vi.mock('@/components/ai-elements/shimmer', () => ({
-  Shimmer: ({ children }: any) => <div data-testid="shimmer">{children}</div>,
+  Shimmer: ({ children }: WithChildren) => <div data-testid="shimmer">{children}</div>,
 }))
 
 vi.mock('@/components/ai-elements/queue', () => ({
-  Queue: ({ children }: any) => <div data-testid="queue">{children}</div>,
-  QueueItem: ({ children }: any) => <div data-testid="queue-item">{children}</div>,
-  QueueItemIndicator: ({ completed }: any) => (
+  Queue: ({ children }: WithChildren) => <div data-testid="queue">{children}</div>,
+  QueueItem: ({ children }: WithChildren) => <div data-testid="queue-item">{children}</div>,
+  QueueItemIndicator: ({ completed }: WithCompleted) => (
     <span data-testid="queue-item-indicator" data-completed={completed} />
   ),
-  QueueItemContent: ({ children, completed }: any) => (
+  QueueItemContent: ({ children, completed }: WithChildrenCompleted) => (
     <span data-testid="queue-item-content" data-completed={completed}>
       {children}
     </span>

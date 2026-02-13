@@ -77,7 +77,7 @@ export default function Dashboard() {
     return () => eventSource.close();
   }, [queryClient, router]);
 
-  const tasks = data?.content ?? [];
+  const tasks = useMemo(() => data?.content ?? [], [data?.content]);
 
   // Client-side filtering
   const filteredTasks = useMemo(() => {

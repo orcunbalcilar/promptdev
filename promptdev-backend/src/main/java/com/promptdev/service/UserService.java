@@ -7,8 +7,10 @@ import com.promptdev.repository.UserRepository;
 import com.promptdev.util.EncryptionUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.crypto.SecretKey;
 import java.util.Optional;
@@ -19,6 +21,8 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
+
+    private static final String USER_NOT_FOUND = "User not found: ";
 
     @Value("${promptdev.encryption.key}")
     private String encryptionKeyString;
@@ -59,7 +63,7 @@ public class UserService {
      */
     public UserProfileDto getUserProfile(UUID userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND + userId));
 
         return UserProfileDto.builder()
                 .id(user.getId().toString())
@@ -89,7 +93,7 @@ public class UserService {
     @Transactional
     public UserProfileDto updateSettings(UUID userId, UpdateUserSettingsRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND + userId));
 
         SecretKey key = getEncryptionKey();
 
@@ -166,7 +170,7 @@ public class UserService {
      */
     public Optional<String> getDecryptedCopilotToken(UUID userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND + userId));
 
         if (user.getCopilotTokenEncrypted() == null) {
             return Optional.empty();
@@ -180,7 +184,7 @@ public class UserService {
      */
     public Optional<String> getDecryptedBitbucketToken(UUID userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND + userId));
 
         if (user.getBitbucketTokenEncrypted() == null) {
             return Optional.empty();
@@ -194,7 +198,7 @@ public class UserService {
      */
     public Optional<String> getDecryptedByokApiKey(UUID userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND + userId));
 
         if (user.getByokApiKeyEncrypted() == null) {
             return Optional.empty();

@@ -165,7 +165,7 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
           {task.modelId && (
             <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5">
               <Bot className="h-2.5 w-2.5" />
-              {task.modelId.split('/').pop()?.split('-').slice(0, 2).join('-') ?? task.modelId}
+              {task.modelId.split('/').pop() ?? task.modelId}
             </Badge>
           )}
         </div>
@@ -188,11 +188,12 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
               </a>
             </Button>
           )}
-          {task.completedAt && task.createdAt && (
+          {(task.completedAt ?? (task.updatedAt && ['FAILED', 'CANCELLED'].includes(task.status))) && task.createdAt && (
             <span className="flex items-center gap-0.5 text-muted-foreground" title="Duration">
               <Clock className="h-2.5 w-2.5" />
               {(() => {
-                const ms = new Date(task.completedAt).getTime() - new Date(task.createdAt).getTime();
+                const endTime = task.completedAt ?? task.updatedAt;
+                const ms = new Date(endTime).getTime() - new Date(task.createdAt).getTime();
                 const mins = Math.floor(ms / 60000);
                 const secs = Math.floor((ms % 60000) / 1000);
                 return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;

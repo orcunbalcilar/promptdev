@@ -5,7 +5,9 @@ export const proxy = auth((req) => {
 
   // Public routes that don't require authentication
   const publicPaths = ["/login", "/api/auth", "/api/copilot/models"]
-  const isPublic = publicPaths.some((path) => pathname.startsWith(path))
+  const isPublic = publicPaths.some(
+    (path) => pathname === path || pathname.startsWith(path + "/")
+  )
 
   if (isPublic) return
 
