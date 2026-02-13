@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -14,6 +15,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -42,6 +48,7 @@ import {
 import { COPILOT_MODELS, DEFAULT_MODEL_ID } from "@/lib/copilot/models";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
 import {
   ArrowLeft,
   CalendarClock,
@@ -328,13 +335,74 @@ function CreateJobDialog() {
                   Start Date (optional)
                 </span>
               </Label>
-              <Input
-                id="startAt"
-                type="datetime-local"
-                value={startAt}
-                onChange={(e) => setStartAt(e.target.value)}
-                className="font-mono text-xs"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !startAt && "text-muted-foreground",
+                    )}
+                  >
+                    <CalendarClock className="mr-2 h-4 w-4" />
+                    {startAt ? (
+                      format(new Date(startAt), "PPP p")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startAt ? new Date(startAt) : undefined}
+                    onSelect={(date) => {
+                      if (!date) {
+                        setStartAt("");
+                        return;
+                      }
+                      const current = startAt ? new Date(startAt) : new Date();
+                      current.setFullYear(
+                        date.getFullYear(),
+                        date.getMonth(),
+                        date.getDate(),
+                      );
+                      // Preserve time if it exists, default to current time otherwise
+                      if (!startAt) {
+                         const now = new Date();
+                         current.setHours(now.getHours());
+                         current.setMinutes(now.getMinutes());
+                      }
+                      setStartAt(format(current, "yyyy-MM-dd'T'HH:mm"));
+                    }}
+                    initialFocus
+                  />
+                  <div className="p-3 border-t">
+                    <Label htmlFor="time-input" className="text-xs">
+                      Time
+                    </Label>
+                    <Input
+                      id="time-input"
+                      type="time"
+                      className="mt-2"
+                      value={
+                        startAt ? format(new Date(startAt), "HH:mm") : ""
+                      }
+                      onChange={(e) => {
+                        const time = e.target.value;
+                        if (!time) return;
+                        const [hours, minutes] = time.split(":").map(Number);
+                        const date = startAt
+                          ? new Date(startAt)
+                          : new Date();
+                        date.setHours(hours);
+                        date.setMinutes(minutes);
+                        setStartAt(format(date, "yyyy-MM-dd'T'HH:mm"));
+                      }}
+                    />
+                  </div>
+                </PopoverContent>
+              </Popover>
               <p className="text-xs text-muted-foreground">
                 If set, the job won&apos;t execute until this date. Leave empty to start immediately.
               </p>

@@ -151,7 +151,7 @@ The compose file defines four services: `db`, `backend`, `frontend`, and `bot` (
 ```bash
 docker run -d \
   --name promptdev-db \
-  -e POSTGRES_DB=promptdev_dev \
+  -e POSTGRES_DB=promptdev \
   -e POSTGRES_USER=promptdev \
   -e POSTGRES_PASSWORD=promptdev \
   -p 5432:5432 \
@@ -163,7 +163,7 @@ docker run -d \
 ```bash
 cd promptdev-backend
 
-export DB_URL="jdbc:postgresql://localhost:5432/promptdev_dev"
+export DB_URL="jdbc:postgresql://localhost:5432/promptdev"
 export DB_USERNAME="promptdev"
 export DB_PASSWORD="promptdev"
 export JPA_DDL_AUTO="update"
@@ -207,7 +207,7 @@ The application ships with **zero development defaults** — all environment-spe
 
 | Variable         | Description                        | Development value (injected by start-all)             |
 | ---------------- | ---------------------------------- | ----------------------------------------------------- |
-| `DB_URL`         | JDBC connection string             | `jdbc:postgresql://localhost:5432/promptdev_dev`      |
+| `DB_URL`         | JDBC connection string             | `jdbc:postgresql://localhost:5432/promptdev`      |
 | `DB_USERNAME`    | PostgreSQL username                | `promptdev`                                           |
 | `DB_PASSWORD`    | PostgreSQL password                | `promptdev`                                           |
 | `JPA_DDL_AUTO`   | Hibernate DDL strategy             | `update` (production should use `validate` or `none`) |
