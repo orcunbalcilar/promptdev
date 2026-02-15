@@ -13,8 +13,7 @@
  * 8. Supports session resume with new prompts
  */
 
-import { createCopilotSession, sendMessage, subscribeToSession, destroySession, getSession } from './client'
-import { COPILOT_MODELS } from './models'
+import { createCopilotSession, sendMessage, subscribeToSession, destroySession, getSession, listAvailableModels } from './client'
 import type { TypedCopilotEvent, BYOKProvider } from './types'
 import { trackOperation, registerMonitoringSession, endMonitoringSession, flushOperations } from '../monitoring'
 
@@ -305,10 +304,16 @@ export async function executeTask(
       console.warn('[Orchestrator] Workspace creation failed, using default:', err)
     }
 
-    // 4. Determine model
+    // 4. Determine model capabilities
     const modelId = task.modelId || 'gpt-4.1'
-    const modelInfo = COPILOT_MODELS.find(m => m.id === modelId)
-    const supportsReasoning = modelInfo?.capabilities.reasoning ?? false
+    let supportsReasoning = false
+    try {
+      const models = await listAvailableModels()
+      const modelInfo = models.find(m => m.id === modelId)
+      supportsReasoning = modelInfo?.capabilities.supports.reasoningEffort ?? false
+    } catch (err) {
+      console.warn(`[Orchestrator] Failed to fetch model capabilities for ${modelId}:`, err)
+    }
 
     // 5. Build system prompt
     const systemPrompt = buildSystemPrompt(task)
@@ -491,6 +496,30 @@ function setupEventTracking(taskId: string, sessionId: string, task: TaskData): 
           await sendCallback(taskId, 'TASK_FAILED', {
             message: `Session error: ${data.message}`,
             errorMessage: data.message,
+          })
+
+          isComplete = true
+          await cleanupTaskSession(taskId, sessionId, task)
+          break
+        }
+
+        case 'session.error': {
+          const data = event.data as { message: string; errorType?: string }
+          const errorMessage = data.message || 'Session error occurred'
+
+          await trackOperation({
+            sessionId,
+            taskId,
+            operationType: 'ERROR',
+            message: errorMessage,
+            success: false,
+            errorMessage: errorMessage,
+            source: 'task-orchestrator',
+          })
+
+          await sendCallback(taskId, 'TASK_FAILED', {
+            message: `Session error: ${errorMessage}`,
+            errorMessage: errorMessage,
           })
 
           isComplete = true

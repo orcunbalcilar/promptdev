@@ -23,6 +23,7 @@ export type CopilotEventType =
   | 'session.usage_info'
   | 'pending_messages.modified'
   | 'error'
+  | 'session.error'
 
 // Base event structure
 export interface CopilotEvent {
@@ -147,6 +148,17 @@ export interface PendingMessagesModifiedEvent extends CopilotEvent {
   data: Record<string, unknown>
 }
 
+// Session error event
+export interface SessionErrorEvent extends CopilotEvent {
+  type: 'session.error'
+  data: {
+    errorType: string
+    message: string
+    stack?: string
+    [key: string]: unknown
+  }
+}
+
 // Assistant turn start event
 export interface AssistantTurnStartEvent extends CopilotEvent {
   type: 'assistant.turn_start'
@@ -225,6 +237,7 @@ export type TypedCopilotEvent =
   | SessionUsageInfoEvent
   | PendingMessagesModifiedEvent
   | ErrorEvent
+  | SessionErrorEvent
 
 // Session state
 export type SessionState = 
@@ -307,12 +320,4 @@ export interface SendMessageRequest {
     path: string
     displayName?: string
   }>
-}
-
-// Available models
-export interface CopilotModel {
-  id: string
-  name: string
-  description?: string
-  supportsReasoning?: boolean
 }

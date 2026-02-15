@@ -8,9 +8,10 @@
 import {
   CopilotClient,
   type CopilotSession as SDKSession,
+  type ModelInfo,
 } from "@github/copilot-sdk";
 import { nanoid } from "nanoid";
-import { COPILOT_MODELS, DEFAULT_MODEL_ID } from "./models";
+import { DEFAULT_MODEL_ID } from "./models";
 import type {
   CopilotEventType,
   CopilotSession,
@@ -130,10 +131,18 @@ export async function createCopilotSession(
   const sessionId = nanoid();
 
   const targetModelId = request.model ?? DEFAULT_MODEL_ID;
-  const targetModel = COPILOT_MODELS.find(
-    (model) => model.id === targetModelId,
-  );
-  const supportsReasoning = targetModel?.capabilities.reasoning ?? false;
+
+  // Fetch model capabilities dynamically
+  let supportsReasoning = false;
+  try {
+    const models = await client.listModels();
+    const targetModel = models.find((m) => m.id === targetModelId);
+    if (targetModel) {
+      supportsReasoning = targetModel.capabilities.supports.reasoningEffort;
+    }
+  } catch (err) {
+    console.warn(`[Copilot] Failed to fetch model capabilities for ${targetModelId}:`, err);
+  }
 
   // Build session config
   const sessionConfig: Record<string, unknown> = {
@@ -189,18 +198,16 @@ export async function createCopilotSession(
  */
 export async function listAvailableModels(
   userGithubToken?: string,
-): Promise<Array<{ id: string; name?: string }>> {
+): Promise<ModelInfo[]> {
   try {
     const client = await getClientForUser(userGithubToken);
     const models = await client.listModels();
+    console.log(models);
     // log model ids for debugging
     console.log(
       `[Copilot] Models from SDK: ${models.map((m: { id: string }) => m.id).join(", ")}`,
     );
-    return models.map((m: { id: string; name?: string }) => ({
-      id: m.id,
-      name: m.name ?? m.id,
-    }));
+    return models;
   } catch (error) {
     console.warn("[Copilot] Failed to list models dynamically:", error);
     return [];
@@ -262,6 +269,7 @@ const KNOWN_EVENT_TYPES = new Set<CopilotEventType>([
   "session.usage_info",
   "pending_messages.modified",
   "error",
+  "session.error",
 ]);
 
 /**

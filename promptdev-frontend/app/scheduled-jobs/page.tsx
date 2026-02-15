@@ -45,9 +45,10 @@ import {
   type Task,
   type WorkspaceType,
 } from "@/lib/api";
-import { COPILOT_MODELS, DEFAULT_MODEL_ID } from "@/lib/copilot/models";
+import { DEFAULT_MODEL_ID } from "@/lib/copilot/models";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ModelInfo } from '@github/copilot-sdk';
 import { format } from "date-fns";
 import {
   ArrowLeft,
@@ -141,6 +142,18 @@ function CreateJobDialog() {
   const [selectedPreset, setSelectedPreset] = useState("0 0 2 * * *");
 
   const queryClient = useQueryClient();
+
+  // Fetch available models
+  const { data: models = [] } = useQuery<ModelInfo[]>({
+    queryKey: ["copilot-models"],
+    queryFn: async () => {
+      const res = await fetch('/api/copilot/models');
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.models || [];
+    },
+    initialData: [],
+  });
 
   const { data: repositories = [] } = useQuery<Repository[]>({
     queryKey: ["repositories"],
@@ -530,7 +543,7 @@ function CreateJobDialog() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {COPILOT_MODELS.map((m) => (
+                  {models.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
                       {m.name}
                     </SelectItem>

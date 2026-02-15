@@ -5,7 +5,6 @@
  */
 
 import { listAvailableModels } from "@/lib/copilot/client";
-import { COPILOT_MODELS, mergeModels } from "@/lib/copilot/models";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -19,17 +18,18 @@ export async function GET() {
   try {
     const dynamicModels = await listAvailableModels();
 
+    console.log(dynamicModels);
+
     if (dynamicModels.length > 0) {
-      const merged = mergeModels(dynamicModels);
-      return NextResponse.json({ models: merged, source: "dynamic" });
+      return NextResponse.json({ models: dynamicModels, source: "dynamic" });
     }
 
-    // Fallback to static list
-    return NextResponse.json({ models: COPILOT_MODELS, source: "static" });
+    // Return empty list if no dynamic models
+    return NextResponse.json({ models: [], source: "empty" });
   } catch (error) {
     console.error("[API] Failed to list models:", error);
 
-    // Always return static models as fallback
-    return NextResponse.json({ models: COPILOT_MODELS, source: "static" });
+    // Return empty list on error
+    return NextResponse.json({ models: [], source: "error" });
   }
 }

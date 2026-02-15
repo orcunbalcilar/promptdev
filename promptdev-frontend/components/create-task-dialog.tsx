@@ -31,8 +31,9 @@ import {
   type WorkspaceType,
 } from "@/lib/api";
 import { getJiraIssue, type JiraIssue } from "@/lib/jira";
-import { COPILOT_MODELS, DEFAULT_MODEL_ID } from "@/lib/copilot/models";
+import { DEFAULT_MODEL_ID } from "@/lib/copilot/models";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ModelInfo } from '@github/copilot-sdk';
 import { FolderOpen, FolderPlus, GitBranch, Plus, RefreshCcw, Shield, Bug, Cog, BookOpen, Loader2, Lightbulb, ExternalLink } from "lucide-react";
 import { Suggestions, Suggestion } from "@/components/ai-elements/suggestion";
 import { useCallback, useEffect, useState } from "react";
@@ -61,6 +62,20 @@ export function CreateTaskDialog() {
   const [triageError, setTriageError] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
+
+  // Fetch available models
+  const {
+    data: models = [],
+  } = useQuery<ModelInfo[]>({
+    queryKey: ["copilot-models"],
+    queryFn: async () => {
+      const res = await fetch('/api/copilot/models');
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.models || [];
+    },
+    initialData: [],
+  });
 
   // Fetch repositories from Bitbucket
   const {
@@ -477,19 +492,19 @@ export function CreateTaskDialog() {
                   <SelectValue placeholder="Select model" />
                 </SelectTrigger>
                 <SelectContent>
-                  {COPILOT_MODELS.map((m) => (
+                  {models.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                           <span>{m.name}</span>
-                          {m.multiplier && (
+                          {m.billing?.multiplier && (
                             <span className="text-xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                              {m.multiplier}
+                              {m.billing.multiplier}x
                             </span>
                           )}
                         </div>
                         <span className="text-xs text-muted-foreground">
-                          {m.description}
+                          {m.name}
                         </span>
                       </div>
                     </SelectItem>
@@ -584,7 +599,7 @@ export function CreateTaskDialog() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__same__">Same as task model</SelectItem>
-                    {COPILOT_MODELS.map((m) => (
+                    {models.map((m) => (
                       <SelectItem key={m.id} value={m.id}>
                         {m.name}
                       </SelectItem>

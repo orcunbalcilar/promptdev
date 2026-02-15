@@ -14,7 +14,13 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -67,13 +73,14 @@ import {
 } from "@/components/ai-elements/tool";
 
 import { useCopilotSession } from "@/hooks/useCopilotSession";
-import { COPILOT_MODELS, DEFAULT_MODEL_ID } from "@/lib/copilot/models";
+import { DEFAULT_MODEL_ID } from "@/lib/copilot/models";
 import type {
   CopilotMessage,
   CopilotToolExecution,
   SessionState,
 } from "@/lib/copilot/types";
 import { cn } from "@/lib/utils";
+import type { ModelInfo } from "@github/copilot-sdk";
 
 // Copilot slash commands (used by command help display)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- available for slash command UI
@@ -155,6 +162,20 @@ function ToolExecution({ tool }: Readonly<{ tool: CopilotToolExecution }>) {
   );
 }
 
+function getMessageContent(
+  streamingContent: string,
+  streamingReasoning: string,
+  activeTools: CopilotToolExecution[],
+) {
+  if (streamingContent) {
+    return <MessageResponse>{streamingContent}</MessageResponse>;
+  }
+  if (!streamingReasoning && activeTools.length === 0) {
+    return <Shimmer duration={1.5}>Thinking...</Shimmer>;
+  }
+  return null;
+}
+
 /**
  * Message display component
  */
@@ -206,11 +227,7 @@ function CopilotMessageDisplay({
 
         {/* Message content */}
         {showStreamingContent ? (
-          streamingContent ? (
-            <MessageResponse>{streamingContent}</MessageResponse>
-          ) : !streamingReasoning && activeTools.length === 0 ? (
-            <Shimmer duration={1.5}>Thinking...</Shimmer>
-          ) : null
+          getMessageContent(streamingContent, streamingReasoning, activeTools)
         ) : (
           <MessageResponse>{message.content}</MessageResponse>
         )}
@@ -227,14 +244,16 @@ function SettingsDialog({
   setModel,
   reasoningEffort,
   setReasoningEffort,
+  models,
 }: Readonly<{
   model: string;
   setModel: (v: string) => void;
   reasoningEffort: string;
   setReasoningEffort: (v: string) => void;
+  models: ModelInfo[];
 }>) {
-  const selectedModel = COPILOT_MODELS.find((m) => m.id === model);
-  const supportsReasoning = selectedModel?.capabilities.reasoning ?? false;
+  const selectedModel = models.find((m) => m.id === model);
+  const supportsReasoning = selectedModel?.capabilities.supports.reasoningEffort ?? false;
 
   return (
     <Dialog>
@@ -259,19 +278,19 @@ function SettingsDialog({
                 <SelectValue placeholder="Select model" />
               </SelectTrigger>
               <SelectContent>
-                {COPILOT_MODELS.map((m) => (
+                {models.map((m) => (
                   <SelectItem key={m.id} value={m.id}>
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2">
                         <span>{m.name}</span>
-                        {m.multiplier && (
+                        {m.billing?.multiplier && (
                           <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
-                            {m.multiplier}
+                            {m.billing.multiplier}x
                           </span>
                         )}
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        {m.description}
+                        {m.name}
                       </span>
                     </div>
                   </SelectItem>
@@ -329,6 +348,7 @@ export default function CopilotAgentPage() {
 
   const {
     session,
+    availableModels,
     state,
     messages,
     tools,
@@ -386,7 +406,7 @@ export default function CopilotAgentPage() {
           case "/model": {
             const newModelId = parts[1];
             if (newModelId) {
-              const found = COPILOT_MODELS.find((m) => m.id === newModelId);
+              const found = availableModels.find((m) => m.id === newModelId);
               if (found) {
                 setModel(newModelId);
               }
@@ -426,8 +446,243 @@ export default function CopilotAgentPage() {
 
       await sendMessage(text);
     },
-    [sendMessage, handleNewSession],
+    [sendMessage, handleNewSession, availableModels],
   );
+
+  const renderContent = () => {
+    if (showStartDialog) {
+      return (
+        <div className="flex-1 flex items-center justify-center p-6">
+          <Card className="max-w-md w-full">
+            <CardHeader className="text-center">
+              <div className="bg-primary/10 p-4 rounded-full w-fit mx-auto mb-4">
+                <Bot className="h-12 w-12 text-primary" />
+              </div>
+              <CardTitle className="text-2xl">
+                Start Copilot Agent
+              </CardTitle>
+              <CardDescription>
+                Choose your AI model and preferences before starting
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="start-model">Model</Label>
+                <Select value={model} onValueChange={setModel}>
+                  <SelectTrigger id="start-model">
+                    <SelectValue placeholder="Select model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableModels.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span>{m.name}</span>
+                            {m.billing?.multiplier && (
+                              <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
+                                {m.billing.multiplier}x
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {m.name}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="start-reasoning">Reasoning Effort</Label>
+                <Select
+                  value={reasoningEffort}
+                  onValueChange={(v) =>
+                    setReasoningEffort(v as typeof reasoningEffort)
+                  }
+                >
+                  <SelectTrigger id="start-reasoning">
+                    <SelectValue placeholder="Select effort" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {REASONING_EFFORTS.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>
+                        <div className="flex flex-col">
+                          <span>{r.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {r.description}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                onClick={handleStartSession}
+                className="w-full"
+                size="lg"
+              >
+                <Sparkles className="h-5 w-5 mr-2" />
+                Start Agent
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    if (session) {
+      return (
+        <>
+          <div className="flex-1 min-h-0">
+            <Conversation className="h-full">
+              <ConversationContent className="p-6">
+                {messages.length === 0 && !isStreaming ? (
+                  <ConversationEmptyState
+                    icon={<Sparkles className="h-12 w-12" />}
+                    title="Start a conversation"
+                    description="Ask Copilot to help you with coding tasks, debugging, or any development questions."
+                  />
+                ) : (
+                  <>
+                    {messages.map((message, index) => (
+                      <CopilotMessageDisplay
+                        key={message.id}
+                        message={message}
+                        isLast={index === messages.length - 1}
+                        isStreaming={isStreaming}
+                        streamingContent={streamingContent}
+                        streamingReasoning={streamingReasoning}
+                        activeTools={
+                          index === messages.length - 1 ? tools : []
+                        }
+                      />
+                    ))}
+
+                    {/* Show streaming assistant message if no messages yet */}
+                    {messages.length > 0 &&
+                      messages.at(-1)?.role === "user" &&
+                      isStreaming && (
+                        <Message from="assistant">
+                          <MessageContent>
+                            {streamingReasoning && (
+                              <Reasoning isStreaming defaultOpen>
+                                <ReasoningTrigger />
+                                <ReasoningContent>
+                                  {streamingReasoning}
+                                </ReasoningContent>
+                              </Reasoning>
+                            )}
+                            {tools.map((tool) => (
+                              <ToolExecution key={tool.id} tool={tool} />
+                            ))}
+                            {streamingContent ? (
+                              <MessageResponse>
+                                {streamingContent}
+                              </MessageResponse>
+                            ) : (
+                              !streamingReasoning &&
+                              tools.length === 0 && (
+                                <Shimmer duration={1.5}>
+                                  Thinking...
+                                </Shimmer>
+                              )
+                            )}
+                          </MessageContent>
+                        </Message>
+                      )}
+                  </>
+                )}
+              </ConversationContent>
+              <ConversationScrollButton />
+            </Conversation>
+          </div>
+
+          {/* Input area */}
+          <div className="border-t p-4">
+            <PromptInput
+              onSubmit={handleSubmit}
+              className="max-w-4xl mx-auto"
+            >
+              <PromptInputTextarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask Copilot anything..."
+                className="min-h-12"
+              />
+              <PromptInputFooter>
+                <PromptInputTools>
+                  {isStreaming && (
+                    <PromptInputButton
+                      onClick={abort}
+                      variant="ghost"
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <XCircle className="h-4 w-4 mr-1" />
+                      Stop
+                    </PromptInputButton>
+                  )}
+                </PromptInputTools>
+                <PromptInputSubmit
+                  status={(() => {
+                    if (isStreaming) return "streaming";
+                    if (state === "processing") return "submitted";
+                    return "ready";
+                  })()}
+                  disabled={!input.trim() || !session}
+                  onStop={abort}
+                />
+              </PromptInputFooter>
+            </PromptInput>
+          </div>
+        </>
+      );
+    }
+
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          {error ? (
+            <>
+              <div className="bg-destructive/10 p-6 rounded-full w-fit mx-auto">
+                <XCircle className="h-12 w-12 text-destructive" />
+              </div>
+              <h2 className="text-xl font-semibold">
+                Failed to Initialize
+              </h2>
+              <p className="text-muted-foreground max-w-sm">{error}</p>
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowStartDialog(true)}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
+                </Button>
+                <Button onClick={handleStartSession}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Retry
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="bg-muted/50 p-6 rounded-full w-fit mx-auto animate-pulse">
+                <Bot className="h-12 w-12 text-muted-foreground" />
+              </div>
+              <h2 className="text-xl font-semibold">
+                Initializing Copilot...
+              </h2>
+              <p className="text-muted-foreground">
+                Setting up your AI agent session
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -476,6 +731,7 @@ export default function CopilotAgentPage() {
                 setReasoningEffort={(v) =>
                   setReasoningEffort(v as typeof reasoningEffort)
                 }
+                models={availableModels}
               />
 
               {session && (
@@ -526,228 +782,7 @@ export default function CopilotAgentPage() {
       {/* Main content */}
       <main className="flex-1 container mx-auto px-4 py-6 flex flex-col min-h-0">
         <div className="flex-1 flex flex-col rounded-lg border bg-card shadow-sm overflow-hidden">
-          {showStartDialog ? (
-            // Start dialog - choose model before creating session
-            <div className="flex-1 flex items-center justify-center p-6">
-              <Card className="max-w-md w-full">
-                <CardHeader className="text-center">
-                  <div className="bg-primary/10 p-4 rounded-full w-fit mx-auto mb-4">
-                    <Bot className="h-12 w-12 text-primary" />
-                  </div>
-                  <CardTitle className="text-2xl">Start Copilot Agent</CardTitle>
-                  <CardDescription>
-                    Choose your AI model and preferences before starting
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="start-model">Model</Label>
-                    <Select value={model} onValueChange={setModel}>
-                      <SelectTrigger id="start-model">
-                        <SelectValue placeholder="Select model" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {COPILOT_MODELS.map((m) => (
-                          <SelectItem key={m.id} value={m.id}>
-                            <div className="flex flex-col">
-                              <div className="flex items-center gap-2">
-                                <span>{m.name}</span>
-                                {m.multiplier && (
-                                  <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
-                                    {m.multiplier}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-xs text-muted-foreground">
-                                {m.description}
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="start-reasoning">Reasoning Effort</Label>
-                    <Select
-                      value={reasoningEffort}
-                      onValueChange={(v) =>
-                        setReasoningEffort(v as typeof reasoningEffort)
-                      }
-                    >
-                      <SelectTrigger id="start-reasoning">
-                        <SelectValue placeholder="Select effort" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {REASONING_EFFORTS.map((r) => (
-                          <SelectItem key={r.id} value={r.id}>
-                            <div className="flex flex-col">
-                              <span>{r.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {r.description}
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button
-                    onClick={handleStartSession}
-                    className="w-full"
-                    size="lg"
-                  >
-                    <Sparkles className="h-5 w-5 mr-2" />
-                    Start Agent
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          ) : session ? (
-            // Conversation
-            <>
-              <div className="flex-1 min-h-0">
-                <Conversation className="h-full">
-                  <ConversationContent className="p-6">
-                    {messages.length === 0 && !isStreaming ? (
-                      <ConversationEmptyState
-                        icon={<Sparkles className="h-12 w-12" />}
-                        title="Start a conversation"
-                        description="Ask Copilot to help you with coding tasks, debugging, or any development questions."
-                      />
-                    ) : (
-                      <>
-                        {messages.map((message, index) => (
-                          <CopilotMessageDisplay
-                            key={message.id}
-                            message={message}
-                            isLast={index === messages.length - 1}
-                            isStreaming={isStreaming}
-                            streamingContent={streamingContent}
-                            streamingReasoning={streamingReasoning}
-                            activeTools={
-                              index === messages.length - 1 ? tools : []
-                            }
-                          />
-                        ))}
-
-                        {/* Show streaming assistant message if no messages yet */}
-                        {messages.length > 0 &&
-                          messages.at(-1)?.role === "user" &&
-                          isStreaming && (
-                            <Message from="assistant">
-                              <MessageContent>
-                                {streamingReasoning && (
-                                  <Reasoning isStreaming defaultOpen>
-                                    <ReasoningTrigger />
-                                    <ReasoningContent>
-                                      {streamingReasoning}
-                                    </ReasoningContent>
-                                  </Reasoning>
-                                )}
-                                {tools.map((tool) => (
-                                  <ToolExecution key={tool.id} tool={tool} />
-                                ))}
-                                {streamingContent ? (
-                                  <MessageResponse>
-                                    {streamingContent}
-                                  </MessageResponse>
-                                ) : (
-                                  !streamingReasoning &&
-                                  tools.length === 0 && (
-                                    <Shimmer duration={1.5}>
-                                      Thinking...
-                                    </Shimmer>
-                                  )
-                                )}
-                              </MessageContent>
-                            </Message>
-                          )}
-                      </>
-                    )}
-                  </ConversationContent>
-                  <ConversationScrollButton />
-                </Conversation>
-              </div>
-
-              {/* Input area */}
-              <div className="border-t p-4">
-                <PromptInput
-                  onSubmit={handleSubmit}
-                  className="max-w-4xl mx-auto"
-                >
-                  <PromptInputTextarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask Copilot anything..."
-                    className="min-h-12"
-                  />
-                  <PromptInputFooter>
-                    <PromptInputTools>
-                      {isStreaming && (
-                        <PromptInputButton
-                          onClick={abort}
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <XCircle className="h-4 w-4 mr-1" />
-                          Stop
-                        </PromptInputButton>
-                      )}
-                    </PromptInputTools>
-                    <PromptInputSubmit
-                      status={(() => {
-                        if (isStreaming) return "streaming";
-                        if (state === "processing") return "submitted";
-                        return "ready";
-                      })()}
-                      disabled={!input.trim() || !session}
-                      onStop={abort}
-                    />
-                  </PromptInputFooter>
-                </PromptInput>
-              </div>
-            </>
-          ) : (
-            // Loading state — show error with retry if session creation failed
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center space-y-4">
-                {error ? (
-                  <>
-                    <div className="bg-destructive/10 p-6 rounded-full w-fit mx-auto">
-                      <XCircle className="h-12 w-12 text-destructive" />
-                    </div>
-                    <h2 className="text-xl font-semibold">Failed to Initialize</h2>
-                    <p className="text-muted-foreground max-w-sm">
-                      {error}
-                    </p>
-                    <div className="flex items-center justify-center gap-2">
-                      <Button variant="outline" onClick={() => setShowStartDialog(true)}>
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back
-                      </Button>
-                      <Button onClick={handleStartSession}>
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Retry
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="bg-muted/50 p-6 rounded-full w-fit mx-auto animate-pulse">
-                      <Bot className="h-12 w-12 text-muted-foreground" />
-                    </div>
-                    <h2 className="text-xl font-semibold">
-                      Initializing Copilot...
-                    </h2>
-                    <p className="text-muted-foreground">
-                      Setting up your AI agent session
-                    </p>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
+          {renderContent()}
         </div>
 
         {/* Session info card */}

@@ -22,6 +22,7 @@ describe('CopilotEventType', () => {
     'session.usage_info',
     'pending_messages.modified',
     'error',
+    'session.error',
   ]
 
   it('should include all expected event types', () => {
@@ -172,5 +173,23 @@ describe('TypedCopilotEvent', () => {
       },
     }
     expect(event.type).toBe('error')
+  })
+
+  it('should accept session error event', () => {
+    const event: TypedCopilotEvent = {
+      id: '8',
+      type: 'session.error',
+      timestamp: new Date().toISOString(),
+      sessionId: 'session-1',
+      data: {
+        errorType: 'query',
+        message: 'Something went wrong',
+        stack: 'Error: ...',
+      },
+    }
+    expect(event.type).toBe('session.error')
+    const data = event.data as { errorType: string; message: string }
+    expect(data.errorType).toBe('query')
+    expect(data.message).toBe('Something went wrong')
   })
 })

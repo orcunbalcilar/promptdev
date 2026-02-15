@@ -8,7 +8,8 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { nanoid } from 'nanoid'
-import { COPILOT_MODELS, DEFAULT_MODEL_ID } from '@/lib/copilot/models'
+import { DEFAULT_MODEL_ID } from '@/lib/copilot/models'
+import type { ModelInfo } from '@github/copilot-sdk'
 import {
   registerMonitoringSession,
   endMonitoringSession,
@@ -44,6 +45,8 @@ interface UseCopilotSessionReturn {
   state: SessionState
   /** Messages in the conversation */
   messages: CopilotMessage[]
+  /** Available models */
+  availableModels: ModelInfo[]
   /** Active tool executions */
   tools: CopilotToolExecution[]
   /** Current streaming content */
@@ -79,6 +82,7 @@ export function useCopilotSession(
 
   // State
   const [session, setSession] = useState<CopilotSession | null>(null)
+  const [availableModels, setAvailableModels] = useState<ModelInfo[]>([])
   const [state, setState] = useState<SessionState>('idle')
   const [messages, setMessages] = useState<CopilotMessage[]>([])
   const [tools, setTools] = useState<CopilotToolExecution[]>([])
@@ -90,6 +94,22 @@ export function useCopilotSession(
   // Refs
   const eventSourceRef = useRef<EventSource | null>(null)
   const currentMessageIdRef = useRef<string | null>(null)
+
+  // Fetch available models on mount
+  useEffect(() => {
+    async function fetchModels() {
+      try {
+        const res = await fetch('/api/copilot/models')
+        if (res.ok) {
+          const data = await res.json()
+          setAvailableModels(data.models || [])
+        }
+      } catch (e) {
+        console.warn('Failed to fetch models', e)
+      }
+    }
+    fetchModels()
+  }, [])
 
   /**
    * Handle incoming events
@@ -240,6 +260,25 @@ export function useCopilotSession(
         })
         break
       }
+
+      case 'session.error': {
+        const data = event.data as { message: string; errorType?: string }
+        const errorMessage = data.message || 'Session error occurred'
+        setError(errorMessage)
+        setState('error')
+        setIsStreaming(false)
+
+        // Track error in monitoring
+        queueOperation({
+          sessionId: event.sessionId,
+          operationType: 'ERROR',
+          message: errorMessage,
+          success: false,
+          errorMessage: errorMessage,
+          source: 'web',
+        })
+        break
+      }
     }
   }, [onEvent, streamingReasoning, tools])
 
@@ -283,8 +322,9 @@ export function useCopilotSession(
       setState('processing')
 
       const targetModelId = customOptions?.model ?? model
-      const targetModel = COPILOT_MODELS.find(m => m.id === targetModelId)
-      const supportsReasoning = targetModel?.capabilities.reasoning ?? false
+      // Use available models, checking if list is populated
+      const targetModel = availableModels.find(m => m.id === targetModelId)
+      const supportsReasoning = targetModel?.capabilities.supports.reasoningEffort ?? false
 
       const response = await fetch('/api/copilot/sessions', {
         method: 'POST',
@@ -438,6 +478,7 @@ export function useCopilotSession(
 
   return {
     session,
+    availableModels,
     state,
     messages,
     tools,

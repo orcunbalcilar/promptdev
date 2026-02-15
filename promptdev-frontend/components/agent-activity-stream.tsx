@@ -3,7 +3,6 @@
 import { useEffect, useRef, useMemo } from "react"
 import type { TaskEvent, Task, EventType } from "@/lib/api"
 import { cn } from "@/lib/utils"
-import { COPILOT_MODELS } from "@/lib/copilot/models"
 
 // ai-elements imports
 import { Agent, AgentHeader } from "@/components/ai-elements/agent"
@@ -305,9 +304,7 @@ function parseToolResult(
 // ============================================================================
 
 function AgentStartedEvent({ task }: Readonly<{ task: Task }>) {
-  const modelName = task.modelId
-    ? (COPILOT_MODELS.find((m) => m.id === task.modelId)?.name ?? task.modelId)
-    : "Copilot Agent"
+  const modelName = task.modelId || "Copilot Agent"
   return (
     <Agent>
       <AgentHeader name="PromptDev Agent" model={modelName} />
