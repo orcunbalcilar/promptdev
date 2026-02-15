@@ -1,5 +1,6 @@
 "use client";
 
+import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,17 +31,30 @@ import {
   type Repository,
   type WorkspaceType,
 } from "@/lib/api";
-import { getJiraIssue, type JiraIssue } from "@/lib/jira";
 import { DEFAULT_MODEL_ID } from "@/lib/copilot/models";
+import { getJiraIssue, type JiraIssue } from "@/lib/jira";
+import type { ModelInfo } from "@github/copilot-sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ModelInfo } from '@github/copilot-sdk';
-import { FolderOpen, FolderPlus, GitBranch, Plus, RefreshCcw, Shield, Bug, Cog, BookOpen, Loader2, Lightbulb, ExternalLink } from "lucide-react";
-import { Suggestions, Suggestion } from "@/components/ai-elements/suggestion";
-import { useCallback, useEffect, useState } from "react";
+import {
+  BookOpen,
+  Bug,
+  Cog,
+  ExternalLink,
+  FolderOpen,
+  FolderPlus,
+  GitBranch,
+  Lightbulb,
+  Loader2,
+  Plus,
+  RefreshCcw,
+  Shield,
+} from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
 
 export function CreateTaskDialog() {
   const [open, setOpen] = useState(false);
-  const [workspaceType, setWorkspaceType] = useState<WorkspaceType>("BITBUCKET");
+  const [workspaceType, setWorkspaceType] =
+    useState<WorkspaceType>("BITBUCKET");
   const [selectedRepo, setSelectedRepo] = useState("");
   const [selectedSourceBranch, setSelectedSourceBranch] = useState("main");
   const [selectedTargetBranch, setSelectedTargetBranch] = useState("main");
@@ -64,12 +78,10 @@ export function CreateTaskDialog() {
   const queryClient = useQueryClient();
 
   // Fetch available models
-  const {
-    data: models = [],
-  } = useQuery<ModelInfo[]>({
+  const { data: models } = useQuery<ModelInfo[]>({
     queryKey: ["copilot-models"],
     queryFn: async () => {
-      const res = await fetch('/api/copilot/models');
+      const res = await fetch("/api/copilot/models");
       if (!res.ok) return [];
       const data = await res.json();
       return data.models || [];
@@ -78,20 +90,18 @@ export function CreateTaskDialog() {
   });
 
   // Fetch repositories from Bitbucket
-  const {
-    data: repositories = [],
-    isLoading: reposLoading,
-  } = useQuery<Repository[]>({
+  const { data: repositories = [], isLoading: reposLoading } = useQuery<
+    Repository[]
+  >({
     queryKey: ["repositories"],
     queryFn: getRepositories,
     enabled: open && workspaceType === "BITBUCKET",
   });
 
   // Fetch branches when a repo is selected
-  const {
-    data: branches = [],
-    isLoading: branchesLoading,
-  } = useQuery<Branch[]>({
+  const { data: branches = [], isLoading: branchesLoading } = useQuery<
+    Branch[]
+  >({
     queryKey: ["branches", selectedRepo],
     queryFn: () => getBranches(selectedRepo),
     enabled: open && workspaceType === "BITBUCKET" && selectedRepo.length > 0,
@@ -141,21 +151,35 @@ export function CreateTaskDialog() {
       // Auto-populate the title input
       const titleInput = document.getElementById("title") as HTMLInputElement;
       if (titleInput && !titleInput.value) {
-        const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-        nativeSetter?.call(titleInput, `[${issue.key}] ${issue.fields.summary}`);
-        titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+        const nativeSetter = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          "value",
+        )?.set;
+        nativeSetter?.call(
+          titleInput,
+          `[${issue.key}] ${issue.fields.summary}`,
+        );
+        titleInput.dispatchEvent(new Event("input", { bubbles: true }));
       }
       // Auto-populate the prompt textarea
-      const promptTextarea = document.getElementById("prompt") as HTMLTextAreaElement;
+      const promptTextarea = document.getElementById(
+        "prompt",
+      ) as HTMLTextAreaElement;
       if (promptTextarea) {
-        const description = issue.fields.description || "No description provided.";
+        const description =
+          issue.fields.description || "No description provided.";
         const triagePrompt = `## Jira Issue: ${issue.key} - ${issue.fields.summary}\n\n### Original Description:\n${description}\n\n### Implementation Instructions:\nImplement the changes described in the Jira issue above. Ensure:\n- All acceptance criteria are met\n- Existing tests continue to pass\n- New functionality is properly tested\n- Code follows project conventions`;
-        const nativeSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+        const nativeSetter = Object.getOwnPropertyDescriptor(
+          HTMLTextAreaElement.prototype,
+          "value",
+        )?.set;
         nativeSetter?.call(promptTextarea, triagePrompt);
-        promptTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+        promptTextarea.dispatchEvent(new Event("input", { bubbles: true }));
       }
     } catch (err) {
-      setTriageError(err instanceof Error ? err.message : "Failed to fetch Jira issue");
+      setTriageError(
+        err instanceof Error ? err.message : "Failed to fetch Jira issue",
+      );
     } finally {
       setTriageLoading(false);
     }
@@ -178,7 +202,7 @@ export function CreateTaskDialog() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
@@ -273,36 +297,81 @@ export function CreateTaskDialog() {
                 <Suggestion
                   suggestion="Add comprehensive unit tests for the authentication module"
                   onClick={(s) => {
-                    const el = document.getElementById("prompt") as HTMLTextAreaElement;
-                    if (el) { const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set; setter?.call(el, s); el.dispatchEvent(new Event('input', { bubbles: true })); }
+                    const el = document.getElementById(
+                      "prompt",
+                    ) as HTMLTextAreaElement;
+                    if (el) {
+                      const setter = Object.getOwnPropertyDescriptor(
+                        HTMLTextAreaElement.prototype,
+                        "value",
+                      )?.set;
+                      setter?.call(el, s);
+                      el.dispatchEvent(new Event("input", { bubbles: true }));
+                    }
                   }}
                 />
                 <Suggestion
                   suggestion="Create a new REST API endpoint with full CRUD operations"
                   onClick={(s) => {
-                    const el = document.getElementById("prompt") as HTMLTextAreaElement;
-                    if (el) { const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set; setter?.call(el, s); el.dispatchEvent(new Event('input', { bubbles: true })); }
+                    const el = document.getElementById(
+                      "prompt",
+                    ) as HTMLTextAreaElement;
+                    if (el) {
+                      const setter = Object.getOwnPropertyDescriptor(
+                        HTMLTextAreaElement.prototype,
+                        "value",
+                      )?.set;
+                      setter?.call(el, s);
+                      el.dispatchEvent(new Event("input", { bubbles: true }));
+                    }
                   }}
                 />
                 <Suggestion
                   suggestion="Refactor this component to improve performance and readability"
                   onClick={(s) => {
-                    const el = document.getElementById("prompt") as HTMLTextAreaElement;
-                    if (el) { const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set; setter?.call(el, s); el.dispatchEvent(new Event('input', { bubbles: true })); }
+                    const el = document.getElementById(
+                      "prompt",
+                    ) as HTMLTextAreaElement;
+                    if (el) {
+                      const setter = Object.getOwnPropertyDescriptor(
+                        HTMLTextAreaElement.prototype,
+                        "value",
+                      )?.set;
+                      setter?.call(el, s);
+                      el.dispatchEvent(new Event("input", { bubbles: true }));
+                    }
                   }}
                 />
                 <Suggestion
                   suggestion="Fix the bug in the data fetching layer and add proper error handling"
                   onClick={(s) => {
-                    const el = document.getElementById("prompt") as HTMLTextAreaElement;
-                    if (el) { const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set; setter?.call(el, s); el.dispatchEvent(new Event('input', { bubbles: true })); }
+                    const el = document.getElementById(
+                      "prompt",
+                    ) as HTMLTextAreaElement;
+                    if (el) {
+                      const setter = Object.getOwnPropertyDescriptor(
+                        HTMLTextAreaElement.prototype,
+                        "value",
+                      )?.set;
+                      setter?.call(el, s);
+                      el.dispatchEvent(new Event("input", { bubbles: true }));
+                    }
                   }}
                 />
                 <Suggestion
                   suggestion="Update dependencies, fix deprecations, and run security audit"
                   onClick={(s) => {
-                    const el = document.getElementById("prompt") as HTMLTextAreaElement;
-                    if (el) { const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set; setter?.call(el, s); el.dispatchEvent(new Event('input', { bubbles: true })); }
+                    const el = document.getElementById(
+                      "prompt",
+                    ) as HTMLTextAreaElement;
+                    if (el) {
+                      const setter = Object.getOwnPropertyDescriptor(
+                        HTMLTextAreaElement.prototype,
+                        "value",
+                      )?.set;
+                      setter?.call(el, s);
+                      el.dispatchEvent(new Event("input", { bubbles: true }));
+                    }
                   }}
                 />
               </Suggestions>
@@ -448,10 +517,7 @@ export function CreateTaskDialog() {
                     </SelectTrigger>
                     <SelectContent>
                       {branches.map((branch) => (
-                        <SelectItem
-                          key={branch.id}
-                          value={branch.displayId}
-                        >
+                        <SelectItem key={branch.id} value={branch.displayId}>
                           {branch.displayId}
                           {branch.isDefault ? " (default)" : ""}
                         </SelectItem>
@@ -470,10 +536,7 @@ export function CreateTaskDialog() {
                     </SelectTrigger>
                     <SelectContent>
                       {branches.map((branch) => (
-                        <SelectItem
-                          key={branch.id}
-                          value={branch.displayId}
-                        >
+                        <SelectItem key={branch.id} value={branch.displayId}>
                           {branch.displayId}
                           {branch.isDefault ? " (default)" : ""}
                         </SelectItem>
@@ -497,11 +560,9 @@ export function CreateTaskDialog() {
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                           <span>{m.name}</span>
-                          {m.billing?.multiplier && (
-                            <span className="text-xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                              {m.billing.multiplier}x
-                            </span>
-                          )}
+                          <span className="text-xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            {m.billing?.multiplier}x
+                          </span>
                         </div>
                         <span className="text-xs text-muted-foreground">
                           {m.name}
@@ -548,7 +609,9 @@ export function CreateTaskDialog() {
                     max={50}
                     value={maxIterations}
                     onChange={(e) =>
-                      setMaxIterations(Number.parseInt(e.target.value, 10) || 10)
+                      setMaxIterations(
+                        Number.parseInt(e.target.value, 10) || 10,
+                      )
                     }
                   />
                 </div>
@@ -584,7 +647,8 @@ export function CreateTaskDialog() {
                   </span>
                 </Label>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Automatically review generated code and fix issues before committing.
+                  Automatically review generated code and fix issues before
+                  committing.
                 </p>
               </div>
             </div>
@@ -593,7 +657,12 @@ export function CreateTaskDialog() {
             {reviewEnabled && (
               <div className="grid gap-2 pl-4 border-l-2 border-primary/20">
                 <Label>Review Model (optional)</Label>
-                <Select value={reviewModelId || "__same__"} onValueChange={(v) => setReviewModelId(v === "__same__" ? "" : v)}>
+                <Select
+                  value={reviewModelId || "__same__"}
+                  onValueChange={(v) =>
+                    setReviewModelId(v === "__same__" ? "" : v)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Use same model as task" />
                   </SelectTrigger>
@@ -607,7 +676,8 @@ export function CreateTaskDialog() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Optionally use a different model for review (e.g., a faster model for quick reviews).
+                  Optionally use a different model for review (e.g., a faster
+                  model for quick reviews).
                 </p>
               </div>
             )}
@@ -643,14 +713,22 @@ export function CreateTaskDialog() {
                   className="shrink-0"
                 >
                   {triageLoading ? (
-                    <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" />Fetching...</>
+                    <>
+                      <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                      Fetching...
+                    </>
                   ) : (
-                    <><ExternalLink className="h-4 w-4 mr-1.5" />Fetch &amp; Triage</>
+                    <>
+                      <ExternalLink className="h-4 w-4 mr-1.5" />
+                      Fetch &amp; Triage
+                    </>
                   )}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Link this task to a Jira issue. Click &quot;Fetch &amp; Triage&quot; to review and refine the issue details before starting.
+                Link this task to a Jira issue. Click &quot;Fetch &amp;
+                Triage&quot; to review and refine the issue details before
+                starting.
               </p>
 
               {/* Triage Error */}
@@ -671,35 +749,53 @@ export function CreateTaskDialog() {
                     </h4>
                     <div className="rounded-md border bg-background/60 p-3 space-y-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{triageIssue.key}</span>
-                        <span className="text-xs text-muted-foreground">{triageIssue.fields.issuetype.name}</span>
+                        <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">
+                          {triageIssue.key}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {triageIssue.fields.issuetype.name}
+                        </span>
                         <span className="text-xs text-muted-foreground">•</span>
-                        <span className="text-xs text-muted-foreground">{triageIssue.fields.status.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {triageIssue.fields.status.name}
+                        </span>
                         {triageIssue.fields.priority && (
                           <>
-                            <span className="text-xs text-muted-foreground">•</span>
-                            <span className="text-xs text-muted-foreground">{triageIssue.fields.priority.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              •
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {triageIssue.fields.priority.name}
+                            </span>
                           </>
                         )}
                       </div>
-                      <p className="text-sm font-medium">{triageIssue.fields.summary}</p>
+                      <p className="text-sm font-medium">
+                        {triageIssue.fields.summary}
+                      </p>
                       {triageIssue.fields.description && (
                         <p className="text-xs text-muted-foreground whitespace-pre-wrap line-clamp-6">
                           {triageIssue.fields.description}
                         </p>
                       )}
                       {!triageIssue.fields.description && (
-                        <p className="text-xs text-muted-foreground italic">No description provided in Jira.</p>
+                        <p className="text-xs text-muted-foreground italic">
+                          No description provided in Jira.
+                        </p>
                       )}
-                      {triageIssue.fields.labels && triageIssue.fields.labels.length > 0 && (
-                        <div className="flex gap-1 flex-wrap pt-1">
-                          {triageIssue.fields.labels.map((label) => (
-                            <span key={label} className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium">
-                              {label}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                      {triageIssue.fields.labels &&
+                        triageIssue.fields.labels.length > 0 && (
+                          <div className="flex gap-1 flex-wrap pt-1">
+                            {triageIssue.fields.labels.map((label) => (
+                              <span
+                                key={label}
+                                className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium"
+                              >
+                                {label}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                     </div>
                   </div>
 
@@ -711,18 +807,32 @@ export function CreateTaskDialog() {
                     </h4>
                     <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                       {!triageIssue.fields.description && (
-                        <li className="text-yellow-600 dark:text-yellow-400 font-medium">Add a detailed description — the Jira issue has none</li>
+                        <li className="text-yellow-600 dark:text-yellow-400 font-medium">
+                          Add a detailed description — the Jira issue has none
+                        </li>
                       )}
-                      <li>Add specific acceptance criteria for the implementation</li>
-                      <li>Mention technical constraints or architectural requirements</li>
-                      <li>Specify test requirements (unit tests, integration tests, E2E)</li>
+                      <li>
+                        Add specific acceptance criteria for the implementation
+                      </li>
+                      <li>
+                        Mention technical constraints or architectural
+                        requirements
+                      </li>
+                      <li>
+                        Specify test requirements (unit tests, integration
+                        tests, E2E)
+                      </li>
                       <li>Define edge cases or error handling expectations</li>
-                      <li>Reference related files or components that should be modified</li>
+                      <li>
+                        Reference related files or components that should be
+                        modified
+                      </li>
                     </ul>
                   </div>
 
                   <p className="text-xs text-muted-foreground">
-                    ✓ Title and prompt have been pre-filled from the Jira issue. Edit them above to add more detail before creating the task.
+                    ✓ Title and prompt have been pre-filled from the Jira issue.
+                    Edit them above to add more detail before creating the task.
                   </p>
                 </div>
               )}
@@ -737,7 +847,9 @@ export function CreateTaskDialog() {
               <div className="px-3 pb-3 grid gap-4 border-t pt-3">
                 {/* Commit Message Pattern */}
                 <div className="grid gap-2">
-                  <Label htmlFor="commitMessagePattern">Commit Message Pattern</Label>
+                  <Label htmlFor="commitMessagePattern">
+                    Commit Message Pattern
+                  </Label>
                   <Input
                     id="commitMessagePattern"
                     value={commitMessagePattern}
@@ -745,7 +857,8 @@ export function CreateTaskDialog() {
                     placeholder="feat({{scope}}): {{message}}"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Template for commit messages. Use {"{{scope}}"} and {"{{message}}"} placeholders.
+                    Template for commit messages. Use {"{{scope}}"} and{" "}
+                    {"{{message}}"} placeholders.
                   </p>
                 </div>
 
@@ -757,10 +870,13 @@ export function CreateTaskDialog() {
                     value={envVars}
                     onChange={(e) => setEnvVars(e.target.value)}
                     rows={3}
-                    placeholder={"DATABASE_URL=postgresql://...\nAPI_KEY=sk-..."}
+                    placeholder={
+                      "DATABASE_URL=postgresql://...\nAPI_KEY=sk-..."
+                    }
                   />
                   <p className="text-xs text-muted-foreground">
-                    One per line (KEY=VALUE). These are encrypted at rest and injected during execution.
+                    One per line (KEY=VALUE). These are encrypted at rest and
+                    injected during execution.
                   </p>
                 </div>
 
@@ -775,7 +891,8 @@ export function CreateTaskDialog() {
                     placeholder={"npm install\nnpm run build"}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Shell commands to run before the agent starts. Useful for installing dependencies.
+                    Shell commands to run before the agent starts. Useful for
+                    installing dependencies.
                   </p>
                 </div>
 
@@ -788,51 +905,110 @@ export function CreateTaskDialog() {
                     </span>
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Select skills to give the AI agent domain-specific guidance for this task.
+                    Select skills to give the AI agent domain-specific guidance
+                    for this task.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {[
-                      { id: 'react', label: 'React', description: 'React component best practices' },
-                      { id: 'nextjs', label: 'Next.js', description: 'Next.js patterns & App Router' },
-                      { id: 'typescript', label: 'TypeScript', description: 'Type-safe development' },
-                      { id: 'java', label: 'Java', description: 'Java & Spring Boot' },
-                      { id: 'python', label: 'Python', description: 'Python best practices' },
-                      { id: 'testing', label: 'Testing', description: 'Comprehensive testing strategies' },
-                      { id: 'database', label: 'Database', description: 'DB design & query optimization' },
-                      { id: 'security', label: 'Security', description: 'Security audit & vulnerability detection' },
-                      { id: 'api', label: 'API Design', description: 'REST API design & implementation' },
-                      { id: 'docker', label: 'Docker', description: 'Containerization & deployment' },
-                      { id: 'performance', label: 'Performance', description: 'Performance optimization' },
-                      { id: 'playwright', label: 'Playwright', description: 'Browser automation & E2E testing' },
+                      {
+                        id: "react",
+                        label: "React",
+                        description: "React component best practices",
+                      },
+                      {
+                        id: "nextjs",
+                        label: "Next.js",
+                        description: "Next.js patterns & App Router",
+                      },
+                      {
+                        id: "typescript",
+                        label: "TypeScript",
+                        description: "Type-safe development",
+                      },
+                      {
+                        id: "java",
+                        label: "Java",
+                        description: "Java & Spring Boot",
+                      },
+                      {
+                        id: "python",
+                        label: "Python",
+                        description: "Python best practices",
+                      },
+                      {
+                        id: "testing",
+                        label: "Testing",
+                        description: "Comprehensive testing strategies",
+                      },
+                      {
+                        id: "database",
+                        label: "Database",
+                        description: "DB design & query optimization",
+                      },
+                      {
+                        id: "security",
+                        label: "Security",
+                        description: "Security audit & vulnerability detection",
+                      },
+                      {
+                        id: "api",
+                        label: "API Design",
+                        description: "REST API design & implementation",
+                      },
+                      {
+                        id: "docker",
+                        label: "Docker",
+                        description: "Containerization & deployment",
+                      },
+                      {
+                        id: "performance",
+                        label: "Performance",
+                        description: "Performance optimization",
+                      },
+                      {
+                        id: "playwright",
+                        label: "Playwright",
+                        description: "Browser automation & E2E testing",
+                      },
                     ].map((skill) => {
-                      const selected = skills.split(',').map(s => s.trim()).filter(Boolean).includes(skill.id)
+                      const selected = skills
+                        .split(",")
+                        .map((s) => s.trim())
+                        .filter(Boolean)
+                        .includes(skill.id);
                       return (
                         <button
                           type="button"
                           key={skill.id}
                           title={skill.description}
                           onClick={() => {
-                            const current = skills.split(',').map(s => s.trim()).filter(Boolean)
+                            const current = skills
+                              .split(",")
+                              .map((s) => s.trim())
+                              .filter(Boolean);
                             const next = selected
-                              ? current.filter(s => s !== skill.id)
-                              : [...current, skill.id]
-                            setSkills(next.join(', '))
+                              ? current.filter((s) => s !== skill.id)
+                              : [...current, skill.id];
+                            setSkills(next.join(", "));
                           }}
                           className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
                             selected
-                              ? 'bg-primary text-primary-foreground border-primary'
-                              : 'bg-muted/50 text-muted-foreground border-muted hover:bg-muted hover:text-foreground'
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-muted/50 text-muted-foreground border-muted hover:bg-muted hover:text-foreground"
                           }`}
                         >
                           <BookOpen className="h-3 w-3" />
                           {skill.label}
                         </button>
-                      )
+                      );
                     })}
                   </div>
                   {skills && (
                     <div className="text-xs text-muted-foreground mt-1">
-                      Selected: <span className="font-medium text-foreground">{skills}</span>
+                      Selected:{" "}
+                      <span className="font-medium text-foreground">
+                        {skills}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -853,7 +1029,9 @@ export function CreateTaskDialog() {
                 createMutation.isPending ||
                 (workspaceType === "BITBUCKET" && !selectedRepo) ||
                 (workspaceType === "LOCAL" && !newProjectName && !localPath) ||
-                (workspaceType === "LOCAL" && !!newProjectName && !newProjectDir)
+                (workspaceType === "LOCAL" &&
+                  !!newProjectName &&
+                  !newProjectDir)
               }
             >
               {createMutation.isPending ? "Creating..." : "Create Task"}
