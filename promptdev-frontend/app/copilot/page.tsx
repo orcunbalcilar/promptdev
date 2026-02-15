@@ -220,10 +220,13 @@ function CopilotMessageDisplay({
         ))}
 
         {/* Active tools (for streaming message) */}
-        {isLast &&
-          activeTools.map((tool) => (
-            <ToolExecution key={tool.id} tool={tool} />
-          ))}
+        {isLast && activeTools.length > 0 && (
+          <>
+            {activeTools.map((tool) => (
+              <ToolExecution key={tool.id} tool={tool} />
+            ))}
+          </>
+        )}
 
         {/* Message content */}
         {showStreamingContent ? (
@@ -253,7 +256,8 @@ function SettingsDialog({
   models: ModelInfo[];
 }>) {
   const selectedModel = models.find((m) => m.id === model);
-  const supportsReasoning = selectedModel?.capabilities.supports.reasoningEffort ?? false;
+  const supportsReasoning =
+    selectedModel?.capabilities.supports.reasoningEffort ?? false;
 
   return (
     <Dialog>
@@ -458,9 +462,7 @@ export default function CopilotAgentPage() {
               <div className="bg-primary/10 p-4 rounded-full w-fit mx-auto mb-4">
                 <Bot className="h-12 w-12 text-primary" />
               </div>
-              <CardTitle className="text-2xl">
-                Start Copilot Agent
-              </CardTitle>
+              <CardTitle className="text-2xl">Start Copilot Agent</CardTitle>
               <CardDescription>
                 Choose your AI model and preferences before starting
               </CardDescription>
@@ -518,11 +520,7 @@ export default function CopilotAgentPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button
-                onClick={handleStartSession}
-                className="w-full"
-                size="lg"
-              >
+              <Button onClick={handleStartSession} className="w-full" size="lg">
                 <Sparkles className="h-5 w-5 mr-2" />
                 Start Agent
               </Button>
@@ -554,9 +552,7 @@ export default function CopilotAgentPage() {
                         isStreaming={isStreaming}
                         streamingContent={streamingContent}
                         streamingReasoning={streamingReasoning}
-                        activeTools={
-                          index === messages.length - 1 ? tools : []
-                        }
+                        activeTools={index === messages.length - 1 ? tools : []}
                       />
                     ))}
 
@@ -584,9 +580,7 @@ export default function CopilotAgentPage() {
                             ) : (
                               !streamingReasoning &&
                               tools.length === 0 && (
-                                <Shimmer duration={1.5}>
-                                  Thinking...
-                                </Shimmer>
+                                <Shimmer duration={1.5}>Thinking...</Shimmer>
                               )
                             )}
                           </MessageContent>
@@ -601,10 +595,7 @@ export default function CopilotAgentPage() {
 
           {/* Input area */}
           <div className="border-t p-4">
-            <PromptInput
-              onSubmit={handleSubmit}
-              className="max-w-4xl mx-auto"
-            >
+            <PromptInput onSubmit={handleSubmit} className="max-w-4xl mx-auto">
               <PromptInputTextarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -648,9 +639,7 @@ export default function CopilotAgentPage() {
               <div className="bg-destructive/10 p-6 rounded-full w-fit mx-auto">
                 <XCircle className="h-12 w-12 text-destructive" />
               </div>
-              <h2 className="text-xl font-semibold">
-                Failed to Initialize
-              </h2>
+              <h2 className="text-xl font-semibold">Failed to Initialize</h2>
               <p className="text-muted-foreground max-w-sm">{error}</p>
               <div className="flex items-center justify-center gap-2">
                 <Button
@@ -671,9 +660,7 @@ export default function CopilotAgentPage() {
               <div className="bg-muted/50 p-6 rounded-full w-fit mx-auto animate-pulse">
                 <Bot className="h-12 w-12 text-muted-foreground" />
               </div>
-              <h2 className="text-xl font-semibold">
-                Initializing Copilot...
-              </h2>
+              <h2 className="text-xl font-semibold">Initializing Copilot...</h2>
               <p className="text-muted-foreground">
                 Setting up your AI agent session
               </p>
