@@ -53,10 +53,13 @@ import React, { useCallback, useEffect, useState } from "react";
 
 export function CreateTaskDialog() {
   const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [prompt, setPrompt] = useState("");
   const [workspaceType, setWorkspaceType] =
     useState<WorkspaceType>("BITBUCKET");
   const [selectedRepo, setSelectedRepo] = useState("");
-  const [selectedSourceBranch, setSelectedSourceBranch] = useState("main");
+  const [selectedSourceBranch, setSelectedSourceBranch] =
+    useState("__AUTO_GENERATED__");
   const [selectedTargetBranch, setSelectedTargetBranch] = useState("main");
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL_ID);
   const [localPath, setLocalPath] = useState("");
@@ -112,15 +115,16 @@ export function CreateTaskDialog() {
     if (branches.length > 0) {
       const def = branches.find((b) => b.isDefault);
       const id = def?.displayId ?? branches[0]?.displayId ?? "main";
-      setSelectedSourceBranch(id);
       setSelectedTargetBranch(id);
     }
   }, [branches]);
 
   const resetForm = useCallback(() => {
+    setTitle("");
+    setPrompt("");
     setWorkspaceType("BITBUCKET");
     setSelectedRepo("");
-    setSelectedSourceBranch("main");
+    setSelectedSourceBranch("__AUTO_GENERATED__");
     setSelectedTargetBranch("main");
     setSelectedModel(DEFAULT_MODEL_ID);
     setLocalPath("");
@@ -149,32 +153,15 @@ export function CreateTaskDialog() {
       const issue = await getJiraIssue(jiraIssueKey.trim());
       setTriageIssue(issue);
       // Auto-populate the title input
-      const titleInput = document.getElementById("title") as HTMLInputElement;
-      if (titleInput && !titleInput.value) {
-        const nativeSetter = Object.getOwnPropertyDescriptor(
-          HTMLInputElement.prototype,
-          "value",
-        )?.set;
-        nativeSetter?.call(
-          titleInput,
-          `[${issue.key}] ${issue.fields.summary}`,
-        );
-        titleInput.dispatchEvent(new Event("input", { bubbles: true }));
+      if (!title) {
+        setTitle(`[${issue.key}] ${issue.fields.summary}`);
       }
       // Auto-populate the prompt textarea
-      const promptTextarea = document.getElementById(
-        "prompt",
-      ) as HTMLTextAreaElement;
-      if (promptTextarea) {
+      if (!prompt) {
         const description =
           issue.fields.description || "No description provided.";
         const triagePrompt = `## Jira Issue: ${issue.key} - ${issue.fields.summary}\n\n### Original Description:\n${description}\n\n### Implementation Instructions:\nImplement the changes described in the Jira issue above. Ensure:\n- All acceptance criteria are met\n- Existing tests continue to pass\n- New functionality is properly tested\n- Code follows project conventions`;
-        const nativeSetter = Object.getOwnPropertyDescriptor(
-          HTMLTextAreaElement.prototype,
-          "value",
-        )?.set;
-        nativeSetter?.call(promptTextarea, triagePrompt);
-        promptTextarea.dispatchEvent(new Event("input", { bubbles: true }));
+        setPrompt(triagePrompt);
       }
     } catch (err) {
       setTriageError(
@@ -225,8 +212,8 @@ export function CreateTaskDialog() {
     }
 
     createMutation.mutate({
-      title: formData.get("title") as string,
-      prompt: formData.get("prompt") as string,
+      title,
+      prompt,
       repositorySlug,
       workspaceType: effectiveWorkspaceType,
       workspacePath: effectivePath,
@@ -275,12 +262,16 @@ export function CreateTaskDialog() {
             {/* Title */}
             <div className="grid gap-2">
               <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                name="title"
-                required
-                placeholder="Add user authentication"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="title"
+                  name="title"
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Add user authentication"
+                />
+              </div>
             </div>
 
             {/* Prompt */}
@@ -291,88 +282,30 @@ export function CreateTaskDialog() {
                 name="prompt"
                 required
                 rows={4}
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Create a login page with email and password fields..."
               />
               <Suggestions className="mt-1">
                 <Suggestion
                   suggestion="Add comprehensive unit tests for the authentication module"
-                  onClick={(s) => {
-                    const el = document.getElementById(
-                      "prompt",
-                    ) as HTMLTextAreaElement;
-                    if (el) {
-                      const setter = Object.getOwnPropertyDescriptor(
-                        HTMLTextAreaElement.prototype,
-                        "value",
-                      )?.set;
-                      setter?.call(el, s);
-                      el.dispatchEvent(new Event("input", { bubbles: true }));
-                    }
-                  }}
+                  onClick={(s) => setPrompt(s)}
                 />
                 <Suggestion
                   suggestion="Create a new REST API endpoint with full CRUD operations"
-                  onClick={(s) => {
-                    const el = document.getElementById(
-                      "prompt",
-                    ) as HTMLTextAreaElement;
-                    if (el) {
-                      const setter = Object.getOwnPropertyDescriptor(
-                        HTMLTextAreaElement.prototype,
-                        "value",
-                      )?.set;
-                      setter?.call(el, s);
-                      el.dispatchEvent(new Event("input", { bubbles: true }));
-                    }
-                  }}
+                  onClick={(s) => setPrompt(s)}
                 />
                 <Suggestion
                   suggestion="Refactor this component to improve performance and readability"
-                  onClick={(s) => {
-                    const el = document.getElementById(
-                      "prompt",
-                    ) as HTMLTextAreaElement;
-                    if (el) {
-                      const setter = Object.getOwnPropertyDescriptor(
-                        HTMLTextAreaElement.prototype,
-                        "value",
-                      )?.set;
-                      setter?.call(el, s);
-                      el.dispatchEvent(new Event("input", { bubbles: true }));
-                    }
-                  }}
+                  onClick={(s) => setPrompt(s)}
                 />
                 <Suggestion
                   suggestion="Fix the bug in the data fetching layer and add proper error handling"
-                  onClick={(s) => {
-                    const el = document.getElementById(
-                      "prompt",
-                    ) as HTMLTextAreaElement;
-                    if (el) {
-                      const setter = Object.getOwnPropertyDescriptor(
-                        HTMLTextAreaElement.prototype,
-                        "value",
-                      )?.set;
-                      setter?.call(el, s);
-                      el.dispatchEvent(new Event("input", { bubbles: true }));
-                    }
-                  }}
+                  onClick={(s) => setPrompt(s)}
                 />
                 <Suggestion
                   suggestion="Update dependencies, fix deprecations, and run security audit"
-                  onClick={(s) => {
-                    const el = document.getElementById(
-                      "prompt",
-                    ) as HTMLTextAreaElement;
-                    if (el) {
-                      const setter = Object.getOwnPropertyDescriptor(
-                        HTMLTextAreaElement.prototype,
-                        "value",
-                      )?.set;
-                      setter?.call(el, s);
-                      el.dispatchEvent(new Event("input", { bubbles: true }));
-                    }
-                  }}
+                  onClick={(s) => setPrompt(s)}
                 />
               </Suggestions>
             </div>
@@ -509,13 +442,18 @@ export function CreateTaskDialog() {
                     onValueChange={setSelectedSourceBranch}
                   >
                     <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          branchesLoading ? "Loading..." : "Select branch"
-                        }
-                      />
+                      <SelectValue placeholder="Select branch" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="__AUTO_GENERATED__">
+                        <span className="flex items-center gap-2">
+                          <Plus className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium text-primary">
+                            Create: promptdev/{"{task-id}"}
+                          </span>
+                        </span>
+                      </SelectItem>
+                      <div className="my-1 h-px bg-muted" />
                       {branches.map((branch) => (
                         <SelectItem key={branch.id} value={branch.displayId}>
                           {branch.displayId}
@@ -1025,6 +963,8 @@ export function CreateTaskDialog() {
               disabled={
                 createMutation.isPending ||
                 (workspaceType === "BITBUCKET" && !selectedRepo) ||
+                (workspaceType === "BITBUCKET" &&
+                  selectedSourceBranch === selectedTargetBranch) ||
                 (workspaceType === "LOCAL" && !newProjectName && !localPath) ||
                 (workspaceType === "LOCAL" &&
                   !!newProjectName &&
