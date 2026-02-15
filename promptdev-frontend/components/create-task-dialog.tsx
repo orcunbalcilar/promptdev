@@ -564,9 +564,6 @@ export function CreateTaskDialog() {
                             {m.billing?.multiplier}x
                           </span>
                         </div>
-                        <span className="text-xs text-muted-foreground">
-                          {m.name}
-                        </span>
                       </div>
                     </SelectItem>
                   ))}
