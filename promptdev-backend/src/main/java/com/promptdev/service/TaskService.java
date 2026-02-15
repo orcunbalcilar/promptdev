@@ -69,6 +69,27 @@ public class TaskService {
 
         task = taskRepository.save(task);
 
+        // Handle auto-generated branch name
+        if ("__AUTO_GENERATED__".equals(request.getSourceBranch())) {
+            String newBranchName = "promptdev/" + task.getId();
+            String projectKey = bitbucketConfig.getProjectKey();
+            String repoSlug = task.getRepositorySlug();
+            // Default to main if target branch is not specified
+            String startPoint = request.getTargetBranch() != null ? request.getTargetBranch() : "main";
+
+            try {
+                log.info("Auto-creating branch '{}' from '{}' for task {}", newBranchName, startPoint, task.getId());
+                bitbucketService.createBranch(projectKey, repoSlug, newBranchName, startPoint);
+            } catch (Exception e) {
+                // Log but continue - if branch creation fails here (e.g. already exists), 
+                // we still want to set the name and let the agent try to use it.
+                log.warn("Failed to auto-create branch '{}': {}", newBranchName, e.getMessage());
+            }
+
+            task.setSourceBranch(newBranchName);
+            task = taskRepository.save(task);
+        }
+
         // Create initial event
         TaskEvent event = TaskEvent.builder()
                 .task(task)

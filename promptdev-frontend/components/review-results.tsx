@@ -50,6 +50,7 @@ export interface ReviewResultsProps {
 // ============================================================================
 
 function inferLanguage(filePath: string): string {
+  if (!filePath) return "text"
   const ext = filePath.split(".").pop()?.toLowerCase()
   const langMap: Record<string, string> = {
     ts: "typescript",
