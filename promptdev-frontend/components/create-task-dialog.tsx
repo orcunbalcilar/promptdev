@@ -53,7 +53,10 @@ import {
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 
-function getRepoPlaceholder(isLoading: boolean, selectedProject: string): string {
+function getRepoPlaceholder(
+  isLoading: boolean,
+  selectedProject: string,
+): string {
   if (isLoading) return "Loading repositories...";
   if (selectedProject) return "Select a repository";
   return "Select a project first";
@@ -90,16 +93,18 @@ export function CreateTaskDialog() {
   const queryClient = useQueryClient();
 
   // Fetch available models
-  const { data: models } = useQuery<ModelInfo[]>({
-    queryKey: ["copilot-models"],
-    queryFn: async () => {
-      const res = await fetch("/api/copilot/models");
-      if (!res.ok) return [];
-      const data = await res.json();
-      return data.models || [];
+  const { data: models = [], isLoading: modelsLoading } = useQuery<ModelInfo[]>(
+    {
+      queryKey: ["copilot-models"],
+      queryFn: async () => {
+        const res = await fetch("/api/copilot/models");
+        if (!res.ok) return STATIC_MODELS;
+        const data = await res.json();
+        return data.models || STATIC_MODELS;
+      },
+      initialData: STATIC_MODELS,
     },
-    initialData: [],
-  });
+  );
 
   // Fetch available Bitbucket projects
   const { data: projects = [], isLoading: projectsLoading } = useQuery<
@@ -116,13 +121,12 @@ export function CreateTaskDialog() {
   >({
     queryKey: ["repositories", selectedProject],
     queryFn: () => getRepositories(selectedProject || undefined),
-    enabled: open && workspaceType === "BITBUCKET" && selectedProject.length > 0,
+    enabled:
+      open && workspaceType === "BITBUCKET" && selectedProject.length > 0,
   });
 
   // Fetch branches when a repo is selected
-  const { data: branches = [] } = useQuery<
-    Branch[]
-  >({
+  const { data: branches = [] } = useQuery<Branch[]>({
     queryKey: ["branches", selectedProject, selectedRepo],
     queryFn: () => getBranches(selectedRepo, selectedProject || undefined),
     enabled: open && workspaceType === "BITBUCKET" && selectedRepo.length > 0,
@@ -234,7 +238,10 @@ export function CreateTaskDialog() {
       title,
       prompt,
       repositorySlug,
-      projectKey: workspaceType === "BITBUCKET" ? selectedProject || undefined : undefined,
+      projectKey:
+        workspaceType === "BITBUCKET"
+          ? selectedProject || undefined
+          : undefined,
       workspaceType: effectiveWorkspaceType,
       workspacePath: effectivePath,
       sourceBranch: selectedSourceBranch,
@@ -408,7 +415,10 @@ export function CreateTaskDialog() {
                   >
                     <SelectTrigger>
                       <SelectValue
-                        placeholder={getRepoPlaceholder(reposLoading, selectedProject)}
+                        placeholder={getRepoPlaceholder(
+                          reposLoading,
+                          selectedProject,
+                        )}
                       />
                     </SelectTrigger>
                     <SelectContent>
@@ -507,7 +517,11 @@ export function CreateTaskDialog() {
                         <span className="flex items-center gap-2">
                           <Plus className="h-4 w-4 text-muted-foreground" />
                           <span className="font-medium text-primary">
-                            Create: promptdev/{"{task-id}"}
+                            Create:{" "}
+                            {selectedProject
+                              ? selectedProject.toLowerCase()
+                              : "promptdev"}
+                            /{"{task-id}"}
                           </span>
                         </span>
                       </SelectItem>
@@ -546,9 +560,17 @@ export function CreateTaskDialog() {
             {/* Model Selection */}
             <div className="grid gap-2">
               <Label>AI Model</Label>
-              <Select value={selectedModel} onValueChange={setSelectedModel}>
+              <Select
+                value={selectedModel}
+                onValueChange={setSelectedModel}
+                disabled={modelsLoading}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select model" />
+                  <SelectValue
+                    placeholder={
+                      modelsLoading ? "Loading models..." : "Select model"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {models.map((m) => (
@@ -581,7 +603,7 @@ export function CreateTaskDialog() {
                 <Label htmlFor="iterative" className="cursor-pointer">
                   <span className="flex items-center gap-2">
                     <RefreshCcw className="h-4 w-4" />
-                    Iterative Session (multi-step)
+                    Iterative Session (multi-step) - Ralph Loop
                   </span>
                 </Label>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -655,9 +677,16 @@ export function CreateTaskDialog() {
                   onValueChange={(v) =>
                     setReviewModelId(v === "__same__" ? "" : v)
                   }
+                  disabled={modelsLoading}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Use same model as task" />
+                    <SelectValue
+                      placeholder={
+                        modelsLoading
+                          ? "Loading models..."
+                          : "Use same model as task"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__same__">Same as task model</SelectItem>

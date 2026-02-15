@@ -98,6 +98,9 @@ public class RepositoryController {
             @RequestParam(required = false) String projectKey,
             @RequestParam(required = false) String filter) {
         String effectiveProjectKey = resolveProjectKey(projectKey);
+        if (effectiveProjectKey == null || effectiveProjectKey.isBlank()) {
+            throw new IllegalArgumentException("Project key must be provided or configured");
+        }
         log.info("Listing branches for repository: {}/{}", effectiveProjectKey, repoSlug);
         List<BranchResponse> branches = bitbucketService.listBranches(effectiveProjectKey, repoSlug, filter);
         return ResponseEntity.ok(branches);

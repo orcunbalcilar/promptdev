@@ -42,6 +42,7 @@ interface TaskData {
   title: string;
   prompt: string;
   repositorySlug: string;
+  projectKey: string;
   workspaceType: "LOCAL" | "BITBUCKET";
   workspacePath?: string;
   sourceBranch: string;
@@ -947,7 +948,9 @@ async function createPullRequest(
   taskId: string,
   task: TaskData,
 ): Promise<void> {
-  const branchName = task.sourceBranch ?? `promptdev/${taskId}`;
+  const branchName =
+    task.sourceBranch ??
+    `${(task.projectKey || "promptdev").toLowerCase()}/${taskId}`;
   const targetBranch = task.targetBranch ?? "main";
   const maxRetries = 3;
   const retryDelayMs = 5000;
