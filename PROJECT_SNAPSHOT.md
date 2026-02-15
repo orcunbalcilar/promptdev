@@ -76,7 +76,7 @@ Build an AI-powered development platform where users describe features via promp
 - SSE streaming for real-time task progress
 - Agent callback endpoint
 - Bitbucket integration (repo listing, branch listing, PR creation)
-- Event tracking (29 event types)
+- Event tracking (30 operation types)
 - User management with OAuth provider sync (GitHub, Google)
 - User settings API (profile, Bitbucket config, Copilot token)
 - Encrypted secrets (AES-256-GCM for all tokens)

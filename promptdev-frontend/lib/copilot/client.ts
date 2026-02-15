@@ -7,8 +7,8 @@
 
 import {
   CopilotClient,
-  type CopilotSession as SDKSession,
   type ModelInfo,
+  type CopilotSession as SDKSession,
 } from "@github/copilot-sdk";
 import { nanoid } from "nanoid";
 import { DEFAULT_MODEL_ID } from "./models";
@@ -141,7 +141,10 @@ export async function createCopilotSession(
       supportsReasoning = targetModel.capabilities.supports.reasoningEffort;
     }
   } catch (err) {
-    console.warn(`[Copilot] Failed to fetch model capabilities for ${targetModelId}:`, err);
+    console.warn(
+      `[Copilot] Failed to fetch model capabilities for ${targetModelId}:`,
+      err,
+    );
   }
 
   // Build session config
@@ -202,11 +205,6 @@ export async function listAvailableModels(
   try {
     const client = await getClientForUser(userGithubToken);
     const models = await client.listModels();
-    console.log(models);
-    // log model ids for debugging
-    console.log(
-      `[Copilot] Models from SDK: ${models.map((m: { id: string }) => m.id).join(", ")}`,
-    );
     return models;
   } catch (error) {
     console.warn("[Copilot] Failed to list models dynamically:", error);

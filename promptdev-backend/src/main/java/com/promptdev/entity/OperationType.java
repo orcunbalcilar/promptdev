@@ -8,6 +8,7 @@ public enum OperationType {
     SESSION_CREATED,
     SESSION_DESTROYED,
     SESSION_ERROR,
+    USAGE,
 
     // Message operations
     MESSAGE_SENT,

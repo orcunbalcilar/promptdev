@@ -11,7 +11,6 @@ import {
   ProgressBarTrack,
   ProgressBarValue,
 } from "@/components/ai-elements/progress-bar";
-import { StatusIndicator } from "@/components/ai-elements/status-indicator";
 import { TaskChangesSummary } from "@/components/task-changes-summary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -56,7 +55,7 @@ import {
   Shield,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 function getTaskProgress(status: string): number {
@@ -100,6 +99,15 @@ function getStatusIndicatorStatus(
   if (taskStatus === "COMPLETED") return "complete";
   if (["FAILED", "CANCELLED"].includes(taskStatus)) return "error";
   return "submitted";
+}
+
+function getProgressLabel(status: string): string {
+  const labelMap: Record<string, string> = {
+    COMPLETED: "Complete",
+    FAILED: "Failed",
+    CANCELLED: "Cancelled",
+  };
+  return labelMap[status] ?? `${getTaskProgress(status)}%`;
 }
 
 function getProgressWidth(current: number, max: number): string {
@@ -210,9 +218,69 @@ function TaskHeaderActions({
   );
 }
 
+interface EventMetrics {
+  inputTokens: number;
+  outputTokens: number;
+  toolCalls: number;
+  messages: number;
+  errors: number;
+}
+
+function extractTokensFromDetails(details: string): { input: number; output: number } {
+  try {
+    const parsed = JSON.parse(details);
+    return {
+      input: (parsed.inputTokens as number) || 0,
+      output: (parsed.outputTokens as number) || 0,
+    };
+  } catch {
+    return { input: 0, output: 0 };
+  }
+}
+
+function computeEventMetrics(events: TaskEvent[]): EventMetrics | null {
+  if (events.length === 0) return null;
+
+  const metrics: EventMetrics = { inputTokens: 0, outputTokens: 0, toolCalls: 0, messages: 0, errors: 0 };
+
+  for (const event of events) {
+    if (event.eventType === "PROGRESS" && event.details) {
+      const tokens = extractTokensFromDetails(event.details);
+      metrics.inputTokens = Math.max(metrics.inputTokens, tokens.input);
+      metrics.outputTokens = Math.max(metrics.outputTokens, tokens.output);
+    }
+    if (event.eventType === "AGENT_TOOL_CALL") metrics.toolCalls++;
+    if (event.eventType === "AGENT_TOOL_RESULT" || event.eventType === "LOG") metrics.messages++;
+    if (event.eventType === "ERROR" || event.eventType === "TASK_FAILED") metrics.errors++;
+  }
+
+  return metrics;
+}
+
 function SessionMetricsCard({
   session,
-}: Readonly<{ session: MonitoringSession }>) {
+  events,
+}: Readonly<{ session?: MonitoringSession | null; events?: TaskEvent[] }>) {
+  const eventMetrics = useMemo(
+    () => computeEventMetrics(events ?? []),
+    [events],
+  );
+
+  // Prefer monitoring session data, fall back to event-based metrics
+  const metrics = session
+    ? {
+        inputTokens: session.totalInputTokens,
+        outputTokens: session.totalOutputTokens,
+        messages: session.messageCount,
+        toolCalls: session.toolExecutionCount,
+        errors: session.errorCount,
+      }
+    : eventMetrics;
+
+  if (!metrics || (metrics.inputTokens === 0 && metrics.outputTokens === 0 && metrics.toolCalls === 0)) {
+    return null;
+  }
+
   return (
     <Card>
       <CardHeader className="py-3 px-4">
@@ -228,7 +296,7 @@ function SessionMetricsCard({
               Input Tokens
             </span>
             <p className="font-mono font-semibold text-sm">
-              {formatTokenCount(session.totalInputTokens)}
+              {formatTokenCount(metrics.inputTokens)}
             </p>
           </div>
           <div className="space-y-0.5">
@@ -236,13 +304,13 @@ function SessionMetricsCard({
               Output Tokens
             </span>
             <p className="font-mono font-semibold text-sm">
-              {formatTokenCount(session.totalOutputTokens)}
+              {formatTokenCount(metrics.outputTokens)}
             </p>
           </div>
           <div className="space-y-0.5">
             <span className="text-muted-foreground font-medium">Messages</span>
             <p className="font-mono font-semibold text-sm">
-              {session.messageCount}
+              {metrics.messages}
             </p>
           </div>
           <div className="space-y-0.5">
@@ -250,14 +318,14 @@ function SessionMetricsCard({
               Tool Calls
             </span>
             <p className="font-mono font-semibold text-sm">
-              {session.toolExecutionCount}
+              {metrics.toolCalls}
             </p>
           </div>
-          {session.errorCount > 0 && (
+          {metrics.errors > 0 && (
             <div className="space-y-0.5 col-span-2">
               <span className="text-muted-foreground font-medium">Errors</span>
               <p className="font-mono font-semibold text-sm text-destructive">
-                {session.errorCount}
+                {metrics.errors}
               </p>
             </div>
           )}
@@ -553,21 +621,13 @@ export default function TaskDetailPage() {
               <ProgressBarLabel>
                 <span>Task Progress</span>
                 <ProgressBarValue>
-                  {getTaskProgress(task.status)}%
+                  {getProgressLabel(task.status)}
                 </ProgressBarValue>
               </ProgressBarLabel>
               <ProgressBarTrack>
                 <ProgressBarFill value={getTaskProgress(task.status)} />
               </ProgressBarTrack>
             </ProgressBar>
-
-            {/* Agent Status */}
-            <div className="flex items-center gap-2">
-              <StatusIndicator
-                status={getStatusIndicatorStatus(task.status)}
-                showIcon
-              />
-            </div>
 
             <Card>
               <CardHeader className="py-3 px-4">
@@ -773,8 +833,8 @@ export default function TaskDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Session Metrics */}
-            {sessionDetails && <SessionMetricsCard session={sessionDetails} />}
+            {/* Session Metrics - always show if we have events or monitoring data */}
+            <SessionMetricsCard session={sessionDetails} events={allEvents} />
 
             {task.errorMessage && (
               <Card className="border-destructive/50 bg-destructive/5">

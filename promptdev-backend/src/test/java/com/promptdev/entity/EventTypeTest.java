@@ -52,7 +52,7 @@ class EventTypeTest {
         @ValueSource(strings = {
                 "TASK_CREATED", "AGENT_STARTED", "CODE_GENERATING",
                 "GIT_COMMIT", "PR_CREATED", "TASK_COMPLETED",
-                "PROGRESS", "ERROR"
+                "PROGRESS", "ERROR", "LOG"
         })
         @DisplayName("should deserialize common event types from JSON callback")
         void shouldDeserializeCommonEventTypes(String eventTypeName) throws Exception {
