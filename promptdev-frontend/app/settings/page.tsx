@@ -303,13 +303,17 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="bitbucket-project">Project Key</Label>
+                <Label htmlFor="bitbucket-project">Default Project Key (optional)</Label>
                 <Input
                   id="bitbucket-project"
                   placeholder="MYPROJECT"
                   value={bitbucketProjectKey}
                   onChange={(e) => setBitbucketProjectKey(e.target.value)}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Pre-selects this project when creating tasks. You can choose
+                  any project at task creation time.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="bitbucket-user">Username</Label>

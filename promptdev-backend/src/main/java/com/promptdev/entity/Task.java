@@ -36,6 +36,10 @@ public class Task {
     @Column(name = "repository_slug", nullable = false)
     private String repositorySlug;
 
+    /** Bitbucket project key (when workspaceType is BITBUCKET) */
+    @Column(name = "project_key")
+    private String projectKey;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "workspace_type", nullable = false)
     @Builder.Default

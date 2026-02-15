@@ -33,6 +33,7 @@ class TaskMapperTest {
                 .title("Full task")
                 .prompt("Do something")
                 .repositorySlug("my-repo")
+                .projectKey("PRJ")
                 .workspaceType(WorkspaceType.BITBUCKET)
                 .workspacePath("/tmp/workspace")
                 .sourceBranch("feature/test")
@@ -83,6 +84,7 @@ class TaskMapperTest {
             assertThat(response.getTitle()).isEqualTo("Full task");
             assertThat(response.getPrompt()).isEqualTo("Do something");
             assertThat(response.getRepositorySlug()).isEqualTo("my-repo");
+            assertThat(response.getProjectKey()).isEqualTo("PRJ");
             assertThat(response.getWorkspaceType()).isEqualTo(WorkspaceType.BITBUCKET);
             assertThat(response.getWorkspacePath()).isEqualTo("/tmp/workspace");
             assertThat(response.getSourceBranch()).isEqualTo("feature/test");
@@ -240,6 +242,7 @@ class TaskMapperTest {
             TaskResponse response = taskMapper.toResponse(task);
 
             assertThat(response.getJiraIssueKey()).isNull();
+            assertThat(response.getProjectKey()).isNull();
             assertThat(response.getReviewModelId()).isNull();
             assertThat(response.getResumePrompt()).isNull();
             assertThat(response.getCommitMessagePattern()).isNull();

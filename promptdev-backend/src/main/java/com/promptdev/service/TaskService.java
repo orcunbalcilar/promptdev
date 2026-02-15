@@ -47,6 +47,7 @@ public class TaskService {
                 .title(request.getTitle())
                 .prompt(request.getPrompt())
                 .repositorySlug(request.getRepositorySlug())
+                .projectKey(request.getProjectKey() != null ? request.getProjectKey() : bitbucketConfig.getProjectKey())
                 .workspaceType(request.getWorkspaceType() != null ? request.getWorkspaceType() : com.promptdev.entity.WorkspaceType.BITBUCKET)
                 .workspacePath(request.getWorkspacePath())
                 .sourceBranch(request.getSourceBranch() != null ? request.getSourceBranch() : "main")
@@ -72,7 +73,7 @@ public class TaskService {
         // Handle auto-generated branch name
         if ("__AUTO_GENERATED__".equals(request.getSourceBranch())) {
             String newBranchName = "promptdev/" + task.getId();
-            String projectKey = bitbucketConfig.getProjectKey();
+            String projectKey = task.getProjectKey();
             String repoSlug = task.getRepositorySlug();
             // Default to main if target branch is not specified
             String startPoint = request.getTargetBranch() != null ? request.getTargetBranch() : "main";
@@ -410,7 +411,7 @@ public class TaskService {
         Task task = taskRepository.findById(taskId)
             .orElseThrow(() -> new IllegalArgumentException(TASK_NOT_FOUND_MSG + taskId));
 
-        String projectKey = bitbucketConfig.getProjectKey();
+        String projectKey = task.getProjectKey();
         String repoSlug = task.getRepositorySlug();
         String title = request.title() != null ? request.title() : "PromptDev: " + task.getTitle();
         String description = request.description() != null ? request.description() 

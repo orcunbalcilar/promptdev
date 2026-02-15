@@ -256,7 +256,7 @@ describe('SettingsPage', () => {
     await waitFor(() => {
       expect(screen.getByLabelText(/jira server url/i)).toHaveValue('https://jira.company.com')
     })
-    expect(screen.getByLabelText(/default project key/i)).toHaveValue('JIRA')
+    expect(screen.getByLabelText(/^default project key$/i)).toHaveValue('JIRA')
   })
 
   it('should have Save Jira Settings button', async () => {

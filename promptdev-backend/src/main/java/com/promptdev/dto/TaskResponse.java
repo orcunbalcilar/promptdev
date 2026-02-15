@@ -24,6 +24,7 @@ public class TaskResponse {
     private String title;
     private String prompt;
     private String repositorySlug;
+    private String projectKey;
     private WorkspaceType workspaceType;
     private String workspacePath;
     private String sourceBranch;

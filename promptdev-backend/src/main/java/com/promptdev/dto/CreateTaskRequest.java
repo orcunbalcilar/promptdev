@@ -27,6 +27,9 @@ public class CreateTaskRequest {
     @NotBlank(message = "Repository slug is required")
     private String repositorySlug;
 
+    /** Bitbucket project key (when workspaceType is BITBUCKET) */
+    private String projectKey;
+
     /** Type of workspace: LOCAL or BITBUCKET */
     @Builder.Default
     private WorkspaceType workspaceType = WorkspaceType.BITBUCKET;

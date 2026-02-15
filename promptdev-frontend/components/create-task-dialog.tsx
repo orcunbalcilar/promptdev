@@ -24,10 +24,12 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   createTask,
   getBranches,
+  getProjects,
   getRepositories,
   startTask,
   type Branch,
   type CreateTaskRequest,
+  type Project,
   type Repository,
   type WorkspaceType,
 } from "@/lib/api";
@@ -51,12 +53,19 @@ import {
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 
+function getRepoPlaceholder(isLoading: boolean, selectedProject: string): string {
+  if (isLoading) return "Loading repositories...";
+  if (selectedProject) return "Select a repository";
+  return "Select a project first";
+}
+
 export function CreateTaskDialog() {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [prompt, setPrompt] = useState("");
   const [workspaceType, setWorkspaceType] =
     useState<WorkspaceType>("BITBUCKET");
+  const [selectedProject, setSelectedProject] = useState("");
   const [selectedRepo, setSelectedRepo] = useState("");
   const [selectedSourceBranch, setSelectedSourceBranch] =
     useState("__AUTO_GENERATED__");
@@ -92,21 +101,30 @@ export function CreateTaskDialog() {
     initialData: [],
   });
 
-  // Fetch repositories from Bitbucket
-  const { data: repositories = [], isLoading: reposLoading } = useQuery<
-    Repository[]
+  // Fetch available Bitbucket projects
+  const { data: projects = [], isLoading: projectsLoading } = useQuery<
+    Project[]
   >({
-    queryKey: ["repositories"],
-    queryFn: getRepositories,
+    queryKey: ["bitbucket-projects"],
+    queryFn: getProjects,
     enabled: open && workspaceType === "BITBUCKET",
   });
 
+  // Fetch repositories for the selected project
+  const { data: repositories = [], isLoading: reposLoading } = useQuery<
+    Repository[]
+  >({
+    queryKey: ["repositories", selectedProject],
+    queryFn: () => getRepositories(selectedProject || undefined),
+    enabled: open && workspaceType === "BITBUCKET" && selectedProject.length > 0,
+  });
+
   // Fetch branches when a repo is selected
-  const { data: branches = [], isLoading: branchesLoading } = useQuery<
+  const { data: branches = [] } = useQuery<
     Branch[]
   >({
-    queryKey: ["branches", selectedRepo],
-    queryFn: () => getBranches(selectedRepo),
+    queryKey: ["branches", selectedProject, selectedRepo],
+    queryFn: () => getBranches(selectedRepo, selectedProject || undefined),
     enabled: open && workspaceType === "BITBUCKET" && selectedRepo.length > 0,
   });
 
@@ -123,6 +141,7 @@ export function CreateTaskDialog() {
     setTitle("");
     setPrompt("");
     setWorkspaceType("BITBUCKET");
+    setSelectedProject("");
     setSelectedRepo("");
     setSelectedSourceBranch("__AUTO_GENERATED__");
     setSelectedTargetBranch("main");
@@ -215,6 +234,7 @@ export function CreateTaskDialog() {
       title,
       prompt,
       repositorySlug,
+      projectKey: workspaceType === "BITBUCKET" ? selectedProject || undefined : undefined,
       workspaceType: effectiveWorkspaceType,
       workspacePath: effectivePath,
       sourceBranch: selectedSourceBranch,
@@ -317,6 +337,7 @@ export function CreateTaskDialog() {
                 value={workspaceType}
                 onValueChange={(v) => {
                   setWorkspaceType(v as WorkspaceType);
+                  setSelectedProject("");
                   setSelectedRepo("");
                 }}
               >
@@ -342,26 +363,63 @@ export function CreateTaskDialog() {
 
             {/* Repository (Bitbucket) or Local Path */}
             {workspaceType === "BITBUCKET" ? (
-              <div className="grid gap-2">
-                <Label>Repository</Label>
-                <Select value={selectedRepo} onValueChange={setSelectedRepo}>
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        reposLoading
-                          ? "Loading repositories..."
-                          : "Select a repository"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {repositories.map((repo) => (
-                      <SelectItem key={repo.slug} value={repo.slug}>
-                        {repo.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid gap-4">
+                {/* Project Selector */}
+                <div className="grid gap-2">
+                  <Label>Project</Label>
+                  <Select
+                    value={selectedProject}
+                    onValueChange={(v) => {
+                      setSelectedProject(v);
+                      setSelectedRepo("");
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          projectsLoading
+                            ? "Loading projects..."
+                            : "Select a project"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projects.map((project) => (
+                        <SelectItem key={project.key} value={project.key}>
+                          <span className="flex items-center gap-2">
+                            <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">
+                              {project.key}
+                            </span>
+                            <span>{project.name}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Repository Selector */}
+                <div className="grid gap-2">
+                  <Label>Repository</Label>
+                  <Select
+                    value={selectedRepo}
+                    onValueChange={setSelectedRepo}
+                    disabled={!selectedProject}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={getRepoPlaceholder(reposLoading, selectedProject)}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {repositories.map((repo) => (
+                        <SelectItem key={repo.slug} value={repo.slug}>
+                          {repo.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             ) : (
               <div className="grid gap-4">
@@ -962,6 +1020,7 @@ export function CreateTaskDialog() {
               type="submit"
               disabled={
                 createMutation.isPending ||
+                (workspaceType === "BITBUCKET" && !selectedProject) ||
                 (workspaceType === "BITBUCKET" && !selectedRepo) ||
                 (workspaceType === "BITBUCKET" &&
                   selectedSourceBranch === selectedTargetBranch) ||

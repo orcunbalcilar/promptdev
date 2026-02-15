@@ -80,6 +80,7 @@ export interface Task {
   title: string;
   prompt: string;
   repositorySlug: string;
+  projectKey?: string;
   workspaceType: WorkspaceType;
   workspacePath?: string;
   sourceBranch: string;
@@ -137,6 +138,10 @@ export interface Repository {
   name: string;
   description?: string;
   cloneUrl?: string;
+  project?: {
+    key: string;
+    name: string;
+  };
 }
 
 export interface Branch {
@@ -145,10 +150,20 @@ export interface Branch {
   isDefault: boolean;
 }
 
+export interface Project {
+  id: number;
+  key: string;
+  name: string;
+  description?: string;
+  isPublic?: boolean;
+  type?: string;
+}
+
 export interface CreateTaskRequest {
   title: string;
   prompt: string;
   repositorySlug: string;
+  projectKey?: string;
   workspaceType?: WorkspaceType;
   workspacePath?: string;
   sourceBranch?: string;
@@ -362,16 +377,23 @@ export async function cancelTaskExecution(taskId: string): Promise<void> {
 // Repository API
 // ============================================================================
 
-export async function getRepositories(): Promise<Repository[]> {
-  return apiFetch<Repository[]>("/repositories");
+export async function getProjects(): Promise<Project[]> {
+  return apiFetch<Project[]>("/projects");
 }
 
-export async function getBranches(repoSlug: string): Promise<Branch[]> {
-  return apiFetch<Branch[]>(`/repositories/${repoSlug}/branches`);
+export async function getRepositories(projectKey?: string): Promise<Repository[]> {
+  const params = projectKey ? `?projectKey=${encodeURIComponent(projectKey)}` : "";
+  return apiFetch<Repository[]>(`/repositories${params}`);
 }
 
-export async function getDefaultBranch(repoSlug: string): Promise<Branch> {
-  return apiFetch<Branch>(`/repositories/${repoSlug}/default-branch`);
+export async function getBranches(repoSlug: string, projectKey?: string): Promise<Branch[]> {
+  const params = projectKey ? `?projectKey=${encodeURIComponent(projectKey)}` : "";
+  return apiFetch<Branch[]>(`/repositories/${repoSlug}/branches${params}`);
+}
+
+export async function getDefaultBranch(repoSlug: string, projectKey?: string): Promise<Branch> {
+  const params = projectKey ? `?projectKey=${encodeURIComponent(projectKey)}` : "";
+  return apiFetch<Branch>(`/repositories/${repoSlug}/default-branch${params}`);
 }
 
 // ============================================================================

@@ -30,6 +30,7 @@ public class TaskMapper {
                 .title(task.getTitle())
                 .prompt(task.getPrompt())
                 .repositorySlug(task.getRepositorySlug())
+                .projectKey(task.getProjectKey())
                 .workspaceType(task.getWorkspaceType())
                 .workspacePath(task.getWorkspacePath())
                 .sourceBranch(task.getSourceBranch())

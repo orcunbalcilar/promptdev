@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,6 +29,31 @@ public class BitbucketService {
         this.bitbucketRestClient = bitbucketRestClient;
         this.bitbucketBranchUtilsClient = bitbucketBranchUtilsClient;
         this.bitbucketConfig = bitbucketConfig;
+    }
+
+    /**
+     * List all accessible Bitbucket projects.
+     */
+    public List<ProjectResponse> listProjects() {
+        log.info("Listing all Bitbucket projects");
+        PagedResponse<ProjectResponse> response = bitbucketRestClient.get()
+                .uri("/projects?limit=100")
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() {});
+        return response != null ? response.values() : Collections.emptyList();
+    }
+
+    /**
+     * List repositories across all accessible projects.
+     */
+    public List<RepositoryResponse> listAllRepositories() {
+        log.info("Listing repositories across all projects");
+        List<ProjectResponse> projects = listProjects();
+        List<RepositoryResponse> allRepos = new ArrayList<>();
+        for (ProjectResponse project : projects) {
+            allRepos.addAll(listRepositories(project.key()));
+        }
+        return allRepos;
     }
 
     /**
