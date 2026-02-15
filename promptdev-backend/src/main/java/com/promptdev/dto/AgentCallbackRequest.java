@@ -39,4 +39,12 @@ public class AgentCallbackRequest {
     private String pullRequestUrl;
 
     private String errorMessage;
+
+    private String toolName;
+
+    private String toolInput;
+
+    private String toolOutput;
+
+    private String fileChanges;
 }

@@ -134,11 +134,21 @@ public class TaskService {
                 .details(callback.getDetails())
                 .codeSnippet(callback.getCodeSnippet())
                 .filePath(callback.getFilePath())
+                .toolName(callback.getToolName())
+                .toolInput(callback.getToolInput())
+                .toolOutput(callback.getToolOutput())
+                .fileChanges(callback.getFileChanges())
                 .build();
         taskEventRepository.save(event);
 
         // Update task based on event type
         updateTaskFromCallback(task, callback);
+
+        // Update copilotSessionId if provided
+        if (callback.getCopilotSessionId() != null && task.getCopilotSessionId() == null) {
+            task.setCopilotSessionId(callback.getCopilotSessionId());
+        }
+
         task = taskRepository.save(task);
 
         TaskResponse response = taskMapper.toResponse(task);
@@ -149,6 +159,9 @@ public class TaskService {
 
         return response;
     }
+
+    private static final java.util.Set<TaskStatus> TERMINAL_STATUSES =
+            java.util.Set.of(TaskStatus.FAILED, TaskStatus.CANCELLED, TaskStatus.COMPLETED);
 
     private void updateTaskFromCallback(Task task, AgentCallbackRequest callback) {
         switch (callback.getEventType()) {
@@ -165,15 +178,28 @@ public class TaskService {
                 task.setStatus(TaskStatus.IN_PROGRESS);
                 task.setCurrentAttempt(task.getCurrentAttempt() + 1);
             }
-            case CODE_GENERATED -> task.setStatus(TaskStatus.CODE_GENERATED);
+            case CODE_GENERATED -> {
+                // Don't regress from terminal status
+                if (!TERMINAL_STATUSES.contains(task.getStatus())) {
+                    task.setStatus(TaskStatus.CODE_GENERATED);
+                }
+            }
             case REVIEWING_STARTED -> {
-                task.setStatus(TaskStatus.REVIEWING);
-                log.info("Task {} entering code review", task.getId());
+                // Don't regress from terminal status (race: error may arrive before this)
+                if (!TERMINAL_STATUSES.contains(task.getStatus())) {
+                    task.setStatus(TaskStatus.REVIEWING);
+                    log.info("Task {} entering code review", task.getId());
+                } else {
+                    log.warn("Task {} ignoring REVIEWING_STARTED; already in terminal status {}",
+                            task.getId(), task.getStatus());
+                }
             }
             case REVIEWING_COMPLETED -> {
                 // Review passed, continue to commit step
-                task.setStatus(TaskStatus.COMMITTING);
-                log.info("Task {} code review completed, proceeding to commit", task.getId());
+                if (!TERMINAL_STATUSES.contains(task.getStatus())) {
+                    task.setStatus(TaskStatus.COMMITTING);
+                    log.info("Task {} code review completed, proceeding to commit", task.getId());
+                }
             }
             case REVIEWING_FAILED -> {
                 task.setStatus(TaskStatus.FAILED);

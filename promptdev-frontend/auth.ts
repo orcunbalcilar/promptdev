@@ -1,12 +1,34 @@
 import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 
+const providers = [];
+
+if (process.env.NODE_ENV === "development") {
+  providers.push(
+    Credentials({
+      id: "password",
+      name: "Password",
+      credentials: {
+        password: { label: "Password", type: "password" },
+      },
+      authorize: (credentials) => {
+        if (credentials.password === "password") {
+          return {
+            email: "bob@alice.com",
+            name: "Bob Alice",
+            image: "https://avatars.githubusercontent.com/u/67470890?s=200&v=4",
+          };
+        }
+        return null;
+      },
+    }),
+  );
+}
+
 export const { auth, handlers, signIn, signOut } = NextAuth({
-  providers: [GitHub, Google],
-  pages: {
-    signIn: "/login",
-  },
+  providers: [...providers, GitHub, Google],
   callbacks: {
     async jwt({ token, account, profile }) {
       // Persist the GitHub access token on initial sign-in
