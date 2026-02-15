@@ -76,6 +76,9 @@ public class RepositoryController {
             @PathVariable String repoSlug,
             @RequestParam(required = false) String projectKey) {
         String effectiveProjectKey = resolveProjectKey(projectKey);
+        if (effectiveProjectKey == null || effectiveProjectKey.isBlank()) {
+            throw new IllegalArgumentException("Project key must be provided or configured");
+        }
         log.info("Fetching repository: {}/{}", effectiveProjectKey, repoSlug);
         RepositoryResponse repo = bitbucketService.getRepository(effectiveProjectKey, repoSlug);
         return ResponseEntity.ok(repo);
