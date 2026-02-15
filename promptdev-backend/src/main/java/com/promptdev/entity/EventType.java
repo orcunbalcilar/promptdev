@@ -24,6 +24,7 @@ public enum EventType {
     ERROR,
     // General progress event
     PROGRESS,
+    LOG,
     // Iterative session events
     ITERATION_STARTED,
     ITERATION_COMPLETED,

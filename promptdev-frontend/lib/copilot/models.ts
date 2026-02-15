@@ -1,4 +1,4 @@
-export const DEFAULT_MODEL_ID = 'claude-sonnet-4.5'
+export const DEFAULT_MODEL_ID = 'gpt-5-mini'
 
 /**
  * Infer provider from model ID prefix

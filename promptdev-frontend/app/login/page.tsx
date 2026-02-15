@@ -78,6 +78,22 @@ function LoginForm() {
             Continue with Google
           </Button>
 
+          {process.env.NODE_ENV === "development" && (
+            <div className="pt-4 border-t mt-4">
+              <div className="text-xs text-center text-muted-foreground mb-4">
+                Development Mode Only
+              </div>
+              <Button
+                variant="outline"
+                className="w-full h-11 gap-3 border-dashed"
+                onClick={() => signIn("password", { password: "password", callbackUrl })}
+              >
+                <Zap className="h-5 w-5" />
+                Sign in as Test User
+              </Button>
+            </div>
+          )}
+
           <p className="text-xs text-muted-foreground text-center pt-2">
             By signing in, you agree to use PromptDev responsibly for AI-powered development.
           </p>

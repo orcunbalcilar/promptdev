@@ -18,8 +18,6 @@ export async function GET() {
   try {
     const dynamicModels = await listAvailableModels();
 
-    console.log(dynamicModels);
-
     if (dynamicModels.length > 0) {
       return NextResponse.json({ models: dynamicModels, source: "dynamic" });
     }

@@ -199,6 +199,29 @@ class MonitoringControllerTest {
         }
 
         @Test
+        @DisplayName("should track usage operation and return 201")
+        void shouldTrackUsageOperation() throws Exception {
+            var request = TrackOperationRequest.builder()
+                    .operationType(OperationType.USAGE)
+                    .message("Token usage stats").source("copilot-sdk").build();
+
+            var operation = CopilotOperation.builder()
+                    .id(UUID.randomUUID())
+                    .operationType(OperationType.USAGE).build();
+
+            when(monitoringService.trackOperation(any(TrackOperationRequest.class)))
+                    .thenReturn(operation);
+
+            mockMvc.perform(post(OPS_EP)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id").exists());
+            
+            verify(monitoringService).trackOperation(any(TrackOperationRequest.class));
+        }
+
+        @Test
         @DisplayName("should reject operation without operationType")
         void shouldRejectWithoutType() throws Exception {
             mockMvc.perform(post(OPS_EP)
