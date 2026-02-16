@@ -98,11 +98,10 @@ export function CreateTaskDialog() {
       queryKey: ["copilot-models"],
       queryFn: async () => {
         const res = await fetch("/api/copilot/models");
-        if (!res.ok) return STATIC_MODELS;
+        if (!res.ok) return [];
         const data = await res.json();
-        return data.models || STATIC_MODELS;
+        return data.models || [];
       },
-      initialData: STATIC_MODELS,
     },
   );
 
