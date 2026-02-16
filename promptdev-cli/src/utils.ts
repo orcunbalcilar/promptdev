@@ -3,7 +3,7 @@
  */
 
 import { execSync, spawn, type ChildProcess } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
@@ -74,7 +74,7 @@ export function spawnDetached(
   logFile?: string,
 ): ChildProcess {
   const out = logFile
-    ? require('node:fs').openSync(logFile, 'a')
+    ? openSync(logFile, 'a')
     : 'ignore'
   const child = spawn(command, args, {
     cwd,
@@ -129,7 +129,7 @@ export function getVersionInfo(projectDir: string): VersionInfo {
   const pomPath = join(projectDir, 'promptdev-backend', 'pom.xml')
   if (existsSync(pomPath)) {
     const pom = readFileSync(pomPath, 'utf-8')
-    const match = pom.match(/<version>([^<]+)<\/version>/)
+    const match = new RegExp(/<version>([^<]+)<\/version>/).exec(pom)
     if (match) backendVersion = match[1]
   }
 

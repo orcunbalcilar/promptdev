@@ -16,7 +16,7 @@ interface StartOptions {
 
 type ServiceName = 'db' | 'backend' | 'frontend'
 
-async function startDatabase(projectDir: string): Promise<boolean> {
+async function startDatabase(): Promise<boolean> {
   const spinner = ora('Starting PostgreSQL...').start()
 
   if (isPortInUse(5432)) {
@@ -113,7 +113,7 @@ async function startFrontend(projectDir: string, detach: boolean): Promise<boole
 }
 
 const SERVICE_STARTERS: Record<ServiceName, (dir: string, detach: boolean) => Promise<boolean>> = {
-  db: (dir) => startDatabase(dir),
+  db: () => startDatabase(),
   backend: startBackend,
   frontend: startFrontend,
 }
@@ -132,7 +132,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
     await SERVICE_STARTERS[svc](projectDir, options.detach)
   } else {
     // Start all services in order
-    await startDatabase(projectDir)
+    await startDatabase()
     // Wait a bit for DB to be ready
     await new Promise(resolve => setTimeout(resolve, 2000))
     await startBackend(projectDir, options.detach)
