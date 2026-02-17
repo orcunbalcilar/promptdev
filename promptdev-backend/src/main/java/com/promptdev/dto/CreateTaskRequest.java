@@ -97,4 +97,7 @@ public class CreateTaskRequest {
 
     /** JSON array of additional repository slugs */
     private String additionalRepositories;
+
+    /** Custom system prompt for this task */
+    private String systemPrompt;
 }

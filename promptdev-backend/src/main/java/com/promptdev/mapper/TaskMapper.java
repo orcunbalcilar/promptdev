@@ -59,6 +59,7 @@ public class TaskMapper {
                 .bootScript(task.getBootScript())
                 .skills(task.getSkills())
                 .additionalRepositories(task.getAdditionalRepositories())
+                .systemPrompt(task.getSystemPrompt())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
                 .completedAt(task.getCompletedAt());

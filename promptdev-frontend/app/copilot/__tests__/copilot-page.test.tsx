@@ -14,8 +14,20 @@ const mockSendMessage = vi.fn()
 const mockAbort = vi.fn()
 const mockDestroy = vi.fn()
 const mockClearError = vi.fn()
+const mockModels = [
+  {
+    id: 'gpt-5.2',
+    name: 'GPT-5.2',
+    description: 'Latest model',
+    provider: 'openai',
+    billing: { multiplier: 1 },
+    capabilities: { supports: { reasoningEffort: true } },
+  },
+]
+
 let hookState = {
   session: null as null | { id: string; model: string; createdAt: string },
+  availableModels: mockModels as Array<unknown>,
   state: 'idle' as string,
   messages: [] as Array<{ id: string; role: string; content: string }>,
   tools: [] as Array<unknown>,
@@ -92,6 +104,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   hookState = {
     session: null,
+    availableModels: mockModels,
     state: 'idle',
     messages: [],
     tools: [],

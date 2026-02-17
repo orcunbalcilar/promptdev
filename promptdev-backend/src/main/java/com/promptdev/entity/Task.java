@@ -173,6 +173,10 @@ public class Task {
     @Column(name = "additional_repositories", columnDefinition = "TEXT")
     private String additionalRepositories;
 
+    /** Custom system prompt for this task (overrides SDLC defaults) */
+    @Column(name = "system_prompt", columnDefinition = "TEXT")
+    private String systemPrompt;
+
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("timestamp ASC")
     @Builder.Default

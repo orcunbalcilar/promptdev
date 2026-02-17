@@ -45,4 +45,14 @@ public class UserProfileDto {
     private String jiraUsername;
     /** True if a Jira token is stored, false otherwise. */
     private boolean jiraTokenSet;
+
+    // Jira auto-task settings
+    private boolean jiraAutoTaskEnabled;
+    private String jiraAutoTaskModelId;
+    private String jiraAutoTaskRepository;
+    private String jiraAutoTaskSourceBranch;
+    private String jiraAutoTaskTargetBranch;
+
+    // Custom system prompt
+    private String customSystemPrompt;
 }

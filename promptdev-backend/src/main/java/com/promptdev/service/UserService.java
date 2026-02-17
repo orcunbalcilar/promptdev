@@ -24,11 +24,36 @@ public class UserService {
 
     private static final String USER_NOT_FOUND = "User not found: ";
 
-    @Value("${promptdev.encryption.key}")
+    @Value("${promptdev.encryption.key:}")
     private String encryptionKeyString;
 
+    /**
+     * Auto-generate ENCRYPTION_KEY at runtime if not provided.
+     * This ensures the application can start without manual key configuration.
+     * The generated key is stable for the lifetime of the JVM process.
+     */
+    private static volatile String generatedKey;
+    private static final Object KEY_LOCK = new Object();
+    private static final java.security.SecureRandom AUTO_KEY_RANDOM = new java.security.SecureRandom();
+
     private SecretKey getEncryptionKey() {
-        return EncryptionUtil.deriveKey(encryptionKeyString);
+        String keyStr = encryptionKeyString;
+        if (keyStr == null || keyStr.isBlank()) {
+            synchronized (KEY_LOCK) {
+                if (generatedKey == null) {
+                    // Generate a stable 32-byte key from a secure random source
+                    byte[] keyBytes = new byte[32];
+                    AUTO_KEY_RANDOM.nextBytes(keyBytes);
+                    generatedKey = java.util.Base64.getEncoder().encodeToString(keyBytes);
+                    org.slf4j.LoggerFactory.getLogger(UserService.class)
+                            .warn("ENCRYPTION_KEY not set — auto-generated a runtime key. "
+                                    + "Encrypted tokens will NOT survive application restarts. "
+                                    + "Set ENCRYPTION_KEY env var for persistent encryption.");
+                }
+                keyStr = generatedKey;
+            }
+        }
+        return EncryptionUtil.deriveKey(keyStr);
     }
 
     /**
@@ -83,6 +108,12 @@ public class UserService {
                 .jiraProjectKey(user.getJiraProjectKey())
                 .jiraUsername(user.getJiraUsername())
                 .jiraTokenSet(user.getJiraTokenEncrypted() != null)
+                .jiraAutoTaskEnabled(Boolean.TRUE.equals(user.getJiraAutoTaskEnabled()))
+                .jiraAutoTaskModelId(user.getJiraAutoTaskModelId())
+                .jiraAutoTaskRepository(user.getJiraAutoTaskRepository())
+                .jiraAutoTaskSourceBranch(user.getJiraAutoTaskSourceBranch())
+                .jiraAutoTaskTargetBranch(user.getJiraAutoTaskTargetBranch())
+                .customSystemPrompt(user.getCustomSystemPrompt())
                 .build();
     }
 
@@ -97,72 +128,73 @@ public class UserService {
 
         SecretKey key = getEncryptionKey();
 
-        if (request.getBitbucketUrl() != null) {
-            user.setBitbucketUrl(request.getBitbucketUrl());
-        }
-        if (request.getBitbucketProjectKey() != null) {
-            user.setBitbucketProjectKey(request.getBitbucketProjectKey());
-        }
-        if (request.getBitbucketUsername() != null) {
-            user.setBitbucketUsername(request.getBitbucketUsername());
-        }
-        if (request.getBitbucketToken() != null) {
-            if (request.getBitbucketToken().isEmpty()) {
-                user.setBitbucketTokenEncrypted(null);
-            } else {
-                user.setBitbucketTokenEncrypted(
-                        EncryptionUtil.encrypt(request.getBitbucketToken(), key));
-            }
-        }
-        if (request.getCopilotToken() != null) {
-            if (request.getCopilotToken().isEmpty()) {
-                user.setCopilotTokenEncrypted(null);
-            } else {
-                user.setCopilotTokenEncrypted(
-                        EncryptionUtil.encrypt(request.getCopilotToken(), key));
-            }
-        }
-
-        // BYOK Provider settings
-        if (request.getByokProviderType() != null) {
-            user.setByokProviderType(request.getByokProviderType().isEmpty() ? null : request.getByokProviderType());
-        }
-        if (request.getByokBaseUrl() != null) {
-            user.setByokBaseUrl(request.getByokBaseUrl().isEmpty() ? null : request.getByokBaseUrl());
-        }
-        if (request.getByokApiKey() != null) {
-            if (request.getByokApiKey().isEmpty()) {
-                user.setByokApiKeyEncrypted(null);
-            } else {
-                user.setByokApiKeyEncrypted(
-                        EncryptionUtil.encrypt(request.getByokApiKey(), key));
-            }
-        }
-        if (request.getByokAzureApiVersion() != null) {
-            user.setByokAzureApiVersion(request.getByokAzureApiVersion().isEmpty() ? null : request.getByokAzureApiVersion());
-        }
-
-        // Jira settings
-        if (request.getJiraUrl() != null) {
-            user.setJiraUrl(request.getJiraUrl().isEmpty() ? null : request.getJiraUrl());
-        }
-        if (request.getJiraProjectKey() != null) {
-            user.setJiraProjectKey(request.getJiraProjectKey().isEmpty() ? null : request.getJiraProjectKey());
-        }
-        if (request.getJiraUsername() != null) {
-            user.setJiraUsername(request.getJiraUsername().isEmpty() ? null : request.getJiraUsername());
-        }
-        if (request.getJiraToken() != null) {
-            if (request.getJiraToken().isEmpty()) {
-                user.setJiraTokenEncrypted(null);
-            } else {
-                user.setJiraTokenEncrypted(
-                        EncryptionUtil.encrypt(request.getJiraToken(), key));
-            }
-        }
+        updateBitbucketSettings(user, request, key);
+        updateCopilotSettings(user, request, key);
+        updateByokSettings(user, request, key);
+        updateJiraSettings(user, request, key);
+        updateJiraAutoTaskSettings(user, request);
 
         userRepository.save(user);
         return getUserProfile(userId);
+    }
+
+    private void updateBitbucketSettings(User user, UpdateUserSettingsRequest request, SecretKey key) {
+        updateFieldIfPresent(request.getBitbucketUrl(), user::setBitbucketUrl);
+        updateFieldIfPresent(request.getBitbucketProjectKey(), user::setBitbucketProjectKey);
+        updateFieldIfPresent(request.getBitbucketUsername(), user::setBitbucketUsername);
+        updateEncryptedToken(request.getBitbucketToken(), user::setBitbucketTokenEncrypted, key);
+    }
+
+    private void updateCopilotSettings(User user, UpdateUserSettingsRequest request, SecretKey key) {
+        updateEncryptedToken(request.getCopilotToken(), user::setCopilotTokenEncrypted, key);
+    }
+
+    private void updateByokSettings(User user, UpdateUserSettingsRequest request, SecretKey key) {
+        updateNullableField(request.getByokProviderType(), user::setByokProviderType);
+        updateNullableField(request.getByokBaseUrl(), user::setByokBaseUrl);
+        updateEncryptedToken(request.getByokApiKey(), user::setByokApiKeyEncrypted, key);
+        updateNullableField(request.getByokAzureApiVersion(), user::setByokAzureApiVersion);
+    }
+
+    private void updateJiraSettings(User user, UpdateUserSettingsRequest request, SecretKey key) {
+        updateNullableField(request.getJiraUrl(), user::setJiraUrl);
+        updateNullableField(request.getJiraProjectKey(), user::setJiraProjectKey);
+        updateNullableField(request.getJiraUsername(), user::setJiraUsername);
+        updateEncryptedToken(request.getJiraToken(), user::setJiraTokenEncrypted, key);
+    }
+
+    private void updateJiraAutoTaskSettings(User user, UpdateUserSettingsRequest request) {
+        if (request.getJiraAutoTaskEnabled() != null) {
+            user.setJiraAutoTaskEnabled(request.getJiraAutoTaskEnabled());
+        }
+        updateNullableField(request.getJiraAutoTaskModelId(), user::setJiraAutoTaskModelId);
+        updateNullableField(request.getJiraAutoTaskRepository(), user::setJiraAutoTaskRepository);
+        updateNullableField(request.getJiraAutoTaskSourceBranch(), user::setJiraAutoTaskSourceBranch);
+        updateNullableField(request.getJiraAutoTaskTargetBranch(), user::setJiraAutoTaskTargetBranch);
+        if (request.getCustomSystemPrompt() != null) {
+            user.setCustomSystemPrompt(request.getCustomSystemPrompt().isBlank() ? null : request.getCustomSystemPrompt());
+        }
+    }
+
+    /** Set a field directly if the value is non-null. */
+    private void updateFieldIfPresent(String value, java.util.function.Consumer<String> setter) {
+        if (value != null) {
+            setter.accept(value);
+        }
+    }
+
+    /** Set a nullable field: non-null/non-empty → set, empty → null, null → skip. */
+    private void updateNullableField(String value, java.util.function.Consumer<String> setter) {
+        if (value != null) {
+            setter.accept(value.isEmpty() ? null : value);
+        }
+    }
+
+    /** Encrypt and set a token, or clear it if empty. */
+    private void updateEncryptedToken(String rawToken, java.util.function.Consumer<String> setter, SecretKey key) {
+        if (rawToken != null) {
+            setter.accept(rawToken.isEmpty() ? null : EncryptionUtil.encrypt(rawToken, key));
+        }
     }
 
     /**

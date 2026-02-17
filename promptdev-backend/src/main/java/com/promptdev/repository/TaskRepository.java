@@ -40,4 +40,6 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
     List<Task> findByIterativeTrueAndStatusIn(List<TaskStatus> statuses);
 
     List<Task> findByWorkspaceTypeOrderByCreatedAtDesc(WorkspaceType workspaceType);
+
+    boolean existsByJiraIssueKeyAndStatusNotIn(String jiraIssueKey, List<TaskStatus> statuses);
 }

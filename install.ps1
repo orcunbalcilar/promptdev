@@ -183,6 +183,26 @@ function Read-BitbucketConfig {
     }
 }
 
+function Read-JiraConfig {
+    Write-Hr
+    Write-Host ""
+    Write-Info "Jira Server configuration (optional — press Enter to skip)"
+    Write-Host "  Connect your Jira Server instance to link tasks to Jira issues."
+    Write-Host "  The agent can update issue status and add comments with PR links."
+    Write-Host "  Or configure in the web UI Settings page after installation."
+    Write-Host ""
+
+    $script:JiraUrl = Read-Host "[PromptDev] Jira Server URL (e.g. https://jira.company.com)"
+    $script:JiraUsername = Read-Host "[PromptDev] Jira Username"
+    $script:JiraToken = Read-Host "[PromptDev] Jira Token" -MaskInput
+
+    if ($JiraUrl) {
+        Write-Log "Jira configuration saved."
+    } else {
+        Write-Warn "Skipping Jira setup. Configure via Settings in the web UI."
+    }
+}
+
 function Read-GithubToken {
     Write-Hr
     Write-Host ""
@@ -280,6 +300,13 @@ PROMPTDEV_API_URL=http://localhost:8080/api
         $env:BITBUCKET_TOKEN = $BitbucketToken
     }
 
+    # Set session environment for Jira
+    if ($JiraUrl) {
+        $env:JIRA_URL = $JiraUrl
+        $env:JIRA_USERNAME = $JiraUsername
+        $env:JIRA_TOKEN = $JiraToken
+    }
+
     Write-Log "Environment configured."
 }
 
@@ -337,6 +364,7 @@ function Main {
     Read-InstallDir
     Read-SlackConfig
     Read-BitbucketConfig
+    Read-JiraConfig
     Read-GithubToken
 
     Install-Repository

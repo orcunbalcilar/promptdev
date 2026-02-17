@@ -96,6 +96,33 @@ public class User {
     @Column(name = "jira_token_encrypted")
     private String jiraTokenEncrypted;
 
+    /** Whether automatic task creation from Jira assigned issues is enabled */
+    @Column(name = "jira_auto_task_enabled")
+    @Builder.Default
+    private Boolean jiraAutoTaskEnabled = false;
+
+    /** Default model ID for auto-created Jira tasks */
+    @Column(name = "jira_auto_task_model_id")
+    private String jiraAutoTaskModelId;
+
+    /** Default repository slug for auto-created Jira tasks */
+    @Column(name = "jira_auto_task_repository")
+    private String jiraAutoTaskRepository;
+
+    /** Default source branch for auto-created Jira tasks */
+    @Column(name = "jira_auto_task_source_branch")
+    private String jiraAutoTaskSourceBranch;
+
+    /** Default target branch for auto-created Jira tasks */
+    @Column(name = "jira_auto_task_target_branch")
+    private String jiraAutoTaskTargetBranch;
+
+    // ── Custom System Prompt ───────────────────────────────────
+
+    /** User's custom system prompt (overrides default in SDLC templates) */
+    @Column(name = "custom_system_prompt", columnDefinition = "TEXT")
+    private String customSystemPrompt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

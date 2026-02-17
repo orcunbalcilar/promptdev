@@ -53,6 +53,7 @@ public class TaskResponse {
     private String bootScript;
     private String skills;
     private String additionalRepositories;
+    private String systemPrompt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime completedAt;

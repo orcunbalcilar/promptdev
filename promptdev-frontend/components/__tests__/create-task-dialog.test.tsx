@@ -60,7 +60,7 @@ describe('CreateTaskDialog', () => {
 
     expect(screen.getByText('Create New Task')).toBeInTheDocument()
     expect(screen.getByLabelText(/title/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/prompt/i)).toBeInTheDocument()
+    expect(screen.getByLabelText('Prompt')).toBeInTheDocument()
   })
 
   it('should show workspace type selector in dialog', async () => {
@@ -213,15 +213,14 @@ describe('CreateTaskDialog', () => {
       expect(screen.getByText('Repository')).toBeInTheDocument()
     })
 
-    it('should disable repository selector when no project is selected', async () => {
+    it('should show repository selector with placeholder when no project is selected', async () => {
       const user = userEvent.setup()
       renderWithProviders(<CreateTaskDialog />)
 
       await user.click(screen.getByRole('button', { name: /new task/i }))
 
-      // The repo select trigger should be disabled since no project is selected
-      // The placeholder should indicate that a project needs to be selected first
-      expect(screen.getByText('Select a project first')).toBeInTheDocument()
+      // Repos load for all projects when no project is selected
+      expect(screen.getByText('Repository')).toBeInTheDocument()
     })
 
     it('should disable submit when no project is selected for Bitbucket workspace', async () => {
@@ -243,8 +242,6 @@ describe('CreateTaskDialog', () => {
       // In default Bitbucket mode, both Project and Repository labels should be visible
       expect(screen.getByText('Project')).toBeInTheDocument()
       expect(screen.getByText('Repository')).toBeInTheDocument()
-      // Repo placeholder should hint to select a project first
-      expect(screen.getByText('Select a project first')).toBeInTheDocument()
     })
   })
 

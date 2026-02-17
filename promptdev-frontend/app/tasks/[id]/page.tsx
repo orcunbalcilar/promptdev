@@ -1,22 +1,11 @@
 "use client";
 
 import {
-  AgentActivityStream,
   ChangedFilesTree,
 } from "@/components/agent-activity-stream";
-import {
-  ProgressBar,
-  ProgressBarFill,
-  ProgressBarLabel,
-  ProgressBarTrack,
-  ProgressBarValue,
-} from "@/components/ai-elements/progress-bar";
-import { TaskChangesSummary } from "@/components/task-changes-summary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import {
   cancelTask,
   getTask,
@@ -26,314 +15,38 @@ import {
   subscribeToTaskEvents,
   type TaskEvent,
 } from "@/lib/api";
-import {
-  getMonitoringSessionDetails,
-  type MonitoringSession,
-} from "@/lib/monitoring";
+import { getMonitoringSessionDetails } from "@/lib/monitoring";
 import { cn } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ModelInfo } from "@github/copilot-sdk";
 import {
-  AlertCircle,
   ArrowLeft,
-  Ban,
-  BookOpen,
   Bot,
-  Bug,
-  Calendar,
-  CheckCircle2,
   Files,
-  FolderOpen,
-  GitBranch,
-  GitPullRequest,
   Loader2,
   PanelRightClose,
   PanelRightOpen,
-  Play,
-  RefreshCcw,
-  RotateCcw,
-  Shield,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import {
+  statusColors,
+  TaskHeaderActions,
+  TaskSidebar,
+  ResumeForm,
+} from "../_components";
 
-function getTaskProgress(status: string): number {
-  const map: Record<string, number> = {
-    PENDING: 0,
-    QUEUED: 5,
-    TRIAGING: 10,
-    IN_PROGRESS: 30,
-    ITERATION_PENDING: 40,
-    VALIDATING: 45,
-    CODE_GENERATED: 55,
-    REVIEWING: 65,
-    COMMITTING: 75,
-    PUSHING: 85,
-    CREATING_PR: 90,
-    COMPLETED: 100,
-    FAILED: 100,
-    CANCELLED: 100,
-  };
-  return map[status] ?? 50;
-}
-
-function getStatusIndicatorStatus(
-  taskStatus: string,
-): "streaming" | "submitted" | "error" | "complete" {
-  if (["PENDING", "QUEUED"].includes(taskStatus)) return "submitted";
-  if (
-    [
-      "IN_PROGRESS",
-      "TRIAGING",
-      "REVIEWING",
-      "COMMITTING",
-      "PUSHING",
-      "CREATING_PR",
-      "VALIDATING",
-      "ITERATION_PENDING",
-      "CODE_GENERATED",
-    ].includes(taskStatus)
-  )
-    return "streaming";
-  if (taskStatus === "COMPLETED") return "complete";
-  if (["FAILED", "CANCELLED"].includes(taskStatus)) return "error";
-  return "submitted";
-}
-
-function getProgressLabel(status: string): string {
-  const labelMap: Record<string, string> = {
-    COMPLETED: "Complete",
-    FAILED: "Failed",
-    CANCELLED: "Cancelled",
-  };
-  return labelMap[status] ?? `${getTaskProgress(status)}%`;
-}
-
-function getProgressWidth(current: number, max: number): string {
-  const pct = Math.min(Math.round((current / max) * 100), 100);
-  const thresholds: Array<[number, string]> = [
-    [0, "w-0"],
-    [10, "w-1/12"],
-    [25, "w-1/4"],
-    [33, "w-1/3"],
-    [50, "w-1/2"],
-    [66, "w-2/3"],
-    [75, "w-3/4"],
-    [90, "w-11/12"],
-  ];
-  for (const [threshold, cls] of thresholds) {
-    if (pct <= threshold) return cls;
-  }
-  return "w-full";
-}
-
-const statusColors: Record<string, string> = {
-  PENDING: "text-yellow-500 bg-yellow-500/10 border-yellow-200",
-  QUEUED: "text-blue-500 bg-blue-500/10 border-blue-200",
-  TRIAGING: "text-orange-600 bg-orange-600/10 border-orange-200",
-  IN_PROGRESS: "text-blue-600 bg-blue-600/10 border-blue-200",
-  CODE_GENERATED: "text-purple-600 bg-purple-600/10 border-purple-200",
-  REVIEWING: "text-teal-600 bg-teal-600/10 border-teal-200",
-  COMMITTING: "text-indigo-600 bg-indigo-600/10 border-indigo-200",
-  PUSHING: "text-indigo-600 bg-indigo-600/10 border-indigo-200",
-  CREATING_PR: "text-cyan-600 bg-cyan-600/10 border-cyan-200",
-  COMPLETED: "text-green-600 bg-green-600/10 border-green-200",
-  FAILED: "text-red-600 bg-red-600/10 border-red-200",
-  CANCELLED: "text-gray-500 bg-gray-500/10 border-gray-200",
-  ITERATION_PENDING: "text-amber-600 bg-amber-600/10 border-amber-200",
-  VALIDATING: "text-indigo-600 bg-indigo-600/10 border-indigo-200",
-};
-
-function getAgentStatusStyle(status: string, isLive: boolean) {
-  if (isLive && !["COMPLETED", "FAILED", "CANCELLED"].includes(status)) {
-    return "border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/30";
-  }
-  if (status === "COMPLETED") {
-    return "border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/30";
-  }
-  if (status === "FAILED") {
-    return "border-red-200 bg-red-50/50 dark:border-red-900 dark:bg-red-950/30";
-  }
-  return "border-muted";
-}
-
-function formatTokenCount(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
-  return String(n);
-}
-
-function TaskHeaderActions({
-  task,
-  showResumeForm,
-  setShowResumeForm,
-  onRetry,
-  onCancel,
-}: Readonly<{
-  task: { id: string; status: string; resumeCount?: number | null };
-  showResumeForm: boolean;
-  setShowResumeForm: (v: boolean) => void;
-  onRetry: () => void;
-  onCancel: () => void;
-}>) {
-  return (
-    <div className="flex items-center gap-2">
-      {(task.status === "COMPLETED" || task.status === "FAILED") && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowResumeForm(!showResumeForm)}
-        >
-          <RotateCcw className="h-4 w-4 mr-2" />
-          {task.status === "COMPLETED" ? "Continue" : "Resume"}
-          {task.resumeCount ? ` (${task.resumeCount})` : ""}
-        </Button>
-      )}
-      {(task.status === "FAILED" || task.status === "CANCELLED") && (
-        <Button variant="outline" size="sm" onClick={onRetry}>
-          <Play className="h-4 w-4 mr-2" />
-          Retry
-        </Button>
-      )}
-      {[
-        "PENDING",
-        "QUEUED",
-        "IN_PROGRESS",
-        "TRIAGING",
-        "REVIEWING",
-        "VALIDATING",
-        "ITERATION_PENDING",
-        "CODE_GENERATED",
-        "COMMITTING",
-        "PUSHING",
-        "CREATING_PR",
-      ].includes(task.status) && (
-        <Button variant="destructive" size="sm" onClick={onCancel}>
-          <Ban className="h-4 w-4 mr-2" />
-          Cancel
-        </Button>
-      )}
-    </div>
-  );
-}
-
-interface EventMetrics {
-  inputTokens: number;
-  outputTokens: number;
-  toolCalls: number;
-  messages: number;
-  errors: number;
-}
-
-function extractTokensFromDetails(details: string): { input: number; output: number } {
-  try {
-    const parsed = JSON.parse(details);
-    return {
-      input: (parsed.inputTokens as number) || 0,
-      output: (parsed.outputTokens as number) || 0,
-    };
-  } catch {
-    return { input: 0, output: 0 };
-  }
-}
-
-function computeEventMetrics(events: TaskEvent[]): EventMetrics | null {
-  if (events.length === 0) return null;
-
-  const metrics: EventMetrics = { inputTokens: 0, outputTokens: 0, toolCalls: 0, messages: 0, errors: 0 };
-
-  for (const event of events) {
-    if (event.eventType === "PROGRESS" && event.details) {
-      const tokens = extractTokensFromDetails(event.details);
-      metrics.inputTokens = Math.max(metrics.inputTokens, tokens.input);
-      metrics.outputTokens = Math.max(metrics.outputTokens, tokens.output);
-    }
-    if (event.eventType === "AGENT_TOOL_CALL") metrics.toolCalls++;
-    if (event.eventType === "AGENT_TOOL_RESULT" || event.eventType === "LOG") metrics.messages++;
-    if (event.eventType === "ERROR" || event.eventType === "TASK_FAILED") metrics.errors++;
-  }
-
-  return metrics;
-}
-
-function SessionMetricsCard({
-  session,
-  events,
-}: Readonly<{ session?: MonitoringSession | null; events?: TaskEvent[] }>) {
-  const eventMetrics = useMemo(
-    () => computeEventMetrics(events ?? []),
-    [events],
-  );
-
-  // Prefer monitoring session data, fall back to event-based metrics
-  const metrics = session
-    ? {
-        inputTokens: session.totalInputTokens,
-        outputTokens: session.totalOutputTokens,
-        messages: session.messageCount,
-        toolCalls: session.toolExecutionCount,
-        errors: session.errorCount,
-      }
-    : eventMetrics;
-
-  if (!metrics || (metrics.inputTokens === 0 && metrics.outputTokens === 0 && metrics.toolCalls === 0)) {
-    return null;
-  }
-
-  return (
-    <Card>
-      <CardHeader className="py-3 px-4">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <Bot className="h-3.5 w-3.5" />
-          Session Metrics
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="px-4 pb-4">
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <div className="space-y-0.5">
-            <span className="text-muted-foreground font-medium">
-              Input Tokens
-            </span>
-            <p className="font-mono font-semibold text-sm">
-              {formatTokenCount(metrics.inputTokens)}
-            </p>
-          </div>
-          <div className="space-y-0.5">
-            <span className="text-muted-foreground font-medium">
-              Output Tokens
-            </span>
-            <p className="font-mono font-semibold text-sm">
-              {formatTokenCount(metrics.outputTokens)}
-            </p>
-          </div>
-          <div className="space-y-0.5">
-            <span className="text-muted-foreground font-medium">Messages</span>
-            <p className="font-mono font-semibold text-sm">
-              {metrics.messages}
-            </p>
-          </div>
-          <div className="space-y-0.5">
-            <span className="text-muted-foreground font-medium">
-              Tool Calls
-            </span>
-            <p className="font-mono font-semibold text-sm">
-              {metrics.toolCalls}
-            </p>
-          </div>
-          {metrics.errors > 0 && (
-            <div className="space-y-0.5 col-span-2">
-              <span className="text-muted-foreground font-medium">Errors</span>
-              <p className="font-mono font-semibold text-sm text-destructive">
-                {metrics.errors}
-              </p>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+// Lazy-load heaviest components
+const AgentActivityStream = dynamic(
+  () => import("@/components/agent-activity-stream").then((m) => ({ default: m.AgentActivityStream })),
+  { ssr: false, loading: () => <div className="flex items-center justify-center h-32"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> },
+);
+const TaskChangesSummary = dynamic(
+  () => import("@/components/task-changes-summary").then((m) => ({ default: m.TaskChangesSummary })),
+  { ssr: false, loading: () => <div className="flex items-center justify-center h-32"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> },
+);
 
 export default function TaskDetailPage() {
   const params = useParams();
@@ -538,320 +251,29 @@ export default function TaskDetailPage() {
 
       {/* Resume Form */}
       {showResumeForm && (
-        <div className="border-b bg-primary/5 px-4 py-4">
-          <div className="container mx-auto max-w-2xl space-y-3">
-            <h3 className="text-sm font-semibold flex items-center gap-2">
-              <RotateCcw className="h-4 w-4" />
-              Resume Session
-            </h3>
-            <Textarea
-              value={resumePrompt}
-              onChange={(e) => setResumePrompt(e.target.value)}
-              placeholder="Describe what you want the agent to improve or change..."
-              rows={3}
-            />
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setShowResumeForm(false);
-                  setResumePrompt("");
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleResume}
-                disabled={isResuming || !resumePrompt.trim()}
-              >
-                {isResuming ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Play className="h-4 w-4 mr-2" />
-                )}
-                Resume Task
-              </Button>
-            </div>
-          </div>
-        </div>
+        <ResumeForm
+          resumePrompt={resumePrompt}
+          setResumePrompt={setResumePrompt}
+          isResuming={isResuming}
+          onResume={handleResume}
+          onClose={() => {
+            setShowResumeForm(false);
+            setResumePrompt("");
+          }}
+        />
       )}
 
       {/* Main Content - 3 Panel Layout */}
       <main className="flex-1 overflow-hidden">
         <div className="flex h-[calc(100vh-4rem)] divide-x">
           {/* Left Panel - Task Info */}
-          <div className="w-80 shrink-0 overflow-y-auto p-4 space-y-4">
-            {/* Agent Status Indicator */}
-            <div
-              className={cn(
-                "flex items-center gap-2 rounded-md border p-3",
-                getAgentStatusStyle(task.status, isLive),
-              )}
-            >
-              <Bot
-                className={cn(
-                  "h-5 w-5",
-                  isLive &&
-                    !["COMPLETED", "FAILED", "CANCELLED"].includes(task.status)
-                    ? "text-blue-600 animate-pulse"
-                    : "text-muted-foreground",
-                )}
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">
-                  {task.modelId
-                    ? (models.find((m) => m.id === task.modelId)
-                        ?.name ?? task.modelId)
-                    : "Copilot Agent"}
-                </p>
-                <p className="text-xs text-muted-foreground capitalize">
-                  {task.status.replaceAll("_", " ").toLowerCase()}
-                </p>
-              </div>
-              {isLive &&
-                !["COMPLETED", "FAILED", "CANCELLED"].includes(task.status) && (
-                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                )}
-            </div>
-
-            {/* Task Progress */}
-            <ProgressBar value={getTaskProgress(task.status)}>
-              <ProgressBarLabel>
-                <span>Task Progress</span>
-                <ProgressBarValue>
-                  {getProgressLabel(task.status)}
-                </ProgressBarValue>
-              </ProgressBarLabel>
-              <ProgressBarTrack>
-                <ProgressBarFill value={getTaskProgress(task.status)} />
-              </ProgressBarTrack>
-            </ProgressBar>
-
-            <Card>
-              <CardHeader className="py-3 px-4">
-                <CardTitle className="text-sm">Task Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm px-4 pb-4">
-                {/* Workspace */}
-                <div className="space-y-1">
-                  <span className="text-muted-foreground font-medium text-xs">
-                    Workspace
-                  </span>
-                  <div className="font-mono bg-muted px-2 py-1 rounded text-xs break-all flex items-center gap-1.5">
-                    {task.workspaceType === "LOCAL" ? (
-                      <FolderOpen className="h-3 w-3 shrink-0" />
-                    ) : (
-                      <GitBranch className="h-3 w-3 shrink-0" />
-                    )}
-                    {task.repositorySlug}
-                    <Badge
-                      variant="outline"
-                      className="ml-auto text-[10px] px-1 py-0"
-                    >
-                      {task.workspaceType === "LOCAL" ? "Local" : "Bitbucket"}
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Branches */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <span className="text-muted-foreground font-medium text-xs">
-                      Source
-                    </span>
-                    <div className="font-mono text-xs flex items-center gap-1">
-                      <GitBranch className="h-3 w-3" />
-                      {task.sourceBranch}
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-muted-foreground font-medium text-xs">
-                      Target
-                    </span>
-                    <div className="font-mono text-xs flex items-center gap-1">
-                      <GitBranch className="h-3 w-3" />
-                      {task.targetBranch}
-                    </div>
-                  </div>
-                </div>
-
-                {task.pullRequestUrl && (
-                  <div className="pt-1">
-                    <a
-                      href={task.pullRequestUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-primary hover:underline font-medium text-xs"
-                    >
-                      <GitPullRequest className="h-3.5 w-3.5" />
-                      View Pull Request
-                    </a>
-                  </div>
-                )}
-
-                {/* Jira Issue Link */}
-                {task.jiraIssueKey && (
-                  <div className="space-y-1">
-                    <span className="text-muted-foreground font-medium text-xs">
-                      Jira Issue
-                    </span>
-                    <div className="flex items-center gap-2 text-xs">
-                      <Bug className="h-3 w-3" />
-                      <Badge
-                        variant="outline"
-                        className="font-mono text-[10px]"
-                      >
-                        {task.jiraIssueKey}
-                      </Badge>
-                    </div>
-                  </div>
-                )}
-
-                {/* Review Status */}
-                {task.reviewEnabled !== undefined && (
-                  <div className="space-y-1">
-                    <span className="text-muted-foreground font-medium text-xs">
-                      Review
-                    </span>
-                    <div className="flex items-center gap-2 text-xs">
-                      <Shield className="h-3 w-3" />
-                      <span>{task.reviewEnabled ? "Enabled" : "Disabled"}</span>
-                      {task.reviewModelId && (
-                        <Badge variant="secondary" className="text-[10px] ml-1">
-                          {task.reviewModelId}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Skills */}
-                {task.skills && (
-                  <div className="space-y-1">
-                    <span className="text-muted-foreground font-medium text-xs">
-                      Skills
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {task.skills.split(",").map((s) => (
-                        <Badge
-                          key={s.trim()}
-                          variant="outline"
-                          className="text-[10px] flex items-center gap-1"
-                        >
-                          <BookOpen className="h-2.5 w-2.5" />
-                          {s.trim()}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Resume Count */}
-                {(task.resumeCount ?? 0) > 0 && (
-                  <div className="flex items-center gap-2 text-xs">
-                    <RotateCcw className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-muted-foreground">
-                      Resumed {task.resumeCount} time
-                      {task.resumeCount === 1 ? "" : "s"}
-                    </span>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-3 pt-2 border-t">
-                  <div className="space-y-0.5">
-                    <span className="text-muted-foreground font-medium text-[10px]">
-                      Created
-                    </span>
-                    <div className="text-[11px] flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {new Date(task.createdAt).toLocaleString()}
-                    </div>
-                  </div>
-                  {task.completedAt && (
-                    <div className="space-y-0.5">
-                      <span className="text-muted-foreground font-medium text-[10px]">
-                        Completed
-                      </span>
-                      <div className="text-[11px] flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3" />
-                        {new Date(task.completedAt).toLocaleString()}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Iterative Session Progress */}
-            {task.iterative && (
-              <Card>
-                <CardHeader className="py-3 px-4">
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <RefreshCcw className="h-3.5 w-3.5" />
-                    Iterative Session
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm px-4 pb-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-xs">
-                      Progress
-                    </span>
-                    <span className="font-mono font-medium text-xs">
-                      {task.currentIteration ?? 0} / {task.maxIterations ?? 10}
-                    </span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-1.5">
-                    <div
-                      className={cn(
-                        "bg-primary rounded-full h-1.5 transition-all",
-                        getProgressWidth(
-                          task.currentIteration ?? 0,
-                          task.maxIterations ?? 10,
-                        ),
-                      )}
-                    />
-                  </div>
-                  {task.completionCriteria && (
-                    <p className="text-[11px] bg-muted px-2 py-1 rounded text-muted-foreground">
-                      {task.completionCriteria}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            <Card>
-              <CardHeader className="py-3 px-4">
-                <CardTitle className="text-sm">Prompt</CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 pb-4">
-                <p className="text-xs whitespace-pre-wrap text-muted-foreground leading-relaxed">
-                  {task.prompt}
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Session Metrics - always show if we have events or monitoring data */}
-            <SessionMetricsCard session={sessionDetails} events={allEvents} />
-
-            {task.errorMessage && (
-              <Card className="border-destructive/50 bg-destructive/5">
-                <CardHeader className="py-3 px-4">
-                  <CardTitle className="text-destructive flex items-center gap-2 text-sm">
-                    <AlertCircle className="h-4 w-4" />
-                    Error
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 pb-4">
-                  <p className="text-xs text-destructive whitespace-pre-wrap">
-                    {task.errorMessage}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          <TaskSidebar
+            task={task}
+            isLive={isLive}
+            models={models}
+            sessionDetails={sessionDetails}
+            allEvents={allEvents}
+          />
 
           {/* Center Panel - Agent Activity Stream / Changes Summary */}
           <div className="flex-1 flex flex-col min-w-0 min-h-0">

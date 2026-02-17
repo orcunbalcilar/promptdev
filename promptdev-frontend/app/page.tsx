@@ -1,7 +1,5 @@
 "use client";
 
-import { CreateTaskDialog } from "@/components/create-task-dialog";
-import { KanbanBoard } from "@/components/kanban-board";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,12 +9,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { API_BASE_URL, getTasks, type Task, type TaskStatus } from "@/lib/api";
+import { API_BASE_URL, getTasks, type PagedResponse, type Task, type TaskStatus } from "@/lib/api";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Activity, Bot, CalendarClock, Loader2, RefreshCw, Search, Settings, Zap } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+
+// bundle-dynamic-imports: Lazy-load heavy components to reduce initial JS bundle
+const CreateTaskDialog = dynamic(
+  () => import("@/components/create-task-dialog").then((m) => ({ default: m.CreateTaskDialog })),
+  { ssr: false },
+);
+const KanbanBoard = dynamic(
+  () => import("@/components/kanban-board").then((m) => ({ default: m.KanbanBoard })),
+  { ssr: false, loading: () => <div className="h-64 flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div> },
+);
 
 const STATUS_GROUPS: { label: string; statuses: TaskStatus[] }[] = [
   { label: "Pending", statuses: ["PENDING", "QUEUED", "TRIAGING"] },
@@ -45,28 +54,35 @@ export default function Dashboard() {
     const eventSource = new EventSource(`${API_BASE_URL}/stream/tasks`);
 
     eventSource.addEventListener("task-update", (event) => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-
-      // Show toast notifications for task completions/failures
       try {
-        const data = JSON.parse(event.data) as { taskId?: string; status?: string; title?: string };
-        if (data.status === "COMPLETED") {
-          toast.success(`Task completed: ${data.title ?? "Task"}`, {
-            action: data.taskId ? {
-              label: "View",
-              onClick: () => router.push(`/tasks/${data.taskId}`),
-            } : undefined,
-          });
-        } else if (data.status === "FAILED") {
-          toast.error(`Task failed: ${data.title ?? "Task"}`, {
-            action: data.taskId ? {
-              label: "View",
-              onClick: () => router.push(`/tasks/${data.taskId}`),
-            } : undefined,
-          });
+        const updatedTask = JSON.parse(event.data) as Partial<Task> & { taskId?: string };
+        const taskId = updatedTask.id ?? updatedTask.taskId;
+
+        if (taskId) {
+          // Optimistic cache update: merge fields instead of refetching
+          const current = queryClient.getQueryData<PagedResponse<Task>>(["tasks"]);
+          const existingIdx = current?.content.findIndex((t) => t.id === taskId) ?? -1;
+
+          if (existingIdx >= 0 && current) {
+            const newContent = [...current.content];
+            newContent[existingIdx] = { ...newContent[existingIdx], ...updatedTask } as Task;
+            queryClient.setQueryData(["tasks"], { ...current, content: newContent });
+          } else {
+            // New task not yet in cache — do a full refetch
+            queryClient.invalidateQueries({ queryKey: ["tasks"] });
+          }
+        } else {
+          queryClient.invalidateQueries({ queryKey: ["tasks"] });
         }
+
+        // Toast notifications for terminal statuses
+        const title = updatedTask.title ?? "Task";
+        const navId = updatedTask.id ?? updatedTask.taskId;
+        const action = navId ? { label: "View", onClick: () => router.push(`/tasks/${navId}`) } : undefined;
+        if (updatedTask.status === "COMPLETED") toast.success(`Task completed: ${title}`, { action });
+        if (updatedTask.status === "FAILED") toast.error(`Task failed: ${title}`, { action });
       } catch {
-        // Event data may not be JSON — just invalidate
+        queryClient.invalidateQueries({ queryKey: ["tasks"] });
       }
     });
 

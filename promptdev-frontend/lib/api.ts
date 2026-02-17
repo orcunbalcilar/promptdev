@@ -113,6 +113,8 @@ export interface Task {
   bootScript?: string;
   skills?: string;
   additionalRepositories?: string;
+  // Custom system prompt
+  systemPrompt?: string;
   createdAt: string;
   updatedAt: string;
   completedAt?: string;
@@ -185,6 +187,8 @@ export interface CreateTaskRequest {
   bootScript?: string;
   skills?: string;
   additionalRepositories?: string;
+  // Custom system prompt
+  systemPrompt?: string;
 }
 
 export interface ScheduledJob {

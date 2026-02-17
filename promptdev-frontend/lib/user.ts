@@ -24,6 +24,14 @@ export interface UserProfile {
   jiraProjectKey?: string;
   jiraUsername?: string;
   jiraTokenSet: boolean;
+  // Jira auto-task settings
+  jiraAutoTaskEnabled: boolean;
+  jiraAutoTaskModelId?: string;
+  jiraAutoTaskRepository?: string;
+  jiraAutoTaskSourceBranch?: string;
+  jiraAutoTaskTargetBranch?: string;
+  // Custom system prompt
+  customSystemPrompt?: string;
 }
 
 export interface UpdateUserSettingsRequest {
@@ -48,6 +56,14 @@ export interface UpdateUserSettingsRequest {
   jiraUsername?: string;
   /** Raw Jira token — encrypted server-side before storage */
   jiraToken?: string;
+  // Jira auto-task settings
+  jiraAutoTaskEnabled?: boolean;
+  jiraAutoTaskModelId?: string;
+  jiraAutoTaskRepository?: string;
+  jiraAutoTaskSourceBranch?: string;
+  jiraAutoTaskTargetBranch?: string;
+  // Custom system prompt
+  customSystemPrompt?: string;
 }
 
 async function userFetch<T>(

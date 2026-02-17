@@ -211,6 +211,28 @@ prompt_bitbucket_config() {
   fi
 }
 
+prompt_jira_config() {
+  hr
+  echo ""
+  info "Jira Server configuration (optional — press Enter to skip)"
+  echo ""
+  echo "  Connect your Jira Server instance to link tasks to Jira issues."
+  echo "  The agent can update issue status and add comments with PR links."
+  echo "  Or configure in the web UI Settings page after installation."
+  echo ""
+
+  read -r -p "$(echo -e "${BLUE}[PromptDev]${NC} Jira Server URL (e.g. https://jira.company.com): ")" JIRA_URL
+  read -r -p "$(echo -e "${BLUE}[PromptDev]${NC} Jira Username: ")" JIRA_USERNAME
+  read -r -s -p "$(echo -e "${BLUE}[PromptDev]${NC} Jira Token: ")" JIRA_TOKEN
+  echo ""
+
+  if [ -n "$JIRA_URL" ]; then
+    log "Jira configuration saved."
+  else
+    warn "Skipping Jira setup. Configure via Settings in the web UI."
+  fi
+}
+
 prompt_github_token() {
   hr
   echo ""
@@ -302,6 +324,11 @@ EOF
     export BITBUCKET_URL BITBUCKET_PROJECT_KEY BITBUCKET_USERNAME BITBUCKET_TOKEN
   fi
 
+  # Export Jira configuration for this session
+  if [ -n "$JIRA_URL" ]; then
+    export JIRA_URL JIRA_USERNAME JIRA_TOKEN
+  fi
+
   log "Environment configured."
 }
 
@@ -361,6 +388,7 @@ main() {
   prompt_install_dir
   prompt_slack_config
   prompt_bitbucket_config
+  prompt_jira_config
   prompt_github_token
 
   clone_repository
