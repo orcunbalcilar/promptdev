@@ -40,4 +40,14 @@ public class UpdateUserSettingsRequest {
     private String jiraUsername;
     /** Raw Jira token — will be encrypted before storage */
     private String jiraToken;
+
+    // Jira auto-task settings
+    private Boolean jiraAutoTaskEnabled;
+    private String jiraAutoTaskModelId;
+    private String jiraAutoTaskRepository;
+    private String jiraAutoTaskSourceBranch;
+    private String jiraAutoTaskTargetBranch;
+
+    // Custom system prompt
+    private String customSystemPrompt;
 }

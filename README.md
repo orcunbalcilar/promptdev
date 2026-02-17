@@ -11,6 +11,7 @@ PromptDev is a development platform that turns natural language prompts into wor
 ### Key Features
 
 - **Prompt-to-PR workflow** — Describe a feature, get a pull request
+- **Jira integration** — Link tasks to Jira issues, update status, add comments with PR links
 - **Repository & branch selection** — Pick from your Bitbucket repos and branches
 - **Local workspace support** — Work with local project directories or create new projects from scratch
 - **Model selection** — Choose from GPT-5.2, Claude Opus 4.5, Gemini 3 Pro, and 14+ models with dynamic model discovery
@@ -38,9 +39,11 @@ PromptDev is a development platform that turns natural language prompts into wor
 │   Frontend      │◀────│    Backend       │     │   Server        │
 │   :3000         │ SSE │    :8080         │     │   :7990         │
 └─────────────────┘     └──────────────────┘     └─────────────────┘
-        │                       │
-        │                       ▼
-        │               ┌──────────────────┐
+        │                       │  │
+        │                       │  └─────▶┌─────────────────┐
+        │                       │        │   Jira Server   │
+        │                       ▼        │   :55000        │
+        │               ┌──────────────────┐└─────────────────┘
         │               │   PostgreSQL 17  │
         │               │   :5432          │
         │               └──────────────────┘
@@ -59,6 +62,7 @@ PromptDev is a development platform that turns natural language prompts into wor
 | Slack Bot | @slack/bolt (Socket Mode)                     | 3001 |
 | AI Engine | GitHub Copilot SDK                            | —    |
 | VCS       | Bitbucket Server or Local filesystem          | 7990 |
+| Issues    | Jira Server (optional)                        | —    |
 | Auth      | NextAuth.js v5 (GitHub, Google OAuth)         | —    |
 
 ---
@@ -89,7 +93,7 @@ curl -fsSL https://raw.githubusercontent.com/orcunbalcilar/promptdev/main/instal
 irm https://raw.githubusercontent.com/orcunbalcilar/promptdev/main/install.ps1 | iex
 ```
 
-The installer checks prerequisites, prompts for optional Slack / Bitbucket / GitHub configuration, clones the repository, and starts all services.
+The installer checks prerequisites, prompts for optional Slack / Bitbucket / Jira / GitHub configuration, clones the repository, and starts all services.
 
 ### Development Start
 
@@ -223,6 +227,9 @@ The application ships with **zero development defaults** — all environment-spe
 | `BITBUCKET_PROJECT_KEY` | Bitbucket project key           |
 | `BITBUCKET_USERNAME`    | Bitbucket username              |
 | `BITBUCKET_TOKEN`       | Bitbucket personal access token |
+| `JIRA_URL`              | Jira Server URL                 |
+| `JIRA_USERNAME`         | Jira username                   |
+| `JIRA_TOKEN`            | Jira personal access token      |
 
 #### Frontend (`promptdev-frontend/.env.local`)
 
@@ -264,6 +271,7 @@ PromptDev uses **NextAuth.js v5** for user authentication with GitHub and Google
 After signing in, navigate to **Settings** to configure:
 
 - **Bitbucket Configuration** — Server URL, project key, username, and personal access token
+- **Jira Configuration** — Server URL, project key, username, and personal access token (for issue tracking, status updates, and PR linking)
 - **GitHub Copilot Token** — Personal GitHub token for isolated Copilot sessions (`gho_`, `ghu_`, `github_pat_`)
 - **BYOK Provider** — OpenAI-compatible, Azure, or Anthropic endpoint with your own API key
 
@@ -390,6 +398,19 @@ npm link    # Makes 'promptdev' command available globally
 | `GET`  | `/api/repositories`                 | List Bitbucket repositories |
 | `GET`  | `/api/repositories/{slug}/branches` | List branches               |
 
+### Jira
+
+| Method | Endpoint                                    | Description              |
+| ------ | ------------------------------------------- | ------------------------ |
+| `GET`  | `/api/jira/issues/search?jql=...`           | Search issues (JQL)      |
+| `GET`  | `/api/jira/issues/{issueKey}`               | Get issue details        |
+| `GET`  | `/api/jira/issues/{issueKey}/transitions`   | Get available transitions|
+| `POST` | `/api/jira/issues/{issueKey}/transition`    | Transition issue status  |
+| `POST` | `/api/jira/issues/{issueKey}/comment`       | Add comment to issue     |
+| `PUT`  | `/api/jira/issues/{issueKey}/assign`        | Assign issue to user     |
+| `GET`  | `/api/jira/projects/{projectKey}/issues`    | Get project issues       |
+| `GET`  | `/api/jira/users/{username}/issues`         | Get assigned issues      |
+
 ### Users
 
 | Method | Endpoint                   | Description                 |
@@ -423,7 +444,7 @@ promptdev/                          ← monorepo root
 │   ├── Dockerfile
 │   ├── pom.xml
 │   └── src/main/java/com/promptdev/
-│       ├── config/                 # Security, SSE, Bitbucket, Scheduler
+│       ├── config/                 # Security, SSE, Bitbucket, Jira, Scheduler
 │       ├── controller/             # REST controllers
 │       ├── dto/                    # Request/Response DTOs
 │       ├── entity/                 # JPA entities

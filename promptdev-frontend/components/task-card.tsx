@@ -100,6 +100,34 @@ const statusConfig: Record<
   },
 };
 
+// ── Helpers ──────────────────────────────────────────────────────
+
+function formatRelativeDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+const STATUS_BORDER: Partial<Record<TaskStatus, string>> = {
+  COMPLETED: "border-l-green-500",
+  FAILED: "border-l-red-500",
+  CANCELLED: "border-l-gray-400",
+  IN_PROGRESS: "border-l-blue-500",
+  REVIEWING: "border-l-teal-500",
+  TRIAGING: "border-l-orange-500",
+  ITERATION_PENDING: "border-l-amber-500",
+};
+
+// ── Component ───────────────────────────────────────────────────
+
 export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
   const config = statusConfig[task.status] ?? statusConfig.PENDING;
   const StatusIcon = config.icon;
@@ -115,19 +143,24 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
   return (
     <Card
       className={cn(
-        "cursor-pointer hover:shadow-md transition-all hover:border-primary/50",
-        task.status === "COMPLETED" && "border-green-200 bg-green-50/10",
+        "cursor-pointer hover:shadow-md transition-all hover:border-primary/50 border-l-4",
+        STATUS_BORDER[task.status] ?? "border-l-transparent",
+        task.status === "COMPLETED" && "bg-green-50/10",
+        task.status === "FAILED" && "bg-red-50/10",
       )}
       onClick={onClick}
     >
       <CardHeader className="p-4 pb-2">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-base font-semibold leading-tight line-clamp-2">
+          <CardTitle
+            className="text-sm font-semibold leading-snug line-clamp-2"
+            title={task.title}
+          >
             {task.title}
           </CardTitle>
           <Badge
             variant={config.variant}
-            className={cn("shrink-0 flex gap-1", config.className)}
+            className={cn("shrink-0 flex gap-1 text-[10px]", config.className)}
           >
             <StatusIcon
               className={cn("h-3 w-3", isAnimating && "animate-spin")}
@@ -137,11 +170,14 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-2 pb-3">
-        <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5em]">
+        <p className="text-xs text-muted-foreground line-clamp-2 min-h-[2.25em]">
           {task.prompt}
         </p>
         {task.status === "FAILED" && task.errorMessage && (
-          <p className="text-xs text-destructive line-clamp-1 mt-1.5 font-mono bg-destructive/5 rounded px-1.5 py-0.5">
+          <p
+            className="text-xs text-destructive line-clamp-2 mt-1.5 font-mono bg-destructive/5 rounded px-1.5 py-0.5"
+            title={task.errorMessage}
+          >
             {task.errorMessage}
           </p>
         )}
@@ -205,9 +241,13 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
               <Loader2 className="h-2.5 w-2.5 animate-spin" />
             </span>
           )}
-          <div title={new Date(task.createdAt).toLocaleString()}>
-            {new Date(task.createdAt).toLocaleDateString()}
-          </div>
+          <time
+            dateTime={task.createdAt}
+            title={new Date(task.createdAt).toLocaleString()}
+            className="tabular-nums"
+          >
+            {formatRelativeDate(task.createdAt)}
+          </time>
         </div>
       </CardFooter>
     </Card>

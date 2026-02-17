@@ -31,6 +31,7 @@ import java.util.UUID;
 @Slf4j
 public class TaskService {
     private static final String TASK_NOT_FOUND_MSG = "Task not found: ";
+    private static final String CURRENT_ITERATION_KEY = "currentIteration";
 
     private final TaskRepository taskRepository;
     private final TaskEventRepository taskEventRepository;
@@ -66,6 +67,7 @@ public class TaskService {
                 .bootScript(request.getBootScript())
                 .skills(request.getSkills())
                 .additionalRepositories(request.getAdditionalRepositories())
+                .systemPrompt(request.getSystemPrompt())
                 .build();
 
         task = taskRepository.save(task);
@@ -256,6 +258,43 @@ public class TaskService {
                 task.setErrorMessage(callback.getErrorMessage());
             }
             case RETRY_SCHEDULED -> task.setStatus(TaskStatus.PENDING);
+            case ITERATION_STARTED -> {
+                // Update iteration counter from frontend orchestrator
+                if (!TERMINAL_STATUSES.contains(task.getStatus())) {
+                    task.setStatus(TaskStatus.ITERATION_PENDING);
+                    // Parse currentIteration from details JSON
+                    try {
+                        if (callback.getDetails() != null) {
+                            var details = new com.fasterxml.jackson.databind.ObjectMapper()
+                                    .readTree(callback.getDetails());
+                            if (details.has(CURRENT_ITERATION_KEY)) {
+                                task.setCurrentIteration(details.get(CURRENT_ITERATION_KEY).asInt());
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.warn("Failed to parse iteration details for task {}: {}", task.getId(), e.getMessage());
+                    }
+                    log.info("Task {} starting iteration {}/{}", task.getId(), task.getCurrentIteration(), task.getMaxIterations());
+                }
+            }
+            case ITERATION_COMPLETED -> {
+                // Update iteration counter when an iteration completes
+                if (!TERMINAL_STATUSES.contains(task.getStatus())) {
+                    try {
+                        if (callback.getDetails() != null) {
+                            var details = new com.fasterxml.jackson.databind.ObjectMapper()
+                                    .readTree(callback.getDetails());
+                            if (details.has(CURRENT_ITERATION_KEY)) {
+                                task.setCurrentIteration(details.get(CURRENT_ITERATION_KEY).asInt());
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.warn("Failed to parse iteration details for task {}: {}", task.getId(), e.getMessage());
+                    }
+                    task.setStatus(TaskStatus.IN_PROGRESS);
+                    log.info("Task {} completed iteration {}/{}", task.getId(), task.getCurrentIteration(), task.getMaxIterations());
+                }
+            }
             default -> {
                 // Other events don't change task status
             }

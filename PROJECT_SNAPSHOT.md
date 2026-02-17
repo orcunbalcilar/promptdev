@@ -19,9 +19,11 @@ Build an AI-powered development platform where users describe features via promp
 │   Frontend      │◀────│    Backend       │     │   Server        │
 │   :3000         │ SSE │    :8080         │     │   :7990         │
 └─────────────────┘     └──────────────────┘     └─────────────────┘
-        │                       │
-        │                       ▼
-        │               ┌──────────────────┐
+        │                       │  │
+        │                       │  └─────▶┌─────────────────┐
+        │                       │        │   Jira Server   │
+        │                       ▼        │   :55000        │
+        │               ┌──────────────────┐└─────────────────┘
         │               │   PostgreSQL 17  │
         │               │   :5432          │
         │               └──────────────────┘
@@ -45,6 +47,7 @@ Build an AI-powered development platform where users describe features via promp
 | Encryption       | AES-256-GCM          | —       |
 | AI Engine        | Copilot SDK          | 0.1.23  |
 | VCS              | Bitbucket / Local    | —       |
+| Issues           | Jira Server          | —       |
 | Testing          | Vitest + Playwright  | 4.0.18  |
 | React Compiler   | babel-plugin         | Latest  |
 | CLI              | Commander.js         | Latest  |
@@ -76,6 +79,7 @@ Build an AI-powered development platform where users describe features via promp
 - SSE streaming for real-time task progress
 - Agent callback endpoint
 - Bitbucket integration (repo listing, branch listing, PR creation)
+- Jira Server integration (issue search, transitions, comments, assignments — conditional on config)
 - Event tracking (30 operation types)
 - User management with OAuth provider sync (GitHub, Google)
 - User settings API (profile, Bitbucket config, Copilot token)
@@ -90,7 +94,7 @@ Build an AI-powered development platform where users describe features via promp
 - Copilot chat page (interactive AI assistant with model/reasoning settings)
 - Monitoring page (system health dashboard)
 - Authentication (NextAuth.js v5 with GitHub and Google OAuth)
-- Login page, Settings page (Bitbucket, Copilot token, BYOK provider)
+- Login page, Settings page (Bitbucket, Jira, Copilot token, BYOK provider)
 - Route protection (proxy.ts)
 - Per-user Copilot tokens for session isolation
 - Copilot slash commands (/model, /review, /fleet, /clear, /help)
@@ -152,35 +156,43 @@ The Slack bot is an optional service in `docker-compose.yml`. Use `--profile sla
 
 ### User
 
-- Fields: id, provider (github/google), providerAccountId, email, name, avatarUrl, bitbucketUrl, bitbucketProjectKey, bitbucketUsername, bitbucketTokenEncrypted, copilotTokenEncrypted, byokProviderType, byokBaseUrl, byokApiKeyEncrypted, timestamps
+- Fields: id, provider (github/google), providerAccountId, email, name, avatarUrl, bitbucketUrl, bitbucketProjectKey, bitbucketUsername, bitbucketTokenEncrypted, copilotTokenEncrypted, byokProviderType, byokBaseUrl, byokApiKeyEncrypted, jiraUrl, jiraProjectKey, jiraUsername, jiraTokenEncrypted, timestamps
 
 ---
 
 ## API Endpoints
 
-| Method | Endpoint                          | Description            |
-| ------ | --------------------------------- | ---------------------- |
-| POST   | /api/tasks                        | Create task            |
-| GET    | /api/tasks                        | List tasks (paginated) |
-| GET    | /api/tasks/{id}                   | Get task               |
-| GET    | /api/tasks/{id}/events            | Get task events        |
-| POST   | /api/tasks/{id}/start             | Start task             |
-| POST   | /api/tasks/{id}/cancel            | Cancel task            |
-| POST   | /api/tasks/{id}/retry             | Retry task             |
-| POST   | /api/tasks/{id}/create-pr         | Create PR              |
-| GET    | /api/repositories                 | List repos             |
-| GET    | /api/repositories/{slug}/branches | List branches          |
-| GET    | /api/stream/tasks                 | SSE: all tasks         |
-| GET    | /api/stream/tasks/{id}            | SSE: specific task     |
-| POST   | /api/stream/callback              | Agent callback         |
-| POST   | /api/scheduled-jobs               | Create job             |
-| GET    | /api/scheduled-jobs               | List jobs              |
-| GET    | /api/scheduled-jobs/{id}          | Get job                |
-| POST   | /api/scheduled-jobs/{id}/toggle   | Toggle job             |
-| DELETE | /api/scheduled-jobs/{id}          | Delete job             |
-| GET    | /api/users/{id}/profile           | Get user profile       |
-| PUT    | /api/users/{id}/settings          | Update user settings   |
-| POST   | /api/users/sync                   | Find/create user       |
+| Method | Endpoint                           | Description              |
+| ------ | ---------------------------------- | ------------------------ |
+| POST   | /api/tasks                         | Create task              |
+| GET    | /api/tasks                         | List tasks (paginated)   |
+| GET    | /api/tasks/{id}                    | Get task                 |
+| GET    | /api/tasks/{id}/events             | Get task events          |
+| POST   | /api/tasks/{id}/start              | Start task               |
+| POST   | /api/tasks/{id}/cancel             | Cancel task              |
+| POST   | /api/tasks/{id}/retry              | Retry task               |
+| POST   | /api/tasks/{id}/create-pr          | Create PR                |
+| GET    | /api/repositories                  | List repos               |
+| GET    | /api/repositories/{slug}/branches  | List branches            |
+| GET    | /api/jira/issues/search            | Search Jira issues (JQL) |
+| GET    | /api/jira/issues/{issueKey}        | Get Jira issue           |
+| GET    | /api/jira/issues/{key}/transitions | Get transitions          |
+| POST   | /api/jira/issues/{key}/transition  | Transition issue         |
+| POST   | /api/jira/issues/{key}/comment     | Add comment              |
+| PUT    | /api/jira/issues/{key}/assign      | Assign issue             |
+| GET    | /api/jira/projects/{key}/issues    | Get project issues       |
+| GET    | /api/jira/users/{name}/issues      | Get assigned issues      |
+| GET    | /api/stream/tasks                  | SSE: all tasks           |
+| GET    | /api/stream/tasks/{id}             | SSE: specific task       |
+| POST   | /api/stream/callback               | Agent callback           |
+| POST   | /api/scheduled-jobs                | Create job               |
+| GET    | /api/scheduled-jobs                | List jobs                |
+| GET    | /api/scheduled-jobs/{id}           | Get job                  |
+| POST   | /api/scheduled-jobs/{id}/toggle    | Toggle job               |
+| DELETE | /api/scheduled-jobs/{id}           | Delete job               |
+| GET    | /api/users/{id}/profile            | Get user profile         |
+| PUT    | /api/users/{id}/settings           | Update user settings     |
+| POST   | /api/users/sync                    | Find/create user         |
 
 ---
 
@@ -188,6 +200,6 @@ The Slack bot is an optional service in `docker-compose.yml`. Use `--profile sla
 
 > Continue building the PromptDev project. Read PROJECT_SNAPSHOT.md and README.md for full context.
 >
-> Completed: Backend (tasks, scheduled jobs, workspace types, model selection with 14+ models and dynamic discovery, iterative sessions, user management with encrypted secrets, BYOK provider support), Frontend (dashboard, task dialog with selectors and local project creation, task detail, scheduled jobs page, copilot chat with slash commands, authentication with NextAuth.js v5, settings page with BYOK config, login page, React Compiler), CLI, Slack bot (with /model, /review, /fleet commands), Docker Compose, Podman support, monorepo structure, one-command installer, Playwright E2E tests.
+> Completed: Backend (tasks, scheduled jobs, workspace types, model selection with 14+ models and dynamic discovery, iterative sessions, user management with encrypted secrets, BYOK provider support, Jira integration), Frontend (dashboard, task dialog with selectors and local project creation, task detail, scheduled jobs page, copilot chat with slash commands, authentication with NextAuth.js v5, settings page with BYOK and Jira config, login page, React Compiler), CLI, Slack bot (with /model, /review, /fleet commands), Docker Compose, Podman support, monorepo structure, one-command installer, Playwright E2E tests.
 >
 > Middleware migrated to proxy.ts (Next.js 16 pattern). All Dockerfiles updated to Java 21 and Node 22. Per-user Copilot tokens and BYOK providers supported for session isolation. Application ships with zero development defaults — all env-specific config injected by start-all scripts or docker-compose.yml.

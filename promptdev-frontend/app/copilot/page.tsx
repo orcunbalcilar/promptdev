@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   Bot,
   RefreshCw,
-  Settings,
   Sparkles,
   Trash2,
   XCircle,
@@ -17,26 +16,9 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 // AI Elements
 import {
@@ -46,11 +28,6 @@ import {
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
 import {
-  Message,
-  MessageContent,
-  MessageResponse,
-} from "@/components/ai-elements/message";
-import {
   PromptInput,
   PromptInputButton,
   PromptInputFooter,
@@ -58,285 +35,18 @@ import {
   PromptInputTextarea,
   PromptInputTools,
 } from "@/components/ai-elements/prompt-input";
-import {
-  Reasoning,
-  ReasoningContent,
-  ReasoningTrigger,
-} from "@/components/ai-elements/reasoning";
-import { Shimmer } from "@/components/ai-elements/shimmer";
-import {
-  Tool,
-  ToolContent,
-  ToolHeader,
-  ToolInput,
-  ToolOutput,
-} from "@/components/ai-elements/tool";
 
 import { useCopilotSession } from "@/hooks/useCopilotSession";
 import { DEFAULT_MODEL_ID } from "@/lib/copilot/models";
-import type {
-  CopilotMessage,
-  CopilotToolExecution,
-  SessionState,
-} from "@/lib/copilot/types";
 import { cn } from "@/lib/utils";
-import type { ModelInfo } from "@github/copilot-sdk";
 
-// Copilot slash commands (used by command help display)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- available for slash command UI
-const COPILOT_COMMANDS = [
-  {
-    name: "/model",
-    description: "Switch AI model",
-    usage: "/model <model-id>",
-  },
-  {
-    name: "/review",
-    description: "Review code in a repository",
-    usage: "/review <repo> [branch]",
-  },
-  { name: "/fleet", description: "Show agent fleet status", usage: "/fleet" },
-  {
-    name: "/clear",
-    description: "Clear conversation history",
-    usage: "/clear",
-  },
-  { name: "/help", description: "Show available commands", usage: "/help" },
-];
-
-// Reasoning effort levels
-const REASONING_EFFORTS = [
-  { id: "low", name: "Low", description: "Fast responses" },
-  { id: "medium", name: "Medium", description: "Balanced" },
-  { id: "high", name: "High", description: "Detailed reasoning" },
-  { id: "xhigh", name: "Extra High", description: "Maximum depth" },
-];
-
-// Session state colors
-const stateColors: Record<SessionState, string> = {
-  idle: "bg-green-500",
-  processing: "bg-blue-500 animate-pulse",
-  streaming: "bg-blue-500 animate-pulse",
-  error: "bg-red-500",
-  disconnected: "bg-gray-500",
-};
-
-/**
- * Tool execution display component
- */
-function ToolExecution({ tool }: Readonly<{ tool: CopilotToolExecution }>) {
-  const getToolState = () => {
-    switch (tool.state) {
-      case "pending":
-        return "input-streaming";
-      case "running":
-        return "input-available";
-      case "completed":
-        return "output-available";
-      case "error":
-        return "output-error";
-      default:
-        return "input-streaming";
-    }
-  };
-
-  return (
-    <Tool defaultOpen={tool.state === "error" || tool.state === "completed"}>
-      <ToolHeader
-        type={`tool-${tool.name}`}
-        state={getToolState()}
-        title={tool.name}
-      />
-      <ToolContent>
-        <ToolInput input={tool.input} />
-        {(tool.output || tool.error) && (
-          <ToolOutput output={tool.output} errorText={tool.error} />
-        )}
-        {tool.duration && (
-          <div className="text-xs text-muted-foreground">
-            Duration: {tool.duration}ms
-          </div>
-        )}
-      </ToolContent>
-    </Tool>
-  );
-}
-
-function getMessageContent(
-  streamingContent: string,
-  streamingReasoning: string,
-  activeTools: CopilotToolExecution[],
-) {
-  if (streamingContent) {
-    return <MessageResponse>{streamingContent}</MessageResponse>;
-  }
-  if (!streamingReasoning && activeTools.length === 0) {
-    return <Shimmer duration={1.5}>Thinking...</Shimmer>;
-  }
-  return null;
-}
-
-/**
- * Message display component
- */
-function CopilotMessageDisplay({
-  message,
-  isLast,
-  isStreaming,
-  streamingContent,
-  streamingReasoning,
-  activeTools,
-}: Readonly<{
-  message: CopilotMessage;
-  isLast: boolean;
-  isStreaming: boolean;
-  streamingContent: string;
-  streamingReasoning: string;
-  activeTools: CopilotToolExecution[];
-}>) {
-  const showStreamingContent = isLast && isStreaming;
-
-  return (
-    <Message from={message.role}>
-      <MessageContent>
-        {/* Reasoning */}
-        {(message.reasoning || (isLast && streamingReasoning)) && (
-          <Reasoning
-            isStreaming={isLast && isStreaming && !!streamingReasoning}
-            defaultOpen={isLast && isStreaming}
-          >
-            <ReasoningTrigger />
-            <ReasoningContent>
-              {isLast && streamingReasoning
-                ? streamingReasoning
-                : message.reasoning || ""}
-            </ReasoningContent>
-          </Reasoning>
-        )}
-
-        {/* Tool executions */}
-        {message.tools?.map((tool) => (
-          <ToolExecution key={tool.id} tool={tool} />
-        ))}
-
-        {/* Active tools (for streaming message) */}
-        {isLast && activeTools.length > 0 && (
-          <>
-            {activeTools.map((tool) => (
-              <ToolExecution key={tool.id} tool={tool} />
-            ))}
-          </>
-        )}
-
-        {/* Message content */}
-        {showStreamingContent ? (
-          getMessageContent(streamingContent, streamingReasoning, activeTools)
-        ) : (
-          <MessageResponse>{message.content}</MessageResponse>
-        )}
-      </MessageContent>
-    </Message>
-  );
-}
-
-/**
- * Settings dialog component
- */
-function SettingsDialog({
-  model,
-  setModel,
-  reasoningEffort,
-  setReasoningEffort,
-  models,
-}: Readonly<{
-  model: string;
-  setModel: (v: string) => void;
-  reasoningEffort: string;
-  setReasoningEffort: (v: string) => void;
-  models: ModelInfo[];
-}>) {
-  const selectedModel = models.find((m) => m.id === model);
-  const supportsReasoning =
-    selectedModel?.capabilities.supports.reasoningEffort ?? false;
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <Settings className="h-4 w-4 mr-2" />
-          Settings
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Agent Settings</DialogTitle>
-          <DialogDescription>
-            Configure the AI model and reasoning settings.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="model">Model</Label>
-            <Select value={model} onValueChange={setModel}>
-              <SelectTrigger id="model">
-                <SelectValue placeholder="Select model" />
-              </SelectTrigger>
-              <SelectContent>
-                {models.map((m) => (
-                  <SelectItem key={m.id} value={m.id}>
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <span>{m.name}</span>
-                        {m.billing?.multiplier && (
-                          <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
-                            {m.billing.multiplier}x
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {m.name}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="reasoning"
-              className={supportsReasoning ? "" : "text-muted-foreground"}
-            >
-              Reasoning Effort{" "}
-              {!supportsReasoning && "(Not supported by this model)"}
-            </Label>
-            <Select
-              value={reasoningEffort}
-              onValueChange={setReasoningEffort}
-              disabled={!supportsReasoning}
-            >
-              <SelectTrigger id="reasoning">
-                <SelectValue placeholder="Select effort" />
-              </SelectTrigger>
-              <SelectContent>
-                {REASONING_EFFORTS.map((r) => (
-                  <SelectItem key={r.id} value={r.id}>
-                    <div className="flex flex-col">
-                      <span>{r.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {r.description}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
+import { stateColors } from "./_components/constants";
+import {
+  CopilotMessageDisplay,
+  StreamingAssistantMessage,
+} from "./_components/copilot-messages";
+import { SettingsDialog } from "./_components/settings-dialog";
+import { StartSessionDialog } from "./_components/start-session-dialog";
 
 /**
  * Copilot Agent Page
@@ -456,77 +166,16 @@ export default function CopilotAgentPage() {
   const renderContent = () => {
     if (showStartDialog) {
       return (
-        <div className="flex-1 flex items-center justify-center p-6">
-          <Card className="max-w-md w-full">
-            <CardHeader className="text-center">
-              <div className="bg-primary/10 p-4 rounded-full w-fit mx-auto mb-4">
-                <Bot className="h-12 w-12 text-primary" />
-              </div>
-              <CardTitle className="text-2xl">Start Copilot Agent</CardTitle>
-              <CardDescription>
-                Choose your AI model and preferences before starting
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="start-model">Model</Label>
-                <Select value={model} onValueChange={setModel}>
-                  <SelectTrigger id="start-model">
-                    <SelectValue placeholder="Select model" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableModels.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
-                            <span>{m.name}</span>
-                            {m.billing?.multiplier && (
-                              <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
-                                {m.billing.multiplier}x
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {m.name}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="start-reasoning">Reasoning Effort</Label>
-                <Select
-                  value={reasoningEffort}
-                  onValueChange={(v) =>
-                    setReasoningEffort(v as typeof reasoningEffort)
-                  }
-                >
-                  <SelectTrigger id="start-reasoning">
-                    <SelectValue placeholder="Select effort" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {REASONING_EFFORTS.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        <div className="flex flex-col">
-                          <span>{r.name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {r.description}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={handleStartSession} className="w-full" size="lg">
-                <Sparkles className="h-5 w-5 mr-2" />
-                Start Agent
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        <StartSessionDialog
+          model={model}
+          setModel={setModel}
+          reasoningEffort={reasoningEffort}
+          setReasoningEffort={(v) =>
+            setReasoningEffort(v as typeof reasoningEffort)
+          }
+          models={availableModels}
+          onStart={handleStartSession}
+        />
       );
     }
 
@@ -560,31 +209,11 @@ export default function CopilotAgentPage() {
                     {messages.length > 0 &&
                       messages.at(-1)?.role === "user" &&
                       isStreaming && (
-                        <Message from="assistant">
-                          <MessageContent>
-                            {streamingReasoning && (
-                              <Reasoning isStreaming defaultOpen>
-                                <ReasoningTrigger />
-                                <ReasoningContent>
-                                  {streamingReasoning}
-                                </ReasoningContent>
-                              </Reasoning>
-                            )}
-                            {tools.map((tool) => (
-                              <ToolExecution key={tool.id} tool={tool} />
-                            ))}
-                            {streamingContent ? (
-                              <MessageResponse>
-                                {streamingContent}
-                              </MessageResponse>
-                            ) : (
-                              !streamingReasoning &&
-                              tools.length === 0 && (
-                                <Shimmer duration={1.5}>Thinking...</Shimmer>
-                              )
-                            )}
-                          </MessageContent>
-                        </Message>
+                        <StreamingAssistantMessage
+                          streamingContent={streamingContent}
+                          streamingReasoning={streamingReasoning}
+                          tools={tools}
+                        />
                       )}
                   </>
                 )}
