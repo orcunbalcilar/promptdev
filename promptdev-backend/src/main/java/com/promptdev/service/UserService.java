@@ -113,6 +113,10 @@ public class UserService {
                 .jiraAutoTaskRepository(user.getJiraAutoTaskRepository())
                 .jiraAutoTaskSourceBranch(user.getJiraAutoTaskSourceBranch())
                 .jiraAutoTaskTargetBranch(user.getJiraAutoTaskTargetBranch())
+                .jiraAutoTaskPrompt(user.getJiraAutoTaskPrompt())
+                .jiraAutoTaskIterative(user.getJiraAutoTaskIterative())
+                .jiraAutoTaskMaxIterations(user.getJiraAutoTaskMaxIterations())
+                .jiraAutoTaskReviewEnabled(user.getJiraAutoTaskReviewEnabled())
                 .customSystemPrompt(user.getCustomSystemPrompt())
                 .build();
     }
@@ -171,6 +175,16 @@ public class UserService {
         updateNullableField(request.getJiraAutoTaskRepository(), user::setJiraAutoTaskRepository);
         updateNullableField(request.getJiraAutoTaskSourceBranch(), user::setJiraAutoTaskSourceBranch);
         updateNullableField(request.getJiraAutoTaskTargetBranch(), user::setJiraAutoTaskTargetBranch);
+        updateNullableField(request.getJiraAutoTaskPrompt(), user::setJiraAutoTaskPrompt);
+        if (request.getJiraAutoTaskIterative() != null) {
+            user.setJiraAutoTaskIterative(request.getJiraAutoTaskIterative());
+        }
+        if (request.getJiraAutoTaskMaxIterations() != null) {
+            user.setJiraAutoTaskMaxIterations(request.getJiraAutoTaskMaxIterations());
+        }
+        if (request.getJiraAutoTaskReviewEnabled() != null) {
+            user.setJiraAutoTaskReviewEnabled(request.getJiraAutoTaskReviewEnabled());
+        }
         if (request.getCustomSystemPrompt() != null) {
             user.setCustomSystemPrompt(request.getCustomSystemPrompt().isBlank() ? null : request.getCustomSystemPrompt());
         }

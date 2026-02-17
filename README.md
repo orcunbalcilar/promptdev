@@ -11,7 +11,7 @@ PromptDev is a development platform that turns natural language prompts into wor
 ### Key Features
 
 - **Prompt-to-PR workflow** — Describe a feature, get a pull request
-- **Jira integration** — Link tasks to Jira issues, update status, add comments with PR links
+- **Jira integration** — Link tasks to Jira issues, update status, add comments with PR links, and auto-create tasks from assigned issues with custom prompts
 - **Repository & branch selection** — Pick from your Bitbucket repos and branches
 - **Local workspace support** — Work with local project directories or create new projects from scratch
 - **Model selection** — Choose from GPT-5.2, Claude Opus 4.5, Gemini 3 Pro, and 14+ models with dynamic model discovery
@@ -271,7 +271,7 @@ PromptDev uses **NextAuth.js v5** for user authentication with GitHub and Google
 After signing in, navigate to **Settings** to configure:
 
 - **Bitbucket Configuration** — Server URL, project key, username, and personal access token
-- **Jira Configuration** — Server URL, project key, username, and personal access token (for issue tracking, status updates, and PR linking)
+- **Jira Configuration** — Server URL, project key, username, personal access token, and auto-task creation settings (custom prompt, iterative mode, max iterations, code review)
 - **GitHub Copilot Token** — Personal GitHub token for isolated Copilot sessions (`gho_`, `ghu_`, `github_pat_`)
 - **BYOK Provider** — OpenAI-compatible, Azure, or Anthropic endpoint with your own API key
 

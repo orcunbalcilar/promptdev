@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { createTask, startTask, type CreateTaskRequest } from "@/lib/api";
+import { createTask, type CreateTaskRequest } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import React, { useState } from "react";
@@ -71,17 +71,16 @@ function TaskForm({ onClose }: Readonly<{ onClose: () => void }>) {
   const createMutation = useMutation({
     mutationFn: async (data: CreateTaskRequest) => {
       const task = await createTask(data);
-      try {
-        await startTask(task.id);
-      } catch (error) {
-        console.warn("Failed to start task:", error);
-      }
+      // We no longer auto-start the task. It will be in PENDING state.
+      // The user can review it on the task page and click "Start".
       return task;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       onClose();
       resetForm();
+      // Optional: Add a toast notification here if you have a toast library available in this scope
+      // toast.success("Task created. You can now review and start it.");
     },
   });
 

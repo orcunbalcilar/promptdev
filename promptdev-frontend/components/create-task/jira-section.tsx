@@ -9,8 +9,16 @@ import { useState } from "react";
 import { useTaskForm } from "./_form-context";
 
 export function JiraSection() {
-  const { title, setTitle, prompt, setPrompt, jiraIssueKey, setJiraIssueKey } =
-    useTaskForm();
+  const {
+    title,
+    setTitle,
+    prompt,
+    setPrompt,
+    jiraIssueKey,
+    setJiraIssueKey,
+    setIterative,
+    setMaxIterations,
+  } = useTaskForm();
 
   const [triageIssue, setTriageIssue] = useState<JiraIssue | null>(null);
   const [triageLoading, setTriageLoading] = useState(false);
@@ -34,6 +42,9 @@ export function JiraSection() {
           `## Jira Issue: ${issue.key} - ${issue.fields.summary}\n\n### Original Description:\n${description}\n\n### Implementation Instructions:\nImplement the changes described in the Jira issue above. Ensure:\n- All acceptance criteria are met\n- Existing tests continue to pass\n- New functionality is properly tested\n- Code follows project conventions`,
         );
       }
+      // Enable iterative mode by default for Jira tasks
+      setIterative(true);
+      setMaxIterations(1);
     } catch (err) {
       setTriageError(
         err instanceof Error ? err.message : "Failed to fetch Jira issue",

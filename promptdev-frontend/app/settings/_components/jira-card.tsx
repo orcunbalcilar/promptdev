@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { updateUserSettings } from "@/lib/user";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Bug, RefreshCw } from "lucide-react";
@@ -43,6 +44,18 @@ export function JiraCard({ userId, profile }: SettingsCardProps) {
   const [autoTaskTargetBranch, setAutoTaskTargetBranch] = useState(
     () => profile.jiraAutoTaskTargetBranch ?? "",
   );
+  const [autoTaskPrompt, setAutoTaskPrompt] = useState(
+    () => profile.jiraAutoTaskPrompt ?? "",
+  );
+  const [autoTaskIterative, setAutoTaskIterative] = useState(
+    () => profile.jiraAutoTaskIterative ?? true,
+  );
+  const [autoTaskMaxIterations, setAutoTaskMaxIterations] = useState(
+    () => profile.jiraAutoTaskMaxIterations ?? 1,
+  );
+  const [autoTaskReviewEnabled, setAutoTaskReviewEnabled] = useState(
+    () => profile.jiraAutoTaskReviewEnabled ?? true,
+  );
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -56,6 +69,10 @@ export function JiraCard({ userId, profile }: SettingsCardProps) {
         jiraAutoTaskRepository: autoTaskRepository || undefined,
         jiraAutoTaskSourceBranch: autoTaskSourceBranch || undefined,
         jiraAutoTaskTargetBranch: autoTaskTargetBranch || undefined,
+        jiraAutoTaskPrompt: autoTaskPrompt || undefined,
+        jiraAutoTaskIterative: autoTaskIterative,
+        jiraAutoTaskMaxIterations: autoTaskMaxIterations,
+        jiraAutoTaskReviewEnabled: autoTaskReviewEnabled,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
@@ -185,6 +202,80 @@ export function JiraCard({ userId, profile }: SettingsCardProps) {
                   value={autoTaskTargetBranch}
                   onChange={(e) => setAutoTaskTargetBranch(e.target.value)}
                 />
+              </div>
+
+              <div className="sm:col-span-2 space-y-4 pt-2">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="jira-auto-review">Enable Code Review</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Automatically request an AI review for the generated code.
+                    </p>
+                  </div>
+                  <Switch
+                    id="jira-auto-review"
+                    checked={autoTaskReviewEnabled}
+                    onCheckedChange={setAutoTaskReviewEnabled}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="jira-auto-iterative">Iterative Mode</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Allow the agent to self-correct if build/tests fail.
+                    </p>
+                  </div>
+                  <Switch
+                    id="jira-auto-iterative"
+                    checked={autoTaskIterative}
+                    onCheckedChange={setAutoTaskIterative}
+                  />
+                </div>
+
+                {autoTaskIterative && (
+                  <div className="space-y-2">
+                    <Label htmlFor="jira-auto-max-iter">Max Iterations</Label>
+                    <Input
+                      id="jira-auto-max-iter"
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={autoTaskMaxIterations}
+                      onChange={(e) =>
+                        setAutoTaskMaxIterations(Number.parseInt(e.target.value) || 1)
+                      }
+                      className="max-w-30"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-2 pt-2">
+                  <Label htmlFor="jira-auto-prompt">Custom Prompt Template</Label>
+                  <Textarea
+                    id="jira-auto-prompt"
+                    placeholder="Implement the following Jira issue: {{summary}}..."
+                    value={autoTaskPrompt}
+                    onChange={(e) => setAutoTaskPrompt(e.target.value)}
+                    className="min-h-25 font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Available placeholders:{" "}
+                    <code className="bg-muted px-1 rounded">
+                      {"{{issueKey}}"}
+                    </code>
+                    ,{" "}
+                    <code className="bg-muted px-1 rounded">{"{{summary}}"}</code>
+                    ,{" "}
+                    <code className="bg-muted px-1 rounded">
+                      {"{{priority}}"}
+                    </code>
+                    ,{" "}
+                    <code className="bg-muted px-1 rounded">
+                      {"{{description}}"}
+                    </code>
+                  </p>
+                </div>
               </div>
             </div>
           )}

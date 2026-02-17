@@ -117,6 +117,22 @@ public class User {
     @Column(name = "jira_auto_task_target_branch")
     private String jiraAutoTaskTargetBranch;
 
+    /** Custom prompt template for auto-created Jira tasks */
+    @Column(name = "jira_auto_task_prompt", columnDefinition = "TEXT")
+    private String jiraAutoTaskPrompt;
+
+    /** Whether auto-created tasks should be iterative */
+    @Column(name = "jira_auto_task_iterative")
+    private Boolean jiraAutoTaskIterative;
+
+    /** Max iterations for auto-created tasks */
+    @Column(name = "jira_auto_task_max_iterations")
+    private Integer jiraAutoTaskMaxIterations;
+
+    /** Whether review is enabled for auto-created tasks */
+    @Column(name = "jira_auto_task_review_enabled")
+    private Boolean jiraAutoTaskReviewEnabled;
+
     // ── Custom System Prompt ───────────────────────────────────
 
     /** User's custom system prompt (overrides default in SDLC templates) */

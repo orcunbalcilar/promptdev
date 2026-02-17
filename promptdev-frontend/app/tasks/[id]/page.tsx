@@ -203,6 +203,18 @@ export default function TaskDetailPage() {
     }
   };
 
+  const handleStart = async () => {
+    if (!task) return;
+    try {
+      await startTask(task.id);
+      queryClient.invalidateQueries({ queryKey: ["task", id] });
+      toast.success("Task started");
+    } catch (e) {
+      console.error("Failed to start task:", e);
+      toast.error("Failed to start task");
+    }
+  };
+
   const handleRetry = async () => {
     if (!task) return;
     try {
@@ -289,6 +301,7 @@ export default function TaskDetailPage() {
               setShowResumeForm={setShowResumeForm}
               onRetry={handleRetry}
               onCancel={handleCancel}
+              onStart={handleStart}
             />
           </div>
         </div>

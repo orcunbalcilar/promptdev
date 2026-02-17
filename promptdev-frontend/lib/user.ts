@@ -30,6 +30,10 @@ export interface UserProfile {
   jiraAutoTaskRepository?: string;
   jiraAutoTaskSourceBranch?: string;
   jiraAutoTaskTargetBranch?: string;
+  jiraAutoTaskPrompt?: string;
+  jiraAutoTaskIterative?: boolean;
+  jiraAutoTaskMaxIterations?: number;
+  jiraAutoTaskReviewEnabled?: boolean;
   // Custom system prompt
   customSystemPrompt?: string;
 }
@@ -62,6 +66,10 @@ export interface UpdateUserSettingsRequest {
   jiraAutoTaskRepository?: string;
   jiraAutoTaskSourceBranch?: string;
   jiraAutoTaskTargetBranch?: string;
+  jiraAutoTaskPrompt?: string;
+  jiraAutoTaskIterative?: boolean;
+  jiraAutoTaskMaxIterations?: number;
+  jiraAutoTaskReviewEnabled?: boolean;
   // Custom system prompt
   customSystemPrompt?: string;
 }

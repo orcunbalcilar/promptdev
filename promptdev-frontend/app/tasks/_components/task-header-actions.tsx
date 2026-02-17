@@ -8,15 +8,23 @@ export function TaskHeaderActions({
   setShowResumeForm,
   onRetry,
   onCancel,
+  onStart,
 }: Readonly<{
   task: { id: string; status: string; resumeCount?: number | null }
   showResumeForm: boolean
   setShowResumeForm: (v: boolean) => void
   onRetry: () => void
   onCancel: () => void
+  onStart: () => void
 }>) {
   return (
     <div className="flex items-center gap-2">
+      {task.status === 'PENDING' && (
+        <Button variant="default" size="sm" onClick={onStart}>
+          <Play className="h-4 w-4 mr-2" />
+          Start Task
+        </Button>
+      )}
       {(task.status === 'COMPLETED' || task.status === 'FAILED') && (
         <Button
           variant="outline"

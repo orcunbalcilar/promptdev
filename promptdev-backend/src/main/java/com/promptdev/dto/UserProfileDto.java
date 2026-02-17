@@ -52,6 +52,10 @@ public class UserProfileDto {
     private String jiraAutoTaskRepository;
     private String jiraAutoTaskSourceBranch;
     private String jiraAutoTaskTargetBranch;
+    private String jiraAutoTaskPrompt;
+    private Boolean jiraAutoTaskIterative;
+    private Integer jiraAutoTaskMaxIterations;
+    private Boolean jiraAutoTaskReviewEnabled;
 
     // Custom system prompt
     private String customSystemPrompt;
