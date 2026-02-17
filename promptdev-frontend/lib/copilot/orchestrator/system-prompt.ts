@@ -2,7 +2,6 @@
  * System prompt builder for the orchestrator.
  */
 
-import { buildSkillsPrompt } from "../../skills";
 import type { TaskData } from "./types";
 
 export function buildSystemPrompt(task: TaskData): string {
@@ -56,10 +55,6 @@ Include the Jira key in ALL commit messages: [${task.jiraIssueKey}] <descriptive
     parts.push(
       `\n## Workspace Setup\nRun these setup commands before starting work:\n\`\`\`\n${task.bootScript}\n\`\`\``,
     );
-  }
-
-  if (task.skills) {
-    parts.push(buildSkillsPrompt(task.skills));
   }
 
   return parts;

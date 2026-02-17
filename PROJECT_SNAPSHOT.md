@@ -79,7 +79,7 @@ Build an AI-powered development platform where users describe features via promp
 - SSE streaming for real-time task progress
 - Agent callback endpoint
 - Bitbucket integration (repo listing, branch listing, PR creation)
-- Jira Server integration (issue search, transitions, comments, assignments — conditional on config)
+- Jira Server integration (issue search, transitions, comments, assignments — conditional on config, auto-task creation enabled by default, commit message patterns enforced with Jira ID)
 - Event tracking (30 operation types)
 - User management with OAuth provider sync (GitHub, Google)
 - User settings API (profile, Bitbucket config, Copilot token)
@@ -87,10 +87,11 @@ Build an AI-powered development platform where users describe features via promp
 
 ### Frontend
 
-- Kanban dashboard with task cards
+- Kanban dashboard with task cards (refined UI with colored column borders, gradient header, Glass effect)
 - Create task dialog (repo dropdown, branch selectors, model picker, iterative toggle)
-- Task detail page with real-time event log
-- Scheduled jobs page (CRUD, cron presets, job type icons)
+- Agent Skills powered by skills.sh ecosystem (12 curated skills from vercel-labs/agent-skills, anthropics/skills, etc. installed via `npx skills add`, click-to-select UI with install counts, deduped install commands in boot script)
+- Task detail page with real-time event log (optimistic SSE updates, no redundant polling)
+- Scheduled jobs page (CRUD, cron presets, job type icons, SDLC template suggestions as collapsible prompts)
 - Copilot chat page (interactive AI assistant with model/reasoning settings)
 - Monitoring page (system health dashboard)
 - Authentication (NextAuth.js v5 with GitHub and Google OAuth)
@@ -156,7 +157,7 @@ The Slack bot is an optional service in `docker-compose.yml`. Use `--profile sla
 
 ### User
 
-- Fields: id, provider (github/google), providerAccountId, email, name, avatarUrl, bitbucketUrl, bitbucketProjectKey, bitbucketUsername, bitbucketTokenEncrypted, copilotTokenEncrypted, byokProviderType, byokBaseUrl, byokApiKeyEncrypted, jiraUrl, jiraProjectKey, jiraUsername, jiraTokenEncrypted, timestamps
+- Fields: id, provider (github/google), providerAccountId, email, name, avatarUrl, bitbucketUrl, bitbucketProjectKey, bitbucketUsername, bitbucketTokenEncrypted, copilotTokenEncrypted, byokProviderType, byokBaseUrl, byokApiKeyEncrypted, jiraUrl, jiraProjectKey, jiraUsername, jiraTokenEncrypted, jiraAutoTaskEnabled (default: true), timestamps
 
 ---
 

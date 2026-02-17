@@ -13,7 +13,9 @@ import {
   resumeTask,
   startTask,
   subscribeToTaskEvents,
+  type Task,
   type TaskEvent,
+  type TaskStatus,
 } from "@/lib/api";
 import { getMonitoringSessionDetails } from "@/lib/monitoring";
 import { cn } from "@/lib/utils";
@@ -29,7 +31,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   statusColors,
@@ -58,6 +60,34 @@ export default function TaskDetailPage() {
   const [resumePrompt, setResumePrompt] = useState("");
   const [isResuming, setIsResuming] = useState(false);
   const [showFilesPanel, setShowFilesPanel] = useState(true);
+  const sseConnected = useRef(false);
+
+  // Event types that indicate a task status change — only these need a refetch
+  const STATUS_CHANGE_EVENTS = useRef(
+    new Set([
+      "TASK_COMPLETED",
+      "TASK_FAILED",
+      "TASK_QUEUED",
+      "PR_CREATED",
+      "ITERATION_COMPLETED",
+      "ITERATION_FAILED",
+      "REVIEWING_COMPLETED",
+      "REVIEWING_FAILED",
+      "TRIAGING_COMPLETED",
+    ]),
+  );
+
+  // Event types where we can optimistically update the task status
+  const EVENT_TO_STATUS = useRef<Record<string, TaskStatus>>({
+    TASK_QUEUED: "QUEUED",
+    AGENT_STARTED: "IN_PROGRESS",
+    CODE_GENERATED: "CODE_GENERATED",
+    TASK_COMPLETED: "COMPLETED",
+    TASK_FAILED: "FAILED",
+    REVIEWING_STARTED: "REVIEWING",
+    TRIAGING_STARTED: "TRIAGING",
+    ITERATION_STARTED: "IN_PROGRESS",
+  });
 
   // Fetch available models for name lookup
   const { data: models = [] } = useQuery<ModelInfo[]>({
@@ -71,7 +101,7 @@ export default function TaskDetailPage() {
     initialData: [],
   });
 
-  // Fetch task details
+  // Fetch task details — only poll when SSE is not connected
   const {
     data: task,
     isLoading,
@@ -81,9 +111,10 @@ export default function TaskDetailPage() {
     queryFn: () => getTask(id),
     refetchInterval: (query) => {
       const status = query.state.data?.status;
-      return status && ["COMPLETED", "FAILED", "CANCELLED"].includes(status)
-        ? false
-        : 3000;
+      if (status && ["COMPLETED", "FAILED", "CANCELLED"].includes(status))
+        return false;
+      // Use a slow fallback poll only when SSE is not connected
+      return sseConnected.current ? false : 5000;
     },
   });
 
@@ -104,27 +135,41 @@ export default function TaskDetailPage() {
     },
   });
 
-  // Subscribe to real-time events
+  // Subscribe to real-time events — optimistic status updates
   useEffect(() => {
     if (!id) return;
 
-    // Clear previous realtime events when ID changes
-    // setRealtimeEvents([]) - moved to cleanup to avoid sync state update warning
+    sseConnected.current = true;
 
     const unsubscribe = subscribeToTaskEvents(
       id,
       (event: TaskEvent) => {
         setRealtimeEvents((prev) => [...prev, event]);
-        // Invalidate task query to get latest status if event suggests progress
-        queryClient.invalidateQueries({ queryKey: ["task", id] });
+
+        // Optimistically update task status from the event type
+        const newStatus = EVENT_TO_STATUS.current[event.eventType];
+        if (newStatus) {
+          queryClient.setQueryData(
+            ["task", id],
+            (old: Task | undefined) =>
+              old ? { ...old, status: newStatus, updatedAt: event.timestamp } : old,
+          );
+        }
+
+        // Only do a full refetch for terminal/important status change events
+        if (STATUS_CHANGE_EVENTS.current.has(event.eventType)) {
+          queryClient.invalidateQueries({ queryKey: ["task", id] });
+        }
       },
       (error: unknown) => {
         console.error("SSE Error:", error);
+        sseConnected.current = false;
       },
     );
 
     return () => {
       unsubscribe();
+      sseConnected.current = false;
       setRealtimeEvents([]);
     };
   }, [id, queryClient]);

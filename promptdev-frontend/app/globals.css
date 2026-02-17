@@ -123,3 +123,83 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ── Kanban & Dashboard polish ─────────────────────────────── */
+
+.kanban-column {
+  @apply rounded-xl border border-border/60 p-3;
+  background: linear-gradient(180deg, oklch(0.98 0 0 / 60%) 0%, oklch(0.96 0 0 / 40%) 100%);
+}
+.dark .kanban-column {
+  background: linear-gradient(180deg, oklch(0.18 0.005 286 / 50%) 0%, oklch(0.16 0.004 286 / 40%) 100%);
+}
+.kanban-column-pending { border-top: 3px solid oklch(0.65 0.05 260); }
+.kanban-column-progress { border-top: 3px solid oklch(0.55 0.2 260); }
+.kanban-column-review { border-top: 3px solid oklch(0.6 0.15 180); }
+.kanban-column-completed { border-top: 3px solid oklch(0.6 0.2 145); }
+.kanban-column-stopped { border-top: 3px solid oklch(0.6 0.2 25); }
+
+.task-card-hover {
+  @apply transition-all duration-200;
+}
+.task-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px oklch(0.5 0.02 260 / 15%), 0 4px 10px -6px oklch(0.5 0.02 260 / 10%);
+}
+.dark .task-card-hover:hover {
+  box-shadow: 0 8px 25px -5px oklch(0.2 0.02 260 / 40%), 0 4px 10px -6px oklch(0.1 0.01 260 / 30%);
+}
+
+/* Header gradient bar */
+.header-bar {
+  background: linear-gradient(135deg, oklch(0.98 0 0) 0%, oklch(0.97 0.005 260) 100%);
+  border-bottom: 1px solid oklch(0.92 0.01 260 / 60%);
+}
+.dark .header-bar {
+  background: linear-gradient(135deg, oklch(0.16 0.006 286) 0%, oklch(0.18 0.015 260) 100%);
+  border-bottom: 1px solid oklch(0.3 0.01 260 / 40%);
+}
+
+/* Skill card styling */
+.skill-card {
+  @apply relative overflow-hidden rounded-lg border p-3 cursor-pointer transition-all duration-200;
+  background: oklch(0.99 0 0);
+}
+.skill-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px oklch(0.5 0.05 260 / 12%);
+}
+.skill-card.selected {
+  border-color: oklch(0.55 0.2 260);
+  background: oklch(0.97 0.01 260);
+  box-shadow: 0 0 0 1px oklch(0.55 0.2 260 / 30%), 0 4px 12px -2px oklch(0.5 0.15 260 / 15%);
+}
+.dark .skill-card {
+  background: oklch(0.22 0.006 286);
+}
+.dark .skill-card.selected {
+  border-color: oklch(0.6 0.2 260);
+  background: oklch(0.24 0.02 260);
+  box-shadow: 0 0 0 1px oklch(0.6 0.2 260 / 30%), 0 4px 12px -2px oklch(0.3 0.1 260 / 20%);
+}
+
+/* Live pulse indicator */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.live-dot {
+  @apply inline-block h-2 w-2 rounded-full bg-green-500;
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+/* Smooth count badge */
+.count-badge {
+  @apply inline-flex items-center justify-center rounded-full text-[11px] font-semibold tabular-nums min-w-[1.5rem] h-6 px-1.5;
+  background: oklch(0.94 0.005 260);
+  color: oklch(0.45 0.02 260);
+}
+.dark .count-badge {
+  background: oklch(0.28 0.01 260);
+  color: oklch(0.75 0.02 260);
+}

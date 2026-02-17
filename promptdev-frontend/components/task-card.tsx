@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/card";
 import type { Task, TaskStatus } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import {
   Ban,
   Bot,
@@ -108,11 +107,11 @@ function formatRelativeDate(dateStr: string): string {
   const diffMs = now - date.getTime();
   const mins = Math.floor(diffMs / 60000);
   if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 60) return `${mins}m`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return `${hours}h`;
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
+  if (days < 7) return `${days}d`;
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
@@ -143,24 +142,22 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
   return (
     <Card
       className={cn(
-        "cursor-pointer hover:shadow-md transition-all hover:border-primary/50 border-l-4",
+        "task-card-hover cursor-pointer border-l-4 bg-card/80 backdrop-blur-sm",
         STATUS_BORDER[task.status] ?? "border-l-transparent",
-        task.status === "COMPLETED" && "bg-green-50/10",
-        task.status === "FAILED" && "bg-red-50/10",
       )}
       onClick={onClick}
     >
-      <CardHeader className="p-4 pb-2">
+      <CardHeader className="p-3 pb-1.5">
         <div className="flex items-start justify-between gap-2">
           <CardTitle
-            className="text-sm font-semibold leading-snug line-clamp-2"
+            className="text-[13px] font-semibold leading-snug line-clamp-2"
             title={task.title}
           >
             {task.title}
           </CardTitle>
           <Badge
             variant={config.variant}
-            className={cn("shrink-0 flex gap-1 text-[10px]", config.className)}
+            className={cn("shrink-0 flex gap-1 text-[10px] h-5", config.className)}
           >
             <StatusIcon
               className={cn("h-3 w-3", isAnimating && "animate-spin")}
@@ -169,63 +166,57 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-2 pb-3">
-        <p className="text-xs text-muted-foreground line-clamp-2 min-h-[2.25em]">
+      <CardContent className="p-3 pt-1 pb-2">
+        <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
           {task.prompt}
         </p>
         {task.status === "FAILED" && task.errorMessage && (
           <p
-            className="text-xs text-destructive line-clamp-2 mt-1.5 font-mono bg-destructive/5 rounded px-1.5 py-0.5"
+            className="text-[11px] text-destructive line-clamp-1 mt-1.5 font-mono bg-destructive/5 rounded px-1.5 py-0.5"
             title={task.errorMessage}
           >
             {task.errorMessage}
           </p>
         )}
       </CardContent>
-      <CardFooter className="p-4 pt-0 text-xs text-muted-foreground flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 font-mono bg-muted px-2 py-1 rounded">
+      <CardFooter className="p-3 pt-0 text-[11px] text-muted-foreground flex justify-between items-center">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="flex items-center gap-1 font-mono bg-muted/60 px-1.5 py-0.5 rounded text-[10px] truncate max-w-24">
             {task.workspaceType === "LOCAL" ? (
-              <FolderOpen className="h-3 w-3" />
+              <FolderOpen className="h-2.5 w-2.5 shrink-0" />
             ) : (
-              <GitBranch className="h-3 w-3" />
+              <GitBranch className="h-2.5 w-2.5 shrink-0" />
             )}
-            {task.repositorySlug}
-          </div>
+            <span className="truncate">{task.repositorySlug}</span>
+          </span>
           {task.iterative && task.maxIterations && (
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-              <RefreshCcw className="h-2.5 w-2.5 mr-1" />
+            <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">
+              <RefreshCcw className="h-2 w-2 mr-0.5" />
               {task.currentIteration ?? 0}/{task.maxIterations}
             </Badge>
           )}
           {task.modelId && (
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5">
-              <Bot className="h-2.5 w-2.5" />
-              {task.modelId.split('/').pop() ?? task.modelId}
+            <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 gap-0.5 max-w-20 truncate">
+              <Bot className="h-2 w-2 shrink-0" />
+              <span className="truncate">{task.modelId.split('/').pop() ?? task.modelId}</span>
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
           {task.pullRequestUrl && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-6 w-6"
-              asChild
+            <a
+              href={task.pullRequestUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open Pull Request"
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              className="text-primary hover:text-primary/80"
             >
-              <a
-                href={task.pullRequestUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Open Pull Request"
-              >
-                <GitPullRequest className="h-3 w-3" />
-              </a>
-            </Button>
+              <GitPullRequest className="h-3 w-3" />
+            </a>
           )}
           {(task.completedAt ?? (task.updatedAt && ['FAILED', 'CANCELLED'].includes(task.status))) && task.createdAt && (
-            <span className="flex items-center gap-0.5 text-muted-foreground" title="Duration">
+            <span className="flex items-center gap-0.5 tabular-nums" title="Duration">
               <Clock className="h-2.5 w-2.5" />
               {(() => {
                 const endTime = task.completedAt ?? task.updatedAt;
@@ -237,14 +228,12 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
             </span>
           )}
           {!task.completedAt && ['IN_PROGRESS', 'REVIEWING', 'TRIAGING', 'VALIDATING'].includes(task.status) && (
-            <span className="flex items-center gap-0.5 text-blue-600" title="Running">
-              <Loader2 className="h-2.5 w-2.5 animate-spin" />
-            </span>
+            <span className="live-dot" title="Running" />
           )}
           <time
             dateTime={task.createdAt}
             title={new Date(task.createdAt).toLocaleString()}
-            className="tabular-nums"
+            className="tabular-nums text-muted-foreground/70"
           >
             {formatRelativeDate(task.createdAt)}
           </time>

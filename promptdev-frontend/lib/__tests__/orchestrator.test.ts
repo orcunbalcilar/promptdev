@@ -345,7 +345,7 @@ describe('Task Orchestrator', () => {
   })
 
   describe('buildSystemPrompt (via executeTask)', () => {
-    it('should include skills in system prompt when provided', async () => {
+    it('should not include skills inline in system prompt (skills are installed via boot script)', async () => {
       const SKILLED_TASK = {
         ...MOCK_TASK,
         skills: 'react, testing',
@@ -369,9 +369,9 @@ describe('Task Orchestrator', () => {
       await executeTask('task-1')
 
       const systemMessage = (createCopilotSession as ReturnType<typeof vi.fn>).mock.calls[0][0].systemMessage
-      expect(systemMessage.content).toContain('available_skills')
-      expect(systemMessage.content).toContain('react')
-      expect(systemMessage.content).toContain('testing')
+      // Skills are no longer embedded in the system prompt — they're installed
+      // via `npx skills add` in the boot script and the agent reads SKILL.md files
+      expect(systemMessage.content).not.toContain('agent_skills')
     })
 
     it('should include review instructions when reviewEnabled', async () => {

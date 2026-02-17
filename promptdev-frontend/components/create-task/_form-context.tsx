@@ -13,6 +13,7 @@ import {
   getRepositories,
 } from "@/lib/api";
 import { DEFAULT_MODEL_ID } from "@/lib/copilot/models";
+import { getDefaultSkillIds, buildInstallScript } from "@/lib/skills";
 import type { ModelInfo } from "@github/copilot-sdk";
 import { useQuery } from "@tanstack/react-query";
 import React, { createContext, use, useCallback, useMemo, useState } from "react";
@@ -131,7 +132,7 @@ export function TaskFormProvider({ open, children }: TaskFormProviderProps) {
   const [commitMessagePattern, setCommitMessagePattern] = useState("");
   const [envVars, setEnvVars] = useState("");
   const [bootScript, setBootScript] = useState("");
-  const [skills, setSkills] = useState("");
+  const [skills, setSkills] = useState(() => getDefaultSkillIds().join(", "));
   const [systemPrompt, setSystemPrompt] = useState("");
 
   // Fetch copilot models
@@ -219,7 +220,7 @@ export function TaskFormProvider({ open, children }: TaskFormProviderProps) {
     setCommitMessagePattern("");
     setEnvVars("");
     setBootScript("");
-    setSkills("");
+    setSkills(getDefaultSkillIds().join(", "));
     setSystemPrompt("");
   }, []);
 
@@ -242,6 +243,21 @@ export function TaskFormProvider({ open, children }: TaskFormProviderProps) {
         effectivePath = localPath;
       }
 
+      // Prepend skills install commands to the boot script
+      const skillsInstall = buildInstallScript(skills);
+      const effectiveBootScript = [skillsInstall, bootScript]
+        .filter(Boolean)
+        .join("\n");
+
+      // Enforce Jira ID in commit message pattern when a Jira key is provided
+      let effectiveCommitPattern = commitMessagePattern || undefined;
+      const trimmedJiraKey = jiraIssueKey?.trim();
+      if (trimmedJiraKey && !commitMessagePattern) {
+        effectiveCommitPattern = `[${trimmedJiraKey}] {message}`;
+      } else if (trimmedJiraKey && commitMessagePattern && !commitMessagePattern.includes(trimmedJiraKey)) {
+        effectiveCommitPattern = `[${trimmedJiraKey}] ${commitMessagePattern}`;
+      }
+
       return {
         title,
         prompt,
@@ -262,10 +278,10 @@ export function TaskFormProvider({ open, children }: TaskFormProviderProps) {
           : undefined,
         reviewEnabled,
         reviewModelId: reviewModelId || undefined,
-        jiraIssueKey: jiraIssueKey || undefined,
-        commitMessagePattern: commitMessagePattern || undefined,
+        jiraIssueKey: trimmedJiraKey || undefined,
+        commitMessagePattern: effectiveCommitPattern,
         envVars: envVars || undefined,
-        bootScript: bootScript || undefined,
+        bootScript: effectiveBootScript || undefined,
         skills: skills || undefined,
         systemPrompt: systemPrompt || undefined,
       };

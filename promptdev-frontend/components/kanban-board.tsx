@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import type { Task, TaskStatus } from "@/lib/api";
 import { TaskCard } from "./task-card";
 
@@ -12,34 +11,34 @@ interface KanbanBoardProps {
 interface KanbanColumn {
   title: string;
   statuses: TaskStatus[];
-  color: string;
+  columnClass: string;
 }
 
 const columns: KanbanColumn[] = [
   {
     title: "Pending",
     statuses: ["PENDING", "QUEUED", "TRIAGING"],
-    color: "bg-muted/50 border-muted",
+    columnClass: "kanban-column-pending",
   },
   {
     title: "In Progress",
     statuses: ["IN_PROGRESS", "VALIDATING", "ITERATION_PENDING"],
-    color: "bg-blue-50/50 border-blue-100",
+    columnClass: "kanban-column-progress",
   },
   {
     title: "Review",
     statuses: ["REVIEWING", "CODE_GENERATED", "COMMITTING", "PUSHING", "CREATING_PR"],
-    color: "bg-teal-50/50 border-teal-100",
+    columnClass: "kanban-column-review",
   },
   {
     title: "Completed",
     statuses: ["COMPLETED"],
-    color: "bg-green-50/50 border-green-100",
+    columnClass: "kanban-column-completed",
   },
   {
     title: "Stopped",
     statuses: ["FAILED", "CANCELLED"],
-    color: "bg-red-50/30 border-red-100",
+    columnClass: "kanban-column-stopped",
   },
 ];
 
@@ -52,25 +51,25 @@ export function KanbanBoard({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 h-full">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 h-full">
       {columns.map((column) => {
         const columnTasks = getTasksForColumn(column);
         return (
-          <div key={column.title} className="flex flex-col h-full space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-sm tracking-tight">
+          <div key={column.title} className="flex flex-col h-full gap-3">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">
                 {column.title}
               </h2>
-              <Badge variant="secondary" className="text-xs font-mono">
+              <span className="count-badge">
                 {columnTasks.length}
-              </Badge>
+              </span>
             </div>
 
             <div
-              className={`flex flex-col gap-3 rounded-lg border p-2 h-full min-h-125 ${column.color}`}
+              className={`kanban-column ${column.columnClass} flex flex-col gap-2.5 h-full min-h-48`}
             >
               {columnTasks.length === 0 ? (
-                <div className="flex items-center justify-center h-32 text-sm text-muted-foreground border border-dashed rounded-md bg-background/50">
+                <div className="flex items-center justify-center h-24 text-xs text-muted-foreground/60 border border-dashed border-border/40 rounded-lg">
                   No tasks
                 </div>
               ) : (

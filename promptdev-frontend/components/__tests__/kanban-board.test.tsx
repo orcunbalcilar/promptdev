@@ -144,23 +144,23 @@ describe('KanbanBoard', () => {
 
     // Pending column: 2 tasks (PENDING + QUEUED)
     const pendingColumn = screen.getByRole('heading', { name: 'Pending' }).closest('.flex.flex-col')!
-    expect(pendingColumn.querySelector('.text-xs')).toHaveTextContent('2')
+    expect(pendingColumn.querySelector('.count-badge')).toHaveTextContent('2')
 
     // In Progress column: 1 task
     const ipColumn = screen.getByRole('heading', { name: 'In Progress' }).closest('.flex.flex-col')!
-    expect(ipColumn.querySelector('.text-xs')).toHaveTextContent('1')
+    expect(ipColumn.querySelector('.count-badge')).toHaveTextContent('1')
 
     // Review column: 0 tasks
     const reviewColumn = screen.getByRole('heading', { name: 'Review' }).closest('.flex.flex-col')!
-    expect(reviewColumn.querySelector('.text-xs')).toHaveTextContent('0')
+    expect(reviewColumn.querySelector('.count-badge')).toHaveTextContent('0')
 
     // Completed column: 2 tasks
     const completedColumn = screen.getByRole('heading', { name: 'Completed' }).closest('.flex.flex-col')!
-    expect(completedColumn.querySelector('.text-xs')).toHaveTextContent('2')
+    expect(completedColumn.querySelector('.count-badge')).toHaveTextContent('2')
 
     // Stopped column: 1 task
     const stoppedColumn = screen.getByRole('heading', { name: 'Stopped' }).closest('.flex.flex-col')!
-    expect(stoppedColumn.querySelector('.text-xs')).toHaveTextContent('1')
+    expect(stoppedColumn.querySelector('.count-badge')).toHaveTextContent('1')
   })
 
   it('calls onTaskClick when a task card is clicked', async () => {

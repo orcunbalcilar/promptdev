@@ -1,5 +1,6 @@
 package com.promptdev.service;
 
+import com.promptdev.config.JiraConfig;
 import com.promptdev.dto.CreateTaskRequest;
 import com.promptdev.dto.jira.JiraIssueResponse;
 import com.promptdev.dto.jira.JiraSearchResponse;
@@ -28,6 +29,7 @@ import java.util.List;
 public class JiraPollingService {
 
     private final JiraService jiraService;
+    private final JiraConfig jiraConfig;
     private final TaskService taskService;
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
@@ -54,18 +56,29 @@ public class JiraPollingService {
     private void pollForUser(User user) {
         String username = user.getJiraUsername();
         if (username == null || username.isBlank()) {
+            // Fallback to global configuration if user-specific setting is missing
+            username = jiraConfig.getUsername();
+        }
+        
+        if (username == null || username.isBlank()) {
             log.warn("User {} has Jira auto-task enabled but no Jira username configured", user.getId());
             return;
         }
 
-        if (user.getJiraAutoTaskRepository() == null || user.getJiraAutoTaskRepository().isBlank()) {
-            log.warn("User {} has Jira auto-task enabled but no default repository configured", user.getId());
-            return;
+        String repository = user.getJiraAutoTaskRepository();
+        if (repository == null || repository.isBlank()) {
+            // Fallback to default repository if missing
+            repository = "promptdev";
         }
 
         try {
             // Search for open issues assigned to the user
-            String jql = buildJql(username, user.getJiraProjectKey());
+            String projectKey = user.getJiraProjectKey();
+            if (projectKey == null || projectKey.isBlank()) {
+                projectKey = jiraConfig.getProjectKey();
+            }
+            
+            String jql = buildJql(username, projectKey);
             JiraSearchResponse searchResult = jiraService.searchIssues(jql, 0, 20);
 
             if (searchResult.issues() == null || searchResult.issues().isEmpty()) {
@@ -76,7 +89,7 @@ public class JiraPollingService {
                     searchResult.issues().size(), username);
 
             for (JiraIssueResponse issue : searchResult.issues()) {
-                createTaskForIssue(user, issue);
+                createTaskForIssue(user, issue, repository);
             }
         } catch (Exception e) {
             log.error("Failed to poll Jira for user {}: {}", user.getId(), e.getMessage());
@@ -94,7 +107,7 @@ public class JiraPollingService {
         return jql.toString();
     }
 
-    private void createTaskForIssue(User user, JiraIssueResponse issue) {
+    private void createTaskForIssue(User user, JiraIssueResponse issue, String repository) {
         String issueKey = issue.key();
 
         // Skip if a non-terminal task already exists for this Jira issue
@@ -111,7 +124,7 @@ public class JiraPollingService {
             CreateTaskRequest request = CreateTaskRequest.builder()
                     .title(title)
                     .prompt(prompt)
-                    .repositorySlug(user.getJiraAutoTaskRepository())
+                    .repositorySlug(repository)
                     .workspaceType(WorkspaceType.BITBUCKET)
                     .sourceBranch(user.getJiraAutoTaskSourceBranch() != null
                             ? user.getJiraAutoTaskSourceBranch() : "__AUTO_GENERATED__")

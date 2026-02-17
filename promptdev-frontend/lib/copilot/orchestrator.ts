@@ -197,7 +197,6 @@ async function addJiraComment(
   }
 }
 
-import { buildSkillsPrompt } from "../skills";
 
 // ── System Prompt Builder ───────────────────────────────────────
 
@@ -250,10 +249,6 @@ Include the Jira key in ALL commit messages: [${task.jiraIssueKey}] <descriptive
 
   if (task.bootScript) {
     parts.push(`\n## Workspace Setup\nRun these setup commands before starting work:\n\`\`\`\n${task.bootScript}\n\`\`\``);
-  }
-
-  if (task.skills) {
-    parts.push(buildSkillsPrompt(task.skills));
   }
 
   return parts;

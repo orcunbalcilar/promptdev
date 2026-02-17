@@ -37,13 +37,14 @@ import {
   type WorkspaceType,
 } from "@/lib/api";
 import { DEFAULT_MODEL_ID } from "@/lib/copilot/models";
+import { getTemplateById } from "@/lib/sdlc";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ModelInfo } from "@github/copilot-sdk";
 import { format } from "date-fns";
-import { CalendarClock, Clock, Plus, Power } from "lucide-react";
-import { useCallback, useState } from "react";
-import { CRON_PRESETS, JOB_TYPE_CONFIG, describeCron } from "./constants";
+import { CalendarClock, Clock, FileText as FileTextIcon, Plus, Power } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { CRON_PRESETS, JOB_TYPE_CONFIG, JOB_TYPE_TEMPLATE_IDS, describeCron } from "./constants";
 
 export function CreateJobDialog() {
   const [open, setOpen] = useState(false);
@@ -60,7 +61,17 @@ export function CreateJobDialog() {
   const [enabled, setEnabled] = useState(true);
   const [selectedPreset, setSelectedPreset] = useState("0 0 2 * * *");
 
+  const [promptTemplate, setPromptTemplate] = useState("");
+
   const queryClient = useQueryClient();
+
+  // Get SDLC templates matching the current job type
+  const sdlcTemplates = useMemo(() => {
+    const templateIds = JOB_TYPE_TEMPLATE_IDS[jobType] ?? [];
+    return templateIds
+      .map((id) => getTemplateById(id))
+      .filter((t) => t !== undefined);
+  }, [jobType]);
 
   // Fetch available models
   const { data: models = [] } = useQuery<ModelInfo[]>({
@@ -220,11 +231,45 @@ export function CreateJobDialog() {
             {/* Prompt Template */}
             <div className="grid gap-2">
               <Label htmlFor="promptTemplate">Prompt Template</Label>
+
+              {/* Show SDLC template suggestions for this job type */}
+              {sdlcTemplates.length > 0 && (
+                <div className="space-y-2">
+                  {sdlcTemplates.map((tpl) => (
+                    <details key={tpl.id} className="rounded-lg border bg-muted/30">
+                      <summary className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-muted/50 transition-colors">
+                        <FileTextIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="font-medium">{tpl.name}</span>
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          {tpl.estimatedDuration}
+                        </span>
+                      </summary>
+                      <div className="px-3 pb-3 space-y-2 border-t pt-2">
+                        <p className="text-xs text-muted-foreground">{tpl.description}</p>
+                        <pre className="text-xs bg-background rounded-md p-2 whitespace-pre-wrap border max-h-40 overflow-y-auto">
+                          {tpl.promptTemplate}
+                        </pre>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPromptTemplate(tpl.promptTemplate)}
+                        >
+                          Use this template
+                        </Button>
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              )}
+
               <Textarea
                 id="promptTemplate"
                 name="promptTemplate"
                 required
                 rows={4}
+                value={promptTemplate}
+                onChange={(e) => setPromptTemplate(e.target.value)}
                 placeholder="Review all dependencies in package.json and update any that have security vulnerabilities or are more than 2 major versions behind..."
               />
             </div>

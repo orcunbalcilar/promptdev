@@ -161,8 +161,8 @@ describe('TaskCard', () => {
     const task = createTask({ createdAt: date.toISOString() })
     renderWithProviders(<TaskCard task={task} />)
 
-    // The component renders toLocaleDateString()
-    const formattedDate = date.toLocaleDateString()
+    // The component renders toLocaleDateString with en-US month short format
+    const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     expect(screen.getByText(formattedDate)).toBeInTheDocument()
   })
 

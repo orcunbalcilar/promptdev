@@ -22,6 +22,7 @@ public class JiraConfig {
     private String username;
     private String password;
     private String token;
+    private String projectKey;
 
     @Bean
     @ConditionalOnProperty(prefix = "jira", name = "base-url")
@@ -36,7 +37,7 @@ public class JiraConfig {
     private void configureAuth(RestClient.Builder builder) {
         if (token != null && !token.isBlank()) {
             builder.defaultHeaders(headers ->
-                headers.setBasicAuth(username, token));
+                headers.setBearerAuth(token));
         } else if (username != null && password != null) {
             builder.defaultHeaders(headers ->
                 headers.setBasicAuth(username, password));

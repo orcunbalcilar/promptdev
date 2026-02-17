@@ -63,7 +63,7 @@ public class TaskService {
                 .jiraIssueKey(request.getJiraIssueKey())
                 .reviewEnabled(request.getReviewEnabled() == null || request.getReviewEnabled())
                 .reviewModelId(request.getReviewModelId())
-                .commitMessagePattern(request.getCommitMessagePattern())
+                .commitMessagePattern(resolveCommitMessagePattern(request))
                 .bootScript(request.getBootScript())
                 .skills(request.getSkills())
                 .additionalRepositories(request.getAdditionalRepositories())
@@ -487,5 +487,27 @@ public class TaskService {
 
         log.info("PR created for task {}: PR #{}", taskId, pr.id());
         return pr;
+    }
+
+    /**
+     * Resolve the commit message pattern, enforcing Jira ID inclusion when a Jira key is provided.
+     */
+    private static String resolveCommitMessagePattern(CreateTaskRequest request) {
+        String pattern = request.getCommitMessagePattern();
+        String jiraKey = request.getJiraIssueKey();
+
+        if (jiraKey == null || jiraKey.isBlank()) {
+            return pattern;
+        }
+
+        if (pattern == null || pattern.isBlank()) {
+            return "[" + jiraKey.trim() + "] {message}";
+        }
+
+        if (!pattern.contains(jiraKey.trim())) {
+            return "[" + jiraKey.trim() + "] " + pattern;
+        }
+
+        return pattern;
     }
 }

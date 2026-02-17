@@ -12,10 +12,10 @@ import {
 import { API_BASE_URL, getTasks, type PagedResponse, type Task, type TaskStatus } from "@/lib/api";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, Bot, CalendarClock, Loader2, RefreshCw, Search, Settings, Zap } from "lucide-react";
+import { Activity, Bot, CalendarClock, Loader2, RefreshCw, Search, Settings, Sparkles, X, Zap } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // bundle-dynamic-imports: Lazy-load heavy components to reduce initial JS bundle
 const CreateTaskDialog = dynamic(
@@ -49,9 +49,18 @@ export default function Dashboard() {
     refetchInterval: 30_000, // 30s fallback polling
   });
 
-  // SSE subscription for real-time task updates
-  useEffect(() => {
+  // SSE subscription for real-time task updates with reconnect
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const connectSSE = useCallback(() => {
+    // Clean up any existing connection
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+
     const eventSource = new EventSource(`${API_BASE_URL}/stream/tasks`);
+    eventSourceRef.current = eventSource;
 
     eventSource.addEventListener("task-update", (event) => {
       try {
@@ -87,11 +96,23 @@ export default function Dashboard() {
     });
 
     eventSource.onerror = () => {
-      // SSE failed — 30s polling is the fallback
+      eventSource.close();
+      // Auto-reconnect after 3 seconds
+      reconnectTimeoutRef.current = setTimeout(() => {
+        connectSSE();
+      }, 3000);
     };
-
-    return () => eventSource.close();
   }, [queryClient, router]);
+
+  useEffect(() => {
+    connectSSE();
+    return () => {
+      eventSourceRef.current?.close();
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+    };
+  }, [connectSSE]);
 
   const tasks = useMemo(() => data?.content ?? [], [data?.content]);
 
@@ -129,6 +150,14 @@ export default function Dashboard() {
     router.push(`/tasks/${task.id}`);
   };
 
+  // Counts for status overview
+  const statusCounts = useMemo(() => {
+    const active = tasks.filter((t) => ["IN_PROGRESS", "VALIDATING", "ITERATION_PENDING"].includes(t.status)).length;
+    const completed = tasks.filter((t) => t.status === "COMPLETED").length;
+    const failed = tasks.filter((t) => ["FAILED", "CANCELLED"].includes(t.status)).length;
+    return { total: tasks.length, active, completed, failed };
+  }, [tasks]);
+
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -150,64 +179,75 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b bg-card/50 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-primary/10 p-2 rounded-full">
-              <Zap className="h-5 w-5 text-primary" />
+      <header className="header-bar backdrop-blur-sm supports-backdrop-filter:bg-background/60 sticky top-0 z-50">
+        <div className="container mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="bg-linear-to-br from-primary/20 to-primary/5 p-2 rounded-lg">
+                <Sparkles className="h-5 w-5 text-primary" />
+              </div>
             </div>
-            <h1 className="text-xl font-bold tracking-tight">PromptDev</h1>
+            <div>
+              <h1 className="text-lg font-bold tracking-tight leading-none">PromptDev</h1>
+              <p className="text-[11px] text-muted-foreground leading-none mt-0.5">AI Development Platform</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <nav className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
+              className="text-xs h-8"
               onClick={() => router.push("/scheduled-jobs")}
             >
-              <CalendarClock className="h-4 w-4 mr-2" />
-              Scheduled Jobs
+              <CalendarClock className="h-3.5 w-3.5 mr-1.5" />
+              Jobs
             </Button>
             <Button
               variant="ghost"
               size="sm"
+              className="text-xs h-8"
               onClick={() => router.push("/monitoring")}
             >
-              <Activity className="h-4 w-4 mr-2" />
-              Monitoring
+              <Activity className="h-3.5 w-3.5 mr-1.5" />
+              Monitor
             </Button>
             <Button
               variant="ghost"
               size="sm"
+              className="text-xs h-8"
               onClick={() => router.push("/copilot")}
             >
-              <Bot className="h-4 w-4 mr-2" />
-              Copilot Agent
+              <Bot className="h-3.5 w-3.5 mr-1.5" />
+              Copilot
             </Button>
             <Button
               variant="ghost"
               size="sm"
+              className="text-xs h-8"
               onClick={() => router.push("/settings")}
             >
-              <Settings className="h-4 w-4 mr-2" />
+              <Settings className="h-3.5 w-3.5 mr-1.5" />
               Settings
             </Button>
+            <div className="w-px h-5 bg-border mx-1" />
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
+              className="h-8 w-8"
               onClick={() => refetch()}
               disabled={isLoading}
+              title="Refresh"
             >
               <RefreshCw
-                className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+                className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`}
               />
-              Refresh
             </Button>
             <CreateTaskDialog />
-          </div>
+          </nav>
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-6 py-6">
         {(() => {
           if (isLoading && tasks.length === 0) {
             return (
@@ -220,8 +260,8 @@ export default function Dashboard() {
           if (tasks.length === 0) {
             return (
               <div className="text-center py-24 space-y-4">
-                <div className="bg-muted/50 p-6 rounded-full w-fit mx-auto">
-                  <Zap className="h-12 w-12 text-muted-foreground" />
+                <div className="bg-linear-to-br from-primary/10 to-primary/5 p-8 rounded-2xl w-fit mx-auto">
+                  <Sparkles className="h-12 w-12 text-primary/60" />
                 </div>
                 <h2 className="text-2xl font-semibold tracking-tight">
                   No tasks yet
@@ -239,6 +279,23 @@ export default function Dashboard() {
 
           return (
             <>
+              {/* Stats bar */}
+              <div className="flex items-center gap-6 mb-5">
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground text-sm">{statusCounts.total} tasks</span>
+                  {statusCounts.active > 0 && (
+                    <span className="flex items-center gap-1.5">
+                      <span className="live-dot" />
+                      {statusCounts.active} running
+                    </span>
+                  )}
+                  <span>{statusCounts.completed} completed</span>
+                  {statusCounts.failed > 0 && (
+                    <span className="text-destructive">{statusCounts.failed} failed</span>
+                  )}
+                </div>
+              </div>
+
               {/* Search & Filter Bar */}
               <div className="flex flex-wrap items-center gap-3 mb-6">
                 <div className="relative flex-1 min-w-50 max-w-sm">
@@ -247,11 +304,11 @@ export default function Dashboard() {
                     placeholder="Search tasks..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
+                    className="pl-9 h-9 text-sm"
                   />
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-37.5">
+                  <SelectTrigger className="w-37.5 h-9 text-sm">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -264,7 +321,7 @@ export default function Dashboard() {
                   </SelectContent>
                 </Select>
                 <Select value={workspaceFilter} onValueChange={setWorkspaceFilter}>
-                  <SelectTrigger className="w-37.5">
+                  <SelectTrigger className="w-37.5 h-9 text-sm">
                     <SelectValue placeholder="Workspace" />
                   </SelectTrigger>
                   <SelectContent>
@@ -277,13 +334,15 @@ export default function Dashboard() {
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="h-9 text-xs gap-1"
                     onClick={() => {
                       setSearchQuery("");
                       setStatusFilter("all");
                       setWorkspaceFilter("all");
                     }}
                   >
-                    Clear filters
+                    <X className="h-3 w-3" />
+                    Clear
                   </Button>
                 )}
               </div>

@@ -1,15 +1,15 @@
 /**
- * Agent Skills Registry
+ * Agent Skills Registry — powered by skills.sh
  *
- * Provides structured, detailed skill definitions that enrich the AI agent's
- * system prompt with domain-specific best practices and guidelines.
+ * Based on the open Agent Skills ecosystem (skills.sh, agentskills.io).
+ * Skills are installed into the ephemeral workspace using `npx skills add <owner/repo>`.
+ * Each skill provides SKILL.md instructions that the agent loads automatically.
  *
- * Each skill contains:
- * - id: Unique identifier stored in the task
- * - label: Human-readable short name for UI
- * - description: Brief description for tooltips
- * - category: Grouping for UI organization
- * - context: Rich prompt text injected into the agent's system prompt
+ * Registry entries map to real packages from the skills.sh leaderboard.
+ * Installation is a single `npx skills add` command per package.
+ *
+ * @see https://skills.sh
+ * @see https://vercel.com/changelog/introducing-skills-the-open-agent-skills-ecosystem
  */
 
 export interface Skill {
@@ -17,269 +17,204 @@ export interface Skill {
   label: string;
   description: string;
   category: SkillCategory;
-  context: string;
+  /** Whether this skill is selected by default for new tasks */
+  defaultSelected: boolean;
+  /** Source repository: owner/repo on GitHub */
+  source: "official" | "community";
+  /** Package path for npx skills add (e.g. "vercel-labs/agent-skills") */
+  installPackage: string;
+  /** Icon hint for UI rendering */
+  icon: SkillIcon;
+  /** Tags for search/filtering */
+  tags: string[];
+  /** Installs count from skills.sh leaderboard (for sorting) */
+  installs: string;
 }
 
+export type SkillIcon =
+  | "code"
+  | "globe"
+  | "database"
+  | "shield"
+  | "test-tube"
+  | "rocket"
+  | "palette"
+  | "server"
+  | "terminal"
+  | "file-text"
+  | "search"
+  | "brain"
+  | "wrench"
+  | "blocks"
+  | "sparkles"
+  | "git-branch";
+
 export type SkillCategory =
-  | "frontend"
-  | "backend"
+  | "development"
   | "testing"
+  | "design"
   | "devops"
-  | "quality";
+  | "documents";
 
 export const SKILL_CATEGORIES: Record<
   SkillCategory,
-  { label: string; order: number }
+  { label: string; order: number; description: string }
 > = {
-  frontend: { label: "Frontend", order: 0 },
-  backend: { label: "Backend", order: 1 },
-  testing: { label: "Testing", order: 2 },
-  devops: { label: "DevOps", order: 3 },
-  quality: { label: "Quality", order: 4 },
+  development: { label: "Development", order: 0, description: "Frameworks, patterns, and best practices for building software" },
+  testing: { label: "Testing & QA", order: 1, description: "Automated testing, browser testing, and quality assurance" },
+  design: { label: "Design & UI", order: 2, description: "UI design guidelines, accessibility, and frontend design" },
+  devops: { label: "DevOps & Tools", order: 3, description: "Deployment, MCP servers, and developer tooling" },
+  documents: { label: "Documents", order: 4, description: "Document generation, skills authoring" },
 };
 
 export const SKILLS: Skill[] = [
-  // ── Frontend ──────────────────────────────────────────────────
+  // ── Development ───────────────────────────────────────────────
   {
-    id: "react",
-    label: "React",
-    description: "React component best practices & patterns",
-    category: "frontend",
-    context: `## React Best Practices
-- Use functional components exclusively. Never use class components.
-- Prefer composition over inheritance. Build compound components with shared context.
-- Avoid boolean prop proliferation — create explicit variant components instead.
-- Calculate derived state during render; do NOT store it in state or sync with useEffect.
-- Use functional setState for state that depends on previous value: \`setState(prev => ...)\`.
-- Use lazy state initialization for expensive values: \`useState(() => expensiveInit())\`.
-- Extract expensive work into memoized sub-components to enable early returns.
-- Put interaction logic in event handlers, not effects.
-- Narrow effect dependencies to primitives (e.g., \`user.id\` not \`user\`).
-- Use \`startTransition\` for non-urgent state updates (search input filtering, etc.).
-- Use \`useRef\` for frequently-changing transient values that don't need re-renders.
-- Hoist static JSX elements outside components to avoid recreation.
-- Use explicit conditional rendering (ternary) instead of \`&&\` to avoid rendering 0/false.
-- With React 19: use \`use()\` instead of \`useContext()\`; ref is now a regular prop — no forwardRef.`,
+    id: "vercel-react-best-practices",
+    label: "React Best Practices",
+    description: "40+ rules across 8 categories for React & Next.js performance optimization from Vercel Engineering. Covers waterfalls, bundle size, SSR, re-renders, and more.",
+    category: "development",
+    defaultSelected: true,
+    source: "official",
+    installPackage: "vercel-labs/agent-skills",
+    icon: "code",
+    tags: ["react", "next.js", "performance", "vercel", "ssr"],
+    installs: "140.4K",
   },
   {
-    id: "nextjs",
-    label: "Next.js",
-    description: "Next.js App Router patterns & data fetching",
-    category: "frontend",
-    context: `## Next.js Best Practices (App Router)
-- Server Components are default — only add "use client" when you need state, effects, or browser APIs.
-- Minimize data passed across the Server/Client boundary. Only serialize fields the client actually uses.
-- Use Suspense boundaries to stream content: show the shell immediately while async data loads.
-- Parallelize data fetching with component composition — sibling RSCs fetch simultaneously.
-- Use React.cache() for per-request deduplication of server-side queries.
-- Use next/dynamic for heavy client components (editors, charts, maps) to reduce initial bundle.
-- Avoid barrel file imports — import directly from source files to reduce bundle size.
-- Authenticate Server Actions like API routes: always verify auth inside each action.
-- Use after() from next/server for non-blocking operations (analytics, logging) after response.
-- Use route handlers (app/api/) for external API integration; Server Actions for mutations.
-- Place shared layouts in layout.tsx; page-specific data fetching in page.tsx.
-- Prefer loading.tsx and error.tsx conventions over manual loading/error states.
-- Use optimizePackageImports in next.config for large icon/component libraries.`,
+    id: "vercel-composition-patterns",
+    label: "Composition Patterns",
+    description: "React composition patterns that scale. Compound components, state lifting, and internal composition to avoid boolean prop proliferation.",
+    category: "development",
+    defaultSelected: false,
+    source: "official",
+    installPackage: "vercel-labs/agent-skills",
+    icon: "blocks",
+    tags: ["react", "composition", "patterns", "components"],
+    installs: "44.2K",
   },
   {
-    id: "typescript",
-    label: "TypeScript",
-    description: "Type-safe development with strict TypeScript",
-    category: "frontend",
-    context: `## TypeScript Best Practices
-- Enable strict mode: \`strict: true\` in tsconfig.json.
-- Use interfaces for object shapes; use type for unions, intersections, and utility types.
-- Prefer \`unknown\` over \`any\`; use type narrowing with type guards.
-- Use discriminated unions for state machines and variant types.
-- Use const assertions (\`as const\`) for literal types and enums.
-- Prefer \`satisfies\` operator for type checking without widening.
-- Use generic constraints (\`extends\`) to make functions flexible but type-safe.
-- Use \`readonly\` and \`ReadonlyArray<T>\` for immutable data.
-- Use \`Record<string, T>\` instead of \`{[key: string]: T}\`.
-- Use template literal types for string pattern enforcement.
-- Always type function return values explicitly for public APIs.
-- Use \`Pick<T, K>\`, \`Omit<T, K>\`, \`Partial<T>\`, \`Required<T>\` for derived types.
-- Avoid type assertions (\`as\`); prefer type guards and narrowing.`,
-  },
-  // ── Backend ───────────────────────────────────────────────────
-  {
-    id: "java",
-    label: "Java",
-    description: "Java & Spring Boot development",
-    category: "backend",
-    context: `## Java & Spring Boot Best Practices
-- Use Java 21+ features: records, sealed interfaces, pattern matching (switch), text blocks.
-- Use constructor injection (Lombok @RequiredArgsConstructor) — never field injection.
-- Follow layered architecture: Controller → Service → Repository. No business logic in controllers.
-- Use DTOs for API boundaries — never expose entities directly.
-- Use Optional return types for nullable queries; avoid Optional as method parameters.
-- Use Spring Data JPA derived query methods for simple queries; @Query for complex ones.
-- Validate inputs with Jakarta Bean Validation (@NotNull, @NotBlank, @Size, etc.).
-- Use @Transactional at service level; keep transactions short.
-- Handle exceptions with @RestControllerAdvice global handlers.
-- Use Lombok (@Data, @Builder, @Getter, @Setter) to reduce boilerplate.
-- Use \`ddl-auto: validate\` in production; manage schema with migrations (Flyway/Liquibase).
-- For encryption: AES-256-GCM, fresh IV per operation, Base64 encode for storage.
-- Write unit tests with JUnit 5 + Mockito; integration tests with @SpringBootTest.`,
+    id: "frontend-design",
+    label: "Frontend Design",
+    description: "Creates polished, accessible UI components with modern CSS, responsive layouts, animation, and design system integration.",
+    category: "design",
+    defaultSelected: false,
+    source: "official",
+    installPackage: "anthropics/skills",
+    icon: "palette",
+    tags: ["css", "design", "ui", "responsive", "accessibility"],
+    installs: "75.6K",
   },
   {
-    id: "python",
-    label: "Python",
-    description: "Python development best practices",
-    category: "backend",
-    context: `## Python Best Practices
-- Use Python 3.12+ features: type hints, match statements, f-strings, walrus operator.
-- Use type hints with \`from __future__ import annotations\` for all function signatures.
-- Use dataclasses or Pydantic models for structured data.
-- Use virtual environments (venv, uv, or poetry) for dependency management.
-- Follow PEP 8 naming conventions: snake_case for functions/variables, PascalCase for classes.
-- Use context managers (with statements) for resource management.
-- Use list/dict/set comprehensions over manual loops where readable.
-- Handle exceptions specifically — never use bare \`except:\`.
-- Use async/await with asyncio for I/O-bound operations.
-- Use pytest for testing with fixtures and parametrize decorators.
-- Use logging module instead of print statements.
-- Use pathlib.Path instead of os.path for file operations.
-- Structure projects with src/ layout and pyproject.toml.`,
+    id: "web-design-guidelines",
+    label: "Web Design Guidelines",
+    description: "100+ rules covering accessibility, performance, and UX. Audits for aria-labels, semantic HTML, focus states, forms, animation, typography, and more.",
+    category: "design",
+    defaultSelected: true,
+    source: "official",
+    installPackage: "vercel-labs/agent-skills",
+    icon: "globe",
+    tags: ["accessibility", "ux", "design", "audit", "a11y"],
+    installs: "106.2K",
   },
   {
-    id: "database",
-    label: "Database",
-    description: "Database design & query optimization",
-    category: "backend",
-    context: `## Database Best Practices
-- Design normalized schemas (3NF minimum) unless denormalization is justified by read patterns.
-- Use proper data types: UUID for IDs, TIMESTAMPTZ for dates, TEXT for variable-length strings.
-- Create indexes for all foreign keys and frequently queried columns.
-- Use composite indexes for multi-column WHERE clauses (leftmost prefix rule).
-- Write N+1 safe queries: use JOINs or batch fetching instead of loops.
-- Use parameterized queries always — never string concatenation for SQL.
-- Add NOT NULL constraints unless null is a valid business state.
-- Use database transactions for multi-step operations; keep them short.
-- Use EXPLAIN ANALYZE to verify query performance.
-- Add CHECK constraints for business rules enforced at the DB level.
-- Use migration tools (Flyway, Liquibase, Prisma Migrate) for schema changes.
-- Implement soft deletes with a \`deleted_at\` timestamp column where appropriate.`,
+    id: "react-native-guidelines",
+    label: "React Native",
+    description: "React Native best practices for AI agents. 16 rules across 7 sections covering performance, layout, animation, images, state, and platform patterns.",
+    category: "development",
+    defaultSelected: false,
+    source: "official",
+    installPackage: "vercel-labs/agent-skills",
+    icon: "code",
+    tags: ["react-native", "mobile", "expo", "ios", "android"],
+    installs: "12.3K",
   },
   {
-    id: "api",
-    label: "API Design",
-    description: "REST API design & implementation",
-    category: "backend",
-    context: `## REST API Design Best Practices
-- Use resource-oriented URLs: /users/{id}/orders, not /getUserOrders.
-- Use proper HTTP methods: GET (read), POST (create), PUT (replace), PATCH (update), DELETE.
-- Return appropriate status codes: 200 OK, 201 Created, 204 No Content, 400 Bad Request, 404 Not Found, 409 Conflict.
-- Use consistent error response format: { "error": "code", "message": "human-readable", "details": {} }.
-- Implement pagination for list endpoints: ?page=0&size=20 with total/totalPages in response.
-- Use query parameters for filtering/sorting: ?status=active&sort=created_at,desc.
-- Version APIs when making breaking changes: /api/v2/users.
-- Validate all inputs at the API boundary before processing.
-- Return only necessary fields — use DTOs to shape responses.
-- Document with OpenAPI/Swagger specifications.
-- Implement rate limiting for public endpoints.
-- Use HATEOAS links for discoverability where appropriate.`,
+    id: "remotion-best-practices",
+    label: "Remotion",
+    description: "Best practices for building video with React using Remotion. Covers composition, rendering, performance, and deployment.",
+    category: "development",
+    defaultSelected: false,
+    source: "community",
+    installPackage: "remotion-dev/skills",
+    icon: "rocket",
+    tags: ["remotion", "video", "react", "rendering"],
+    installs: "95.6K",
   },
   // ── Testing ───────────────────────────────────────────────────
   {
-    id: "testing",
-    label: "Testing",
-    description: "Comprehensive testing strategies",
+    id: "webapp-testing",
+    label: "Web App Testing",
+    description: "Automated browser testing using Playwright. E2E flows, visual regression, API testing, Page Object Model, and CI integration.",
     category: "testing",
-    context: `## Testing Best Practices
-- Follow the testing pyramid: many unit tests, fewer integration tests, minimal E2E tests.
-- Write tests that verify behavior, not implementation details.
-- Use the Arrange-Act-Assert (AAA) pattern for test structure.
-- Name tests descriptively: "should return 404 when user not found" not "test1".
-- Mock external dependencies (APIs, databases) in unit tests.
-- Use real dependencies in integration tests with test containers.
-- Test edge cases: empty inputs, null values, boundary conditions, error paths.
-- Aim for meaningful coverage (critical paths), not 100% line coverage.
-- Use test fixtures and factories for consistent test data.
-- Tests should be independent — never rely on execution order.
-- Keep tests fast: unit tests < 100ms, integration tests < 5s.
-- Use snapshot testing sparingly — only for stable serialization formats.
-- For frontend: test user interactions with Testing Library, not implementation details.`,
+    defaultSelected: false,
+    source: "official",
+    installPackage: "anthropics/skills",
+    icon: "test-tube",
+    tags: ["playwright", "e2e", "browser", "automation", "testing"],
+    installs: "28.1K",
   },
+  // ── DevOps & Tools ────────────────────────────────────────────
   {
-    id: "playwright",
-    label: "Playwright",
-    description: "Browser automation & E2E testing",
-    category: "testing",
-    context: `## Playwright Best Practices
-- Use locators over raw selectors: getByRole(), getByText(), getByTestId(), getByLabel().
-- Prefer user-facing attributes: role, text, label > class names, IDs, CSS selectors.
-- Use web assertions (expect(locator).toBeVisible()) — they auto-retry and wait.
-- Use Page Object Model (POM) to abstract page interactions into reusable classes.
-- Use test.describe() for grouping and test.beforeEach() for setup.
-- Handle authentication with storageState to reuse login across tests.
-- Enable trace-on-failure for debugging: \`use: { trace: 'on-first-retry' }\`.
-- Run tests in parallel by default; isolate state between tests.
-- Use expect(page).toHaveURL() and expect(page).toHaveTitle() for navigation assertions.
-- For API testing, use request fixture: \`const response = await request.get('/api/users')\`.
-- Use test.slow() for known slow tests instead of arbitrary timeouts.
-- Configure retries in CI: \`retries: process.env.CI ? 2 : 0\`.`,
-  },
-  // ── DevOps ────────────────────────────────────────────────────
-  {
-    id: "docker",
-    label: "Docker",
-    description: "Containerization & deployment",
+    id: "mcp-builder",
+    label: "MCP Server Builder",
+    description: "Build Model Context Protocol (MCP) servers that expose tools, resources, and prompts to AI agents following the standard.",
     category: "devops",
-    context: `## Docker Best Practices
-- Use multi-stage builds to minimize final image size.
-- Use specific base image tags (node:22-alpine, not node:latest).
-- Copy package.json/lock first, install deps, then copy source — leverage layer caching.
-- Use .dockerignore to exclude node_modules, .git, local configs.
-- Run as non-root user: \`USER node\` or create a dedicated user.
-- Use HEALTHCHECK instructions for container orchestration.
-- Keep images minimal: use alpine variants, remove build dependencies.
-- Use environment variables for configuration, not hardcoded values.
-- Use docker-compose for local multi-service development.
-- Pin dependency versions in Dockerfiles for reproducible builds.
-- Use named volumes for persistent data; bind mounts for development.
-- Set memory and CPU limits in production deployments.`,
-  },
-  // ── Quality ───────────────────────────────────────────────────
-  {
-    id: "security",
-    label: "Security",
-    description: "Security audit & vulnerability detection",
-    category: "quality",
-    context: `## Security Best Practices
-- Never hardcode secrets, API keys, or credentials. Use environment variables.
-- Validate and sanitize all user inputs at every layer (client, server, database).
-- Use parameterized queries/prepared statements — never concatenate SQL.
-- Implement proper authentication: verify tokens/sessions on every request.
-- Apply authorization checks in every endpoint — don't rely solely on middleware.
-- Use HTTPS everywhere. Set security headers: CSP, X-Frame-Options, HSTS.
-- Encrypt sensitive data at rest (AES-256-GCM) and in transit (TLS 1.3).
-- Implement rate limiting and brute force protection on auth endpoints.
-- Store passwords with bcrypt/argon2 — never plain text or reversible encryption.
-- Use CSRF tokens for state-changing requests in web forms.
-- Validate file uploads: check MIME type, size, and sanitize filenames.
-- Log security events (failed logins, privilege escalations) without leaking sensitive data.
-- Regularly update dependencies and scan for known vulnerabilities.`,
+    defaultSelected: false,
+    source: "official",
+    installPackage: "anthropics/skills",
+    icon: "blocks",
+    tags: ["mcp", "model-context-protocol", "tools", "ai-agents"],
+    installs: "18.2K",
   },
   {
-    id: "performance",
-    label: "Performance",
-    description: "Performance optimization techniques",
-    category: "quality",
-    context: `## Performance Best Practices
-- Measure before optimizing. Use profiling tools to identify actual bottlenecks.
-- Eliminate request waterfalls: use Promise.all() for independent async operations.
-- Implement caching at appropriate levels: browser, CDN, application, database.
-- Use lazy loading for resources not needed on initial render.
-- Optimize database queries: add indexes, avoid N+1, use EXPLAIN ANALYZE.
-- Minimize serialization: only send data the client needs.
-- Use pagination for list endpoints — never return unbounded results.
-- Implement connection pooling for database and HTTP connections.
-- Use streaming (SSE, WebSocket) instead of polling when possible.
-- Optimize images: use modern formats (WebP, AVIF), proper sizing, lazy loading.
-- Use code splitting and tree shaking to reduce JavaScript bundle size.
-- Set proper Cache-Control headers for static assets.
-- Use Web Workers for CPU-intensive operations that would block the main thread.`,
+    id: "vercel-deploy-claimable",
+    label: "Vercel Deploy",
+    description: "Deploy applications to Vercel instantly. Auto-detects 40+ frameworks, returns preview URL and claim URL for ownership transfer.",
+    category: "devops",
+    defaultSelected: false,
+    source: "official",
+    installPackage: "vercel-labs/agent-skills",
+    icon: "rocket",
+    tags: ["deploy", "vercel", "preview", "hosting"],
+    installs: "8.5K",
+  },
+  // ── Documents ─────────────────────────────────────────────────
+  {
+    id: "doc-coauthoring",
+    label: "Doc Co-Authoring",
+    description: "Collaborative document writing and editing. Structure, refine, and polish technical documents, PRDs, ADRs, and documentation.",
+    category: "documents",
+    defaultSelected: false,
+    source: "official",
+    installPackage: "anthropics/skills",
+    icon: "file-text",
+    tags: ["documents", "writing", "markdown", "prd", "adr"],
+    installs: "15.7K",
+  },
+  {
+    id: "find-skills",
+    label: "Find Skills",
+    description: "Discover and install new agent skills. Helps you find the right skill for any task from the skills.sh ecosystem.",
+    category: "documents",
+    defaultSelected: false,
+    source: "official",
+    installPackage: "vercel-labs/skills",
+    icon: "search",
+    tags: ["skills", "discover", "install", "ecosystem"],
+    installs: "248.8K",
+  },
+  {
+    id: "skill-creator",
+    label: "Skill Creator",
+    description: "Create new Agent Skills from scratch. Generates SKILL.md files with proper frontmatter, instructions, and optional scripts.",
+    category: "documents",
+    defaultSelected: false,
+    source: "official",
+    installPackage: "anthropics/skills",
+    icon: "sparkles",
+    tags: ["skills", "create", "agent-skills", "authoring"],
+    installs: "9.4K",
   },
 ];
 
@@ -289,6 +224,7 @@ export const SKILLS: Skill[] = [
 export function getSkillsByCategory(): Array<{
   category: SkillCategory;
   label: string;
+  description: string;
   skills: Skill[];
 }> {
   const grouped = new Map<SkillCategory, Skill[]>();
@@ -303,6 +239,7 @@ export function getSkillsByCategory(): Array<{
     .map(([category, skills]) => ({
       category,
       label: SKILL_CATEGORIES[category].label,
+      description: SKILL_CATEGORIES[category].description,
       skills,
     }))
     .sort(
@@ -313,6 +250,13 @@ export function getSkillsByCategory(): Array<{
 }
 
 /**
+ * Get the default selected skill IDs.
+ */
+export function getDefaultSkillIds(): string[] {
+  return SKILLS.filter((s) => s.defaultSelected).map((s) => s.id);
+}
+
+/**
  * Look up a skill by ID.
  */
 export function getSkillById(id: string): Skill | undefined {
@@ -320,31 +264,45 @@ export function getSkillById(id: string): Skill | undefined {
 }
 
 /**
- * Build the full skills context prompt from a comma-separated skills string.
- * Returns empty string if no valid skills are found.
+ * Get the `npx skills add` install command for a single skill.
+ * Each skill maps to a GitHub repo package; multiple skills from the same
+ * repo only need one install command.
  */
-export function buildSkillsPrompt(skillsStr: string): string {
-  if (!skillsStr) return "";
+export function getInstallCommand(skill: Skill): string {
+  return `npx -y skills add ${skill.installPackage}`;
+}
+
+/**
+ * Build deduplicated install commands for a set of skill IDs.
+ * Skills sharing the same `installPackage` are combined into one command.
+ * Returns an array of `npx skills add <owner/repo>` commands.
+ */
+export function buildInstallCommands(skillsStr: string): string[] {
+  if (!skillsStr) return [];
 
   const skillIds = skillsStr
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
 
-  if (skillIds.length === 0) return "";
+  if (skillIds.length === 0) return [];
 
   const matchedSkills = skillIds
     .map((id) => getSkillById(id))
     .filter((s): s is Skill => s !== undefined);
 
-  if (matchedSkills.length === 0) {
-    // Fallback for unknown skill IDs: add as generic mentions
-    return `\n<agent_skills>\nThe following skills are relevant to this task: ${skillIds.join(", ")}.\nApply best practices for each domain.\n</agent_skills>`;
-  }
+  // Deduplicate by installPackage
+  const packages = [...new Set(matchedSkills.map((s) => s.installPackage))];
 
-  const contextBlocks = matchedSkills
-    .map((skill) => skill.context)
-    .join("\n\n");
+  return packages.map((pkg) => `npx -y skills add ${pkg}`);
+}
 
-  return `\n<agent_skills>\nYou have expertise in the following domains. Follow these guidelines strictly:\n\n${contextBlocks}\n</agent_skills>`;
+/**
+ * Build a single shell command that installs all selected skills.
+ * Commands are chained with `&&` so they run sequentially.
+ */
+export function buildInstallScript(skillsStr: string): string {
+  const commands = buildInstallCommands(skillsStr);
+  if (commands.length === 0) return "";
+  return commands.join(" && ");
 }

@@ -99,7 +99,7 @@ public class User {
     /** Whether automatic task creation from Jira assigned issues is enabled */
     @Column(name = "jira_auto_task_enabled")
     @Builder.Default
-    private Boolean jiraAutoTaskEnabled = false;
+    private Boolean jiraAutoTaskEnabled = true;
 
     /** Default model ID for auto-created Jira tasks */
     @Column(name = "jira_auto_task_model_id")

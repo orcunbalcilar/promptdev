@@ -29,7 +29,7 @@ export function JiraCard({ userId, profile }: SettingsCardProps) {
   const [username, setUsername] = useState(() => profile.jiraUsername ?? "");
   const [token, setToken] = useState("");
   const [autoTaskEnabled, setAutoTaskEnabled] = useState(
-    () => profile.jiraAutoTaskEnabled ?? false,
+    () => profile.jiraAutoTaskEnabled ?? true,
   );
   const [autoTaskModelId, setAutoTaskModelId] = useState(
     () => profile.jiraAutoTaskModelId ?? "",

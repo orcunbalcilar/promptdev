@@ -74,3 +74,17 @@ export function describeCron(cron: string): string {
   if (hour !== "*") return `Daily at ${hour}:${min.padStart(2, "0")}`;
   return cron;
 }
+
+/**
+ * Maps each scheduled job type to the SDLC template IDs
+ * whose pre-defined prompts are most relevant.
+ */
+export const JOB_TYPE_TEMPLATE_IDS: Record<ScheduledJobType, string[]> = {
+  MAINTENANCE: ["feature-implement"],
+  CODE_REVIEW: ["review-code"],
+  TEST_COVERAGE: ["testing-unit", "testing-integration"],
+  SECURITY_AUDIT: ["security-audit"],
+  PERFORMANCE: ["refactor-performance"],
+  DOCUMENTATION: ["docs-readme", "docs-api"],
+  CUSTOM: [],
+};

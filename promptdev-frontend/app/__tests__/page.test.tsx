@@ -322,7 +322,7 @@ describe("Dashboard", () => {
     await user.type(screen.getByPlaceholderText("Search tasks..."), "test");
 
     await waitFor(() => {
-      expect(screen.getByText("Clear filters")).toBeInTheDocument();
+      expect(screen.getByText("Clear")).toBeInTheDocument();
     });
   });
 
@@ -344,7 +344,7 @@ describe("Dashboard", () => {
       );
     });
 
-    await user.click(screen.getByText("Clear filters"));
+    await user.click(screen.getByText("Clear"));
 
     await waitFor(() => {
       expect(screen.getByTestId("kanban-board")).toHaveAttribute(
@@ -373,17 +373,17 @@ describe("Dashboard", () => {
     mockGetTasks.mockResolvedValue(successResponse);
     renderWithProviders(<Dashboard />);
 
-    expect(screen.getByText("Scheduled Jobs")).toBeInTheDocument();
-    expect(screen.getByText("Monitoring")).toBeInTheDocument();
+    expect(screen.getByText("Jobs")).toBeInTheDocument();
+    expect(screen.getByText("Monitor")).toBeInTheDocument();
     expect(screen.getByText("Settings")).toBeInTheDocument();
-    expect(screen.getByText("Copilot Agent")).toBeInTheDocument();
+    expect(screen.getByText("Copilot")).toBeInTheDocument();
   });
 
   it("shows Refresh button", async () => {
     mockGetTasks.mockResolvedValue(successResponse);
     renderWithProviders(<Dashboard />);
 
-    expect(screen.getByText("Refresh")).toBeInTheDocument();
+    expect(screen.getByTitle("Refresh")).toBeInTheDocument();
   });
 
   it("creates SSE connection to /stream/tasks", async () => {

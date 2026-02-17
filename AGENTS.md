@@ -7,4 +7,4 @@
 - always make detailed research on the web before taking any design or implementation decision. You can use the web to find the best practices, patterns, and solutions for the problem at hand.
 - always update the documentation and readme files to reflect the changes you made.
 - always try finishing all the work in one go. Do not leave any work half done. If you need to take a break, make sure to save your progress and come back to it as soon as possible.
-- always use subagents to be fast and efficient.
+- always use claude-opus-4.6 subagents to be fast and efficient.
