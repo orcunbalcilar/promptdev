@@ -11,7 +11,7 @@ PromptDev is a development platform that turns natural language prompts into wor
 ### Key Features
 
 - **Prompt-to-PR workflow** — Describe a feature, get a pull request
-- **Jira integration** — Link tasks to Jira issues, update status, add comments with PR links, and auto-create tasks from assigned issues with custom prompts
+- **Jira integration** — Link tasks to Jira issues, update status, add comments with PR links, auto-create tasks from assigned issues with custom prompts, and opt-out of auto-task creation for specific issues
 - **Repository & branch selection** — Pick from your Bitbucket repos and branches
 - **Local workspace support** — Work with local project directories or create new projects from scratch
 - **Model selection** — Choose from GPT-5.2, Claude Opus 4.5, Gemini 3 Pro, and 14+ models with dynamic model discovery
@@ -506,6 +506,17 @@ If `--env-file` is not specified, the CLI looks for `.env` in the repository roo
 | `PUT`  | `/api/jira/issues/{issueKey}/assign`        | Assign issue to user     |
 | `GET`  | `/api/jira/projects/{projectKey}/issues`    | Get project issues       |
 | `GET`  | `/api/jira/users/{username}/issues`         | Get assigned issues      |
+
+### Jira Opt-Outs
+
+| Method   | Endpoint                                    | Description                       |
+| -------- | ------------------------------------------- | --------------------------------- |
+| `GET`    | `/api/jira-opt-outs/user/{userId}`          | Get user's opt-out list           |
+| `POST`   | `/api/jira-opt-outs`                        | Manually opt out of an issue      |
+| `DELETE` | `/api/jira-opt-outs`                        | Re-enable auto-task for an issue  |
+| `GET`    | `/api/jira-opt-outs/check`                  | Check opt-out status              |
+
+**Automatic Opt-Out:** When a user cancels a task associated with a Jira issue, the system automatically creates an opt-out record to prevent future automatic task creation for that issue. See [docs/JIRA_OPT_OUT_FEATURE.md](docs/JIRA_OPT_OUT_FEATURE.md) for details.
 
 ### Users
 

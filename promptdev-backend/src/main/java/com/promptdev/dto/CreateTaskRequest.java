@@ -68,6 +68,11 @@ public class CreateTaskRequest {
     /** Jira issue key (e.g., PROJ-123) to link with this task */
     private String jiraIssueKey;
 
+    // ── User ownership ─────────────────────────────────────────────
+
+    /** User ID who owns this task (optional, for API-created tasks) */
+    private java.util.UUID userId;
+
     // ── Review feature ─────────────────────────────────────────────
 
     /** Whether auto-review is enabled for this task (default: true) */

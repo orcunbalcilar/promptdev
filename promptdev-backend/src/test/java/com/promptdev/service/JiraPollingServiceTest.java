@@ -6,6 +6,7 @@ import com.promptdev.dto.jira.JiraIssueResponse;
 import com.promptdev.dto.jira.JiraSearchResponse;
 import com.promptdev.entity.TaskStatus;
 import com.promptdev.entity.User;
+import com.promptdev.repository.JiraIssueOptOutRepository;
 import com.promptdev.repository.TaskRepository;
 import com.promptdev.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +42,8 @@ class JiraPollingServiceTest {
     private TaskRepository taskRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private JiraIssueOptOutRepository jiraIssueOptOutRepository;
 
     @InjectMocks
     private JiraPollingService jiraPollingService;
@@ -77,6 +80,8 @@ class JiraPollingServiceTest {
         when(userRepository.findByJiraAutoTaskEnabledTrue()).thenReturn(List.of(user));
         when(jiraService.searchIssues(anyString(), anyInt(), anyInt()))
             .thenReturn(new JiraSearchResponse(0, 50, 1, List.of(issue)));
+        when(jiraIssueOptOutRepository.existsByUserAndJiraIssueKey(eq(user), eq(ISSUE_KEY)))
+            .thenReturn(false);
         when(taskRepository.existsByJiraIssueKeyAndStatusNotIn(eq(ISSUE_KEY), anyList()))
             .thenReturn(false);
 
@@ -90,6 +95,7 @@ class JiraPollingServiceTest {
         assertThat(request.getMaxIterations()).isEqualTo(1);
         assertThat(request.getReviewEnabled()).isTrue();
         assertThat(request.getPrompt()).contains("## Jira Issue: " + ISSUE_KEY);
+        assertThat(request.getUserId()).isEqualTo(user.getId());
     }
 
     @Test
@@ -103,6 +109,8 @@ class JiraPollingServiceTest {
         when(userRepository.findByJiraAutoTaskEnabledTrue()).thenReturn(List.of(user));
         when(jiraService.searchIssues(anyString(), anyInt(), anyInt()))
             .thenReturn(new JiraSearchResponse(0, 50, 1, List.of(issue)));
+        when(jiraIssueOptOutRepository.existsByUserAndJiraIssueKey(eq(user), eq(ISSUE_KEY)))
+            .thenReturn(false);
         when(taskRepository.existsByJiraIssueKeyAndStatusNotIn(eq(ISSUE_KEY), anyList()))
             .thenReturn(false);
 
@@ -124,6 +132,8 @@ class JiraPollingServiceTest {
         when(userRepository.findByJiraAutoTaskEnabledTrue()).thenReturn(List.of(user));
         when(jiraService.searchIssues(anyString(), anyInt(), anyInt()))
             .thenReturn(new JiraSearchResponse(0, 50, 1, List.of(issue)));
+        when(jiraIssueOptOutRepository.existsByUserAndJiraIssueKey(eq(user), eq(ISSUE_KEY)))
+            .thenReturn(false);
         when(taskRepository.existsByJiraIssueKeyAndStatusNotIn(eq(ISSUE_KEY), anyList()))
             .thenReturn(true); // Task exists in non-terminal state
 
@@ -137,6 +147,23 @@ class JiraPollingServiceTest {
         assertThat(terminalStatuses).doesNotContain(TaskStatus.CANCELLED);
         
         // Since exists returns true, createTask should NOT be called
+        verify(taskService, never()).createTask(any());
+    }
+
+    @Test
+    @DisplayName("Should skip task creation when user has opted out")
+    void shouldSkipWhenUserOptedOut() {
+        when(userRepository.findByJiraAutoTaskEnabledTrue()).thenReturn(List.of(user));
+        when(jiraService.searchIssues(anyString(), anyInt(), anyInt()))
+            .thenReturn(new JiraSearchResponse(0, 50, 1, List.of(issue)));
+        when(jiraIssueOptOutRepository.existsByUserAndJiraIssueKey(user, ISSUE_KEY))
+            .thenReturn(true);
+
+        jiraPollingService.pollAndCreateTasks();
+
+        // Should check opt-out first, before checking existing tasks
+        verify(jiraIssueOptOutRepository).existsByUserAndJiraIssueKey(user, ISSUE_KEY);
+        verify(taskRepository, never()).existsByJiraIssueKeyAndStatusNotIn(any(), any());
         verify(taskService, never()).createTask(any());
     }
 }

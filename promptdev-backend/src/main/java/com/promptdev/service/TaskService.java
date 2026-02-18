@@ -8,8 +8,10 @@ import com.promptdev.dto.TaskResponse;
 import com.promptdev.dto.bitbucket.PullRequestResponse;
 import com.promptdev.entity.*;
 import com.promptdev.mapper.TaskMapper;
+import com.promptdev.repository.JiraIssueOptOutRepository;
 import com.promptdev.repository.TaskEventRepository;
 import com.promptdev.repository.TaskRepository;
+import com.promptdev.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -37,10 +39,21 @@ public class TaskService {
     private final TaskMapper taskMapper;
     private final SseService sseService;
     private final BitbucketService bitbucketService;
+    private final UserRepository userRepository;
+    private final JiraIssueOptOutRepository jiraIssueOptOutRepository;
 
     @Transactional
     public TaskResponse createTask(CreateTaskRequest request) {
         log.info("Creating new task: {}", request.getTitle());
+
+        // Fetch user if userId is provided
+        User user = null;
+        if (request.getUserId() != null) {
+            user = userRepository.findById(request.getUserId()).orElse(null);
+            if (user == null) {
+                log.warn("User not found: {}", request.getUserId());
+            }
+        }
 
         Task task = Task.builder()
                 .title(request.getTitle())
@@ -59,6 +72,7 @@ public class TaskService {
                 .completionCriteria(request.getCompletionCriteria())
                 .steps(request.getSteps())
                 .jiraIssueKey(request.getJiraIssueKey())
+                .user(user)
                 .reviewEnabled(request.getReviewEnabled() == null || request.getReviewEnabled())
                 .reviewModelId(request.getReviewModelId())
                 .commitMessagePattern(resolveCommitMessagePattern(request))
@@ -316,6 +330,24 @@ public class TaskService {
                 .message("Task cancelled by user")
                 .build();
         taskEventRepository.save(event);
+
+        // If this task has a Jira issue and a user, create an opt-out entry
+        // to prevent automatic task creation for this issue in the future
+        if (task.getJiraIssueKey() != null && !task.getJiraIssueKey().isBlank() && task.getUser() != null) {
+            boolean optOutExists = jiraIssueOptOutRepository.existsByUserAndJiraIssueKey(
+                task.getUser(), task.getJiraIssueKey());
+            
+            if (!optOutExists) {
+                JiraIssueOptOut optOut = JiraIssueOptOut.builder()
+                    .user(task.getUser())
+                    .jiraIssueKey(task.getJiraIssueKey())
+                    .reason("User cancelled task manually")
+                    .build();
+                jiraIssueOptOutRepository.save(optOut);
+                log.info("Created opt-out for Jira issue {} for user {}", 
+                    task.getJiraIssueKey(), task.getUser().getId());
+            }
+        }
 
         task = taskRepository.save(task);
         TaskResponse response = taskMapper.toResponse(task);

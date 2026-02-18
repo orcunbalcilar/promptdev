@@ -81,7 +81,7 @@ Build an AI-powered development platform where users describe features via promp
 - SSE streaming for real-time task progress
 - Agent callback endpoint
 - Bitbucket integration (repo listing, branch listing, PR creation)
-- Jira Server integration (issue search, transitions, comments, assignments — conditional on config, auto-task creation enabled by default, commit message patterns enforced with Jira ID)
+- Jira Server integration (issue search, transitions, comments, assignments — conditional on config, auto-task creation enabled by default, commit message patterns enforced with Jira ID, opt-out mechanism for cancelled tasks)
 - Event tracking (30 operation types)
 - User management with OAuth provider sync (GitHub, Google)
 - User settings API (profile, Bitbucket config, Copilot token)
@@ -156,7 +156,7 @@ The Slack bot is an optional service in `docker-compose.yml`. Use `--profile sla
 
 ### Task
 
-- Fields: id, title, prompt, repositorySlug, workspaceType (LOCAL/BITBUCKET), workspacePath, sourceBranch, targetBranch, status (12 states), modelId, copilotSessionId, iterative, maxIterations, currentIteration, completionCriteria, steps, currentStepIndex, scheduledJobId, pullRequestId/Url, errorMessage, timestamps
+- Fields: id, title, prompt, repositorySlug, workspaceType (LOCAL/BITBUCKET), workspacePath, sourceBranch, targetBranch, status (12 states), modelId, copilotSessionId, iterative, maxIterations, currentIteration, completionCriteria, steps, currentStepIndex, scheduledJobId, jiraIssueKey, user (FK), pullRequestId/Url, errorMessage, timestamps
 
 ### ScheduledJob
 
@@ -165,6 +165,12 @@ The Slack bot is an optional service in `docker-compose.yml`. Use `--profile sla
 ### User
 
 - Fields: id, provider (github/google), providerAccountId, email, name, avatarUrl, bitbucketUrl, bitbucketProjectKey, bitbucketUsername, bitbucketTokenEncrypted, copilotTokenEncrypted, byokProviderType, byokBaseUrl, byokApiKeyEncrypted, jiraUrl, jiraProjectKey, jiraUsername, jiraTokenEncrypted, jiraAutoTaskEnabled (default: true), timestamps
+
+### JiraIssueOptOut
+
+- Fields: id, user (FK), jiraIssueKey, reason, createdAt
+- Purpose: Tracks Jira issues that users have opted out of auto-task creation. When a user cancels a task with a Jira issue, an opt-out record is automatically created to prevent future automatic task creation for that issue.
+- Constraint: Unique (user_id, jira_issue_key)
 
 ---
 
@@ -190,6 +196,10 @@ The Slack bot is an optional service in `docker-compose.yml`. Use `--profile sla
 | PUT    | /api/jira/issues/{key}/assign      | Assign issue             |
 | GET    | /api/jira/projects/{key}/issues    | Get project issues       |
 | GET    | /api/jira/users/{name}/issues      | Get assigned issues      |
+| GET    | /api/jira-opt-outs/user/{userId}   | Get user opt-outs        |
+| POST   | /api/jira-opt-outs                 | Create opt-out           |
+| DELETE | /api/jira-opt-outs                 | Delete opt-out           |
+| GET    | /api/jira-opt-outs/check           | Check opt-out status     |
 | GET    | /api/stream/tasks                  | SSE: all tasks           |
 | GET    | /api/stream/tasks/{id}             | SSE: specific task       |
 | POST   | /api/stream/callback               | Agent callback           |
@@ -208,6 +218,6 @@ The Slack bot is an optional service in `docker-compose.yml`. Use `--profile sla
 
 > Continue building the PromptDev project. Read PROJECT_SNAPSHOT.md and README.md for full context.
 >
-> Completed: Backend (tasks, scheduled jobs, workspace types, model selection with 14+ models and dynamic discovery, iterative sessions, user management with encrypted secrets, BYOK provider support, Jira integration), Frontend (dashboard, task dialog with selectors and local project creation, task detail, scheduled jobs page, copilot chat with slash commands, authentication with NextAuth.js v5, settings page with BYOK and Jira config, login page, React Compiler), CLI, Slack bot (with /model, /review, /fleet commands), Docker Compose, Podman support, monorepo structure, one-command deploy, Playwright E2E tests.
+> Completed: Backend (tasks, scheduled jobs, workspace types, model selection with 14+ models and dynamic discovery, iterative sessions, user management with encrypted secrets, BYOK provider support, Jira integration with opt-out mechanism for cancelled tasks), Frontend (dashboard, task dialog with selectors and local project creation, task detail, scheduled jobs page, copilot chat with slash commands, authentication with NextAuth.js v5, settings page with BYOK and Jira config, login page, React Compiler), CLI, Slack bot (with /model, /review, /fleet commands), Docker Compose, Podman support, monorepo structure, one-command deploy, Playwright E2E tests.
 >
 > Middleware migrated to proxy.ts (Next.js 16 pattern). All Dockerfiles updated to Java 21 and Node 25. Per-user Copilot tokens and BYOK providers supported for session isolation. Application ships with zero development defaults — all env-specific config injected by deploy.sh or docker-compose.yml. All Node.js subprojects use pnpm. Bitbucket and Jira use token-only auth (no passwords).

@@ -7,6 +7,7 @@ import com.promptdev.dto.jira.JiraSearchResponse;
 import com.promptdev.entity.TaskStatus;
 import com.promptdev.entity.User;
 import com.promptdev.entity.WorkspaceType;
+import com.promptdev.repository.JiraIssueOptOutRepository;
 import com.promptdev.repository.TaskRepository;
 import com.promptdev.repository.UserRepository;
 import java.util.Collection;
@@ -35,6 +36,7 @@ public class JiraPollingService {
     private final TaskService taskService;
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final JiraIssueOptOutRepository jiraIssueOptOutRepository;
 
     /**
      * Terminal statuses — issues linked to tasks in these statuses can be re-created.
@@ -118,6 +120,14 @@ public class JiraPollingService {
     private void createTaskForIssue(User user, JiraIssueResponse issue, String repository) {
         String issueKey = issue.key();
 
+        // Skip if user has opted out of auto-task creation for this issue
+        boolean hasOptedOut = jiraIssueOptOutRepository.existsByUserAndJiraIssueKey(user, issueKey);
+        if (hasOptedOut) {
+            log.debug("Skipping Jira issue {} — user {} has opted out of auto-task creation", 
+                issueKey, user.getId());
+            return;
+        }
+
         // Skip if a non-terminal task already exists for this Jira issue
         boolean alreadyExists = taskRepository.existsByJiraIssueKeyAndStatusNotIn(issueKey,
             TERMINAL_STATUSES);
@@ -166,6 +176,7 @@ public class JiraPollingService {
                         : "main").modelId(
                     user.getJiraAutoTaskModelId() != null ? user.getJiraAutoTaskModelId()
                         : "gpt-5.2").jiraIssueKey(issueKey)
+                .userId(user.getId())
                 .iterative(iterative)
                 .maxIterations(maxIterations)
                 .reviewEnabled(reviewEnabled)

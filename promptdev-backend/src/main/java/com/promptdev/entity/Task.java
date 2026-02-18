@@ -125,6 +125,13 @@ public class Task {
     @Column(name = "jira_issue_key")
     private String jiraIssueKey;
 
+    // ── User ownership ─────────────────────────────────────────────
+
+    /** User who owns/created this task (for Jira auto-tasks, the assignee) */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     // ── Review feature fields ──────────────────────────────────────
 
     /** Whether auto-review is enabled for this task */
