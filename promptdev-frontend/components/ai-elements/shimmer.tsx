@@ -1,31 +1,32 @@
 "use client";
 
 import type { MotionProps } from "motion/react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ElementType, JSX } from "react";
 
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 
 type MotionHTMLProps = MotionProps & Record<string, unknown>;
 
-// Pre-create motion components at module level — React Compiler requires
-// components to be declared outside render to maintain stable references.
-const MOTION_COMPONENTS: Record<string, React.ComponentType<MotionHTMLProps>> = {
-  p: motion.create("p"),
-  span: motion.create("span"),
-  div: motion.create("div"),
-  h1: motion.create("h1"),
-  h2: motion.create("h2"),
-  h3: motion.create("h3"),
-  h4: motion.create("h4"),
-  h5: motion.create("h5"),
-  h6: motion.create("h6"),
+// Cache motion components at module level to avoid creating during render
+const motionComponentCache = new Map<
+  keyof JSX.IntrinsicElements,
+  React.ComponentType<MotionHTMLProps>
+>();
+
+const getMotionComponent = (element: keyof JSX.IntrinsicElements) => {
+  let component = motionComponentCache.get(element);
+  if (!component) {
+    component = motion.create(element);
+    motionComponentCache.set(element, component);
+  }
+  return component;
 };
 
 export interface TextShimmerProps {
-  children: string;
-  as?: keyof typeof MOTION_COMPONENTS;
+  children?: string;
+  as?: ElementType;
   className?: string;
   duration?: number;
   spread?: number;
@@ -33,14 +34,19 @@ export interface TextShimmerProps {
 
 const ShimmerComponent = ({
   children,
-  as: element = "p",
+  as: Component = "p",
   className,
   duration = 2,
   spread = 2,
 }: TextShimmerProps) => {
-  const MotionComponent = MOTION_COMPONENTS[element] ?? MOTION_COMPONENTS.p;
+  const MotionComponent = getMotionComponent(
+    Component as keyof JSX.IntrinsicElements
+  );
 
-  const dynamicSpread = (children?.length ?? 0) * spread;
+  const dynamicSpread = useMemo(
+    () => (children?.length ?? 0) * spread,
+    [children, spread]
+  );
 
   return (
     <MotionComponent

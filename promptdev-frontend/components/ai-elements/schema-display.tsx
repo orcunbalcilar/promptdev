@@ -166,37 +166,20 @@ export const SchemaDisplayPath = ({
 }: SchemaDisplayPathProps) => {
   const { path } = useContext(SchemaDisplayContext);
 
-  // Render path with highlighted parameters safely (avoid dangerouslySetInnerHTML)
-  const renderHighlightedPath = (p: string) => {
-    const parts: React.ReactNode[] = [];
-    const regex = /\{([^}]+)\}/g;
-    let lastIndex = 0;
-    let match: RegExpExecArray | null;
-
-    while ((match = regex.exec(p)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(p.slice(lastIndex, match.index));
-      }
-      // include the braces in the displayed parameter
-      parts.push(
-        <span key={parts.length} className="text-blue-600 dark:text-blue-400">
-          {`{${match[1]}}`}
-        </span>
-      );
-      lastIndex = regex.lastIndex;
-    }
-
-    if (lastIndex < p.length) {
-      parts.push(p.slice(lastIndex));
-    }
-
-    return parts;
-  };
+  // Highlight path parameters
+  const highlightedPath = path.replaceAll(
+    /\{([^}]+)\}/g,
+    '<span class="text-blue-600 dark:text-blue-400">{$1}</span>'
+  );
 
   return (
-    <span className={cn("font-mono text-sm", className)} {...props}>
-      {children ?? <>{renderHighlightedPath(path)}</>}
-    </span>
+    <span
+      className={cn("font-mono text-sm", className)}
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: "needed for parameter highlighting"
+      // oxlint-disable-next-line eslint-plugin-react(no-danger)
+      dangerouslySetInnerHTML={{ __html: children ?? highlightedPath }}
+      {...props}
+    />
   );
 };
 

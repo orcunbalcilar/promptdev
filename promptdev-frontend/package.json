@@ -26,6 +26,8 @@
     "@streamdown/math": "^1.0.2",
     "@streamdown/mermaid": "^1.0.2",
     "@tanstack/react-query": "^5.90.21",
+    "@radix-ui/react-slot": "^1.2.4",
+    "ai": "^6.0.90",
     "@xyflow/react": "^12.10.0",
     "ansi-to-react": "^6.2.6",
     "class-variance-authority": "^0.7.1",

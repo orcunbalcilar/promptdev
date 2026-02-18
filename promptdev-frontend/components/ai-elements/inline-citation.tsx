@@ -164,8 +164,6 @@ export const InlineCitationCarouselIndex = ({
       return;
     }
 
-    // Initial sync from external carousel API — must set state from the API values
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCount(api.scrollSnapList().length);
     setCurrent(api.selectedScrollSnap() + 1);
 

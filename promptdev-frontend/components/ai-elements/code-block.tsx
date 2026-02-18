@@ -32,8 +32,10 @@ import { createHighlighter } from "shiki";
 
 // Shiki uses bitflags for font styles: 1=italic, 2=bold, 4=underline
 // biome-ignore lint/suspicious/noBitwiseOperators: shiki bitflag check
+// eslint-disable-next-line no-bitwise -- shiki bitflag check
 const isItalic = (fontStyle: number | undefined) => fontStyle && fontStyle & 1;
 // biome-ignore lint/suspicious/noBitwiseOperators: shiki bitflag check
+// eslint-disable-next-line no-bitwise -- shiki bitflag check
 // oxlint-disable-next-line eslint(no-bitwise)
 const isBold = (fontStyle: number | undefined) => fontStyle && fontStyle & 2;
 const isUnderline = (fontStyle: number | undefined) =>
@@ -394,12 +396,8 @@ export const CodeBlockContent = ({
   useEffect(() => {
     let cancelled = false;
 
-    // Get synchronous cached result or fall back to raw tokens
-    const syncResult = highlightCode(code, language);
-    if (syncResult) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync cache initialization before subscribing
-      setTokenized(syncResult);
-    }
+    // Reset to raw tokens when code changes (shows current code, not stale tokens)
+    setTokenized(highlightCode(code, language) ?? rawTokens);
 
     // Subscribe to async highlighting result
     highlightCode(code, language, (result) => {

@@ -18,7 +18,7 @@ import {
   MinusIcon,
   PlusIcon,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type CommitProps = ComponentProps<typeof Collapsible>;
 
@@ -157,23 +157,9 @@ export const CommitTimestamp = ({
   children,
   ...props
 }: CommitTimestampProps) => {
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    // Update relative time every minute
-    const interval = setInterval(() => {
-      setNow(Date.now());
-    }, 60_000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const formatted = useMemo(
-    () =>
-      relativeTimeFormat.format(
-        Math.round((date.getTime() - now) / (1000 * 60 * 60 * 24)),
-        "day"
-      ),
-    [date, now]
+  const formatted = relativeTimeFormat.format(
+    Math.round((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+    "day"
   );
 
   return (

@@ -2,7 +2,7 @@
 
 import { signIn, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { Zap, Loader2 } from "lucide-react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Suspense, useEffect } from "react"
@@ -39,7 +39,7 @@ function LoginForm() {
           <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit">
             <Zap className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle asChild><h1 className="text-2xl font-bold">Sign in to PromptDev</h1></CardTitle>
+          <h1 className="leading-none font-semibold text-2xl">Sign in to PromptDev</h1>
           <CardDescription>
             AI-powered development platform. Sign in with your GitHub or Google account to continue.
           </CardDescription>
