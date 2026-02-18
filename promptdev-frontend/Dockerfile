@@ -9,14 +9,14 @@ FROM node:25-slim AS base
 
 # ── Stage 1: Install dependencies ────────────────────────────────────────────
 FROM base AS deps
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm@latest
 WORKDIR /app
 COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile
 
 # ── Stage 2: Build application ──────────────────────────────────────────────
 FROM base AS builder
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm@latest
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .

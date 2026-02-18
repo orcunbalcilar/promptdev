@@ -6,14 +6,14 @@ FROM node:25-slim AS base
 
 # ── Stage 1: Production dependencies only ────────────────────────────────────
 FROM base AS deps
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm@latest
 WORKDIR /app
 COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile --prod
 
 # ── Stage 2: Build TypeScript ────────────────────────────────────────────────
 FROM base AS builder
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm@latest
 WORKDIR /app
 COPY package.json pnpm-lock.yaml* tsconfig.json ./
 RUN pnpm install --frozen-lockfile
