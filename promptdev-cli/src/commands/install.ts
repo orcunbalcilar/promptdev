@@ -26,7 +26,8 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     { name: 'git', required: true },
     { name: 'java', required: true },
     { name: 'node', required: true },
-    { name: 'npm', required: true },
+    { name: 'pnpm', required: true },
+    { name: 'podman', required: false },
     { name: 'docker', required: false },
   ]
 
@@ -80,7 +81,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     // Install frontend dependencies
     const frontendSpinner = ora('Installing frontend dependencies...').start()
     try {
-      exec('npm install', `${projectDir}/promptdev-frontend`)
+      exec('pnpm install', `${projectDir}/promptdev-frontend`)
       frontendSpinner.succeed('Frontend dependencies installed')
     } catch (err) {
       frontendSpinner.fail('Frontend dependency installation failed')
@@ -90,7 +91,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     // Build frontend
     const buildSpinner = ora('Building frontend...').start()
     try {
-      exec('npm run build', `${projectDir}/promptdev-frontend`)
+      exec('pnpm run build', `${projectDir}/promptdev-frontend`)
       buildSpinner.succeed('Frontend built successfully')
     } catch (err) {
       buildSpinner.fail('Frontend build failed')
@@ -99,10 +100,11 @@ export async function installCommand(options: InstallOptions): Promise<void> {
   }
 
   // Check for PostgreSQL
-  const dbAvailable = isCommandAvailable('psql') || isCommandAvailable('docker')
+  const dbAvailable = isCommandAvailable('psql') || isCommandAvailable('podman') || isCommandAvailable('docker')
   if (!dbAvailable) {
-    console.log(chalk.yellow('\n⚠️  PostgreSQL not found. Install it or use Docker:'))
-    console.log(chalk.dim('  docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=promptdev postgres'))
+    console.log(chalk.yellow('\n⚠️  PostgreSQL not found. Install it or use Podman/Docker:'))
+    console.log(chalk.dim('  podman run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=promptdev postgres'))
+    console.log(chalk.dim('  # or with Docker: docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=promptdev postgres'))
   }
 
   // Save config

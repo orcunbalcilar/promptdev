@@ -1,27 +1,32 @@
 # =============================================================================
-# PromptDev — Docker / Podman Compose
+# PromptDev — Podman / Docker Compose
 # =============================================================================
-# Runs the full stack: PostgreSQL, Backend, Frontend, and optionally Slack Bot.
+# Runs the full stack: PostgreSQL, Backend (GraalVM native), Frontend, and
+# optionally Slack Bot.
 #
-# Usage (Docker):
-#   docker compose up -d                         # Core services
-#   docker compose --profile slack up -d          # Include Slack bot
-#   docker compose down                           # Stop all
-#   docker compose down -v                        # Stop all + delete DB volume
+# Quick deploy:   curl -fsSL <raw-url>/deploy.sh | bash
 #
-# Usage (Podman):
-#   podman-compose up -d
-#   podman-compose --profile slack up -d
-#   podman-compose down
+# Podman (preferred):
+#   podman-compose up -d                     # Core services
+#   podman-compose --profile slack up -d     # Include Slack bot
+#
+# Docker (alternative):
+#   docker compose up -d                  # Core services
+#   docker compose --profile slack up -d  # Include Slack bot
 #
 # Environment:
 #   Copy .env.example → .env and fill in your secrets before starting.
+#
+# Volumes (persistent data):
+#   pgdata         – PostgreSQL database files
+#   nextjs-cache   – Next.js ISR / component cache (survives restarts)
+#   workspace-data – Backend workspace files (task repos, generated code)
 # =============================================================================
 
 services:
   # ── PostgreSQL ─────────────────────────────────────────────────────────────
   db:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     container_name: promptdev-db
     restart: unless-stopped
     environment:
@@ -38,11 +43,16 @@ services:
       timeout: 3s
       retries: 10
 
-  # ── Spring Boot Backend ────────────────────────────────────────────────────
+  # ── Spring Boot Backend (GraalVM native image) ────────────────────────────
+  # First build compiles a native executable (~15 min, needs ~8 GB RAM).
+  # Subsequent builds are cached and much faster.
+  # BuildKit is enabled for persistent Maven cache across builds.
   backend:
     build:
       context: ./promptdev-backend
       dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     container_name: promptdev-backend
     restart: unless-stopped
     depends_on:
@@ -53,17 +63,25 @@ services:
       DB_USERNAME: promptdev
       DB_PASSWORD: promptdev
       JPA_DDL_AUTO: update
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-change-me-in-production-32chars!}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       BITBUCKET_URL: ${BITBUCKET_URL:-}
-      BITBUCKET_PROJECT_KEY: ${BITBUCKET_PROJECT_KEY:-}
       BITBUCKET_USERNAME: ${BITBUCKET_USERNAME:-}
       BITBUCKET_TOKEN: ${BITBUCKET_TOKEN:-}
       JIRA_URL: ${JIRA_URL:-}
       JIRA_USERNAME: ${JIRA_USERNAME:-}
       JIRA_TOKEN: ${JIRA_TOKEN:-}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      WORKSPACE_BASE_PATH: /data/workspaces
     ports:
       - "8080:8080"
+    volumes:
+      - workspace-data:/data/workspaces
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # ── Next.js Frontend ──────────────────────────────────────────────────────
   frontend:
@@ -73,7 +91,8 @@ services:
     container_name: promptdev-frontend
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     environment:
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api}
@@ -85,6 +104,14 @@ services:
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
     ports:
       - "3000:3000"
+    volumes:
+      - nextjs-cache:/app/.next/cache
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # ── Slack Bot (optional — start with --profile slack) ──────────────────────
   bot:
@@ -96,7 +123,8 @@ services:
     profiles:
       - slack
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     environment:
       SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
       SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
@@ -106,3 +134,5 @@ services:
 
 volumes:
   pgdata:
+  nextjs-cache:
+  workspace-data:

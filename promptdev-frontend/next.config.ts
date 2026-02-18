@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
   // This prevents Turbopack from bundling it and breaking import.meta.resolve
   serverExternalPackages: ["@github/copilot-sdk"],
 
-  // Standalone output for Docker/Podman container deployments
+  // Standalone output for Podman/Docker container deployments
   output: "standalone",
 
   // Include external packages in standalone output

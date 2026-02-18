@@ -93,7 +93,7 @@ PromptDev sits in the **$0 AI compute cost** sweet spot:
 
 > "Air-gapped AI development. Your code never leaves your infrastructure."
 
-- Full self-hosted deployment (Docker/Podman)
+- Full self-hosted deployment (Podman/Docker)
 - Works with Bitbucket Server and Jira Server (on-premise)
 - AES-256-GCM encryption for all secrets
 - Zero data sent to PromptDev — we ship software, not a service
@@ -352,7 +352,7 @@ These are the "think out of the box" strategies that differentiate PromptDev fro
 | License system              | P0       | License key validation, feature gating, seat counting        |
 | Usage telemetry             | P0       | Anonymous usage tracking (opt-in) for outcome-based metrics  |
 | Stripe integration          | P0       | Billing for Professional tier (subscription + usage overage) |
-| Community Edition packaging | P1       | Docker image with feature flags for free tier                |
+| Community Edition packaging | P1       | Podman/Docker image with feature flags for free tier                |
 | Documentation site          | P1       | Docs, pricing page, comparison charts                        |
 
 ### Phase 2: Enterprise (Months 4-6)
@@ -506,7 +506,7 @@ These are the "think out of the box" strategies that differentiate PromptDev fro
 
 **Mitigation:**
 
-- Docker Compose + one-command installer already works
+- Podman Compose + one-command installer already works
 - Invest in documentation and troubleshooting guides
 - Community Edition builds a support community (GitHub Issues, Discord)
 - Enterprise tier includes dedicated support to justify premium pricing

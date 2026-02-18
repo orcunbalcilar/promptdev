@@ -1,6 +1,5 @@
 package com.promptdev.service;
 
-import com.promptdev.config.BitbucketConfig;
 import com.promptdev.dto.TaskEventResponse;
 import com.promptdev.dto.TaskResponse;
 import com.promptdev.entity.*;
@@ -43,9 +42,6 @@ class TaskServiceResumeTest {
 
     @Mock
     private BitbucketService bitbucketService;
-
-    @Mock
-    private BitbucketConfig bitbucketConfig;
 
     @InjectMocks
     private TaskService taskService;

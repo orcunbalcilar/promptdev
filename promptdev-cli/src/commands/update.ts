@@ -52,7 +52,7 @@ export async function updateCommand(options: UpdateOptions): Promise<void> {
   if (existsSync(frontendDir)) {
     const frontendSpinner = ora('Updating frontend dependencies...').start()
     try {
-      exec('npm install', frontendDir)
+      exec('pnpm install', frontendDir)
       frontendSpinner.succeed('Frontend dependencies updated')
     } catch {
       frontendSpinner.fail('Frontend dependency update failed')
@@ -60,7 +60,7 @@ export async function updateCommand(options: UpdateOptions): Promise<void> {
 
     const buildSpinner = ora('Rebuilding frontend...').start()
     try {
-      exec('npm run build', frontendDir)
+      exec('pnpm run build', frontendDir)
       buildSpinner.succeed('Frontend rebuilt')
     } catch {
       buildSpinner.fail('Frontend rebuild failed')

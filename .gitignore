@@ -56,5 +56,3 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-start-all.sh
-start-all.ps1

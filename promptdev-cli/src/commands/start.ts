@@ -3,15 +3,26 @@
  */
 
 import chalk from 'chalk'
+import inquirer from 'inquirer'
 import ora from 'ora'
-import { join } from 'node:path'
 import { existsSync } from 'node:fs'
+import { join } from 'node:path'
+import {
+  applyEnvToProcess,
+  getMissingEnvKeys,
+  loadEnvFile,
+  REQUIRED_ENV_KEYS,
+  resolveEnvFilePath,
+  SECRET_ENV_KEYS,
+  upsertEnvFile,
+} from '../env.js'
 import { exec, execSafe, getProjectDir, isPortInUse, spawnDetached } from '../utils.js'
 
 interface StartOptions {
   service?: string
   detach: boolean
   directory?: string
+  envFile?: string
 }
 
 type ServiceName = 'db' | 'backend' | 'frontend'
@@ -24,7 +35,25 @@ async function startDatabase(): Promise<boolean> {
     return true
   }
 
-  // Try docker
+  // Try podman first, then docker
+  const hasPodman = execSafe('which podman') !== null
+  if (hasPodman) {
+    try {
+      // Check if container exists
+      const existing = execSafe('podman ps -a --filter name=promptdev-db --format "{{.ID}}"')
+      if (existing) {
+        exec('podman start promptdev-db')
+      } else {
+        exec('podman run -d --name promptdev-db -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=promptdev postgres:16')
+      }
+      spinner.succeed('PostgreSQL started via Podman')
+      return true
+    } catch {
+      spinner.fail('Failed to start PostgreSQL via Podman')
+      return false
+    }
+  }
+
   const hasDocker = execSafe('which docker') !== null
   if (hasDocker) {
     try {
@@ -43,7 +72,7 @@ async function startDatabase(): Promise<boolean> {
     }
   }
 
-  spinner.fail('PostgreSQL not running and Docker not available')
+  spinner.fail('PostgreSQL not running and Podman/Docker not available')
   console.log(chalk.yellow('  Please start PostgreSQL manually on port 5432'))
   return false
 }
@@ -97,11 +126,11 @@ async function startFrontend(projectDir: string, detach: boolean): Promise<boole
 
   if (detach) {
     const logFile = join(projectDir, '.promptdev', 'frontend.log')
-    spawnDetached('npm', ['run', 'dev'], frontendDir, logFile)
+    spawnDetached('pnpm', ['dev'], frontendDir, logFile)
     spinner.succeed('Frontend starting in background (port 3000)')
   } else {
     try {
-      exec('npm run dev &', frontendDir)
+      exec('pnpm dev &', frontendDir)
       spinner.succeed('Frontend started on port 3000')
     } catch {
       spinner.fail('Failed to start frontend')
@@ -118,10 +147,52 @@ const SERVICE_STARTERS: Record<ServiceName, (dir: string, detach: boolean) => Pr
   frontend: startFrontend,
 }
 
+async function ensureRequiredEnv(projectDir: string, envFile?: string): Promise<void> {
+  const envFilePath = resolveEnvFilePath(projectDir, envFile)
+  const fileEnv = loadEnvFile(envFilePath)
+
+  if (Object.keys(fileEnv).length === 0 && !existsSync(envFilePath)) {
+    console.log(chalk.yellow(`\n⚠️  No env file found at ${envFilePath}. A new one will be created.`))
+  }
+
+  applyEnvToProcess(fileEnv)
+
+  const mergedEnv = { ...fileEnv, ...process.env }
+  const missing = getMissingEnvKeys(REQUIRED_ENV_KEYS, mergedEnv)
+  if (missing.length === 0) {
+    return
+  }
+
+  console.log(chalk.yellow(`\n⚠️  Missing required environment values: ${missing.join(', ')}`))
+
+  const answers = await inquirer.prompt(
+    missing.map(key => ({
+      type: SECRET_ENV_KEYS.has(key) ? 'password' : 'input',
+      name: key,
+      message: `Enter ${key}:`,
+      mask: SECRET_ENV_KEYS.has(key) ? '*' : undefined,
+      validate: (value: string) => (value.trim().length > 0 ? true : `${key} is required`),
+    })),
+  )
+
+  const updates: Record<string, string> = {}
+  for (const key of missing) {
+    updates[key] = String(answers[key]).trim()
+  }
+
+  upsertEnvFile(envFilePath, updates)
+  applyEnvToProcess(updates)
+  console.log(chalk.green(`Saved missing values to ${envFilePath}`))
+}
+
 export async function startCommand(options: StartOptions): Promise<void> {
   console.log(chalk.bold('\n⚡ Starting PromptDev\n'))
 
   const projectDir = getProjectDir(options.directory)
+
+  if (!options.service || options.service !== 'db') {
+    await ensureRequiredEnv(projectDir, options.envFile)
+  }
 
   if (options.service) {
     const svc = options.service as ServiceName

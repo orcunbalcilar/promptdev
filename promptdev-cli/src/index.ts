@@ -44,6 +44,7 @@ program
   .option('-s, --service <service>', 'Start a specific service (backend, frontend, db)')
   .option('--detach', 'Run in background', false)
   .option('-d, --directory <path>', 'Project directory')
+  .option('--env-file <path>', 'Path to a .env file to load before starting services')
   .action(startCommand)
 
 program

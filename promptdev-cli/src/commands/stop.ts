@@ -30,13 +30,29 @@ function stopOnPort(port: number, name: string): void {
   }
 }
 
-function stopDocker(name: string): void {
-  const spinner = ora("Stopping PostgreSQL (Docker)...").start();
-  const result = execSafe(`docker stop ${name}`);
-  if (result === null) {
-    spinner.info("PostgreSQL Docker container not running");
+function stopContainerRuntime(name: string): void {
+  // Try podman first, then docker
+  const hasPodman = execSafe('which podman') !== null
+  const hasDocker = execSafe('which docker') !== null
+
+  if (hasPodman) {
+    const spinner = ora("Stopping PostgreSQL (Podman)...").start();
+    const result = execSafe(`podman stop ${name}`)
+    if (result === null) {
+      spinner.info("PostgreSQL Podman container not running")
+    } else {
+      spinner.succeed("PostgreSQL (Podman) stopped")
+    }
+  } else if (hasDocker) {
+    const spinner = ora("Stopping PostgreSQL (Docker)...").start();
+    const result = execSafe(`docker stop ${name}`)
+    if (result === null) {
+      spinner.info("PostgreSQL Docker container not running")
+    } else {
+      spinner.succeed("PostgreSQL (Docker) stopped")
+    }
   } else {
-    spinner.succeed("PostgreSQL (Docker) stopped");
+    console.warn(chalk.yellow("  Podman/Docker not found"))
   }
 }
 
@@ -54,7 +70,7 @@ export async function stopCommand(options: StopOptions): Promise<void> {
         stopOnPort(3000, "Frontend");
         break;
       case "db":
-        stopDocker("promptdev-db");
+        stopContainerRuntime("promptdev-db");
         break;
       default:
         console.error(chalk.red(`Unknown service: ${options.service}`));
@@ -63,7 +79,7 @@ export async function stopCommand(options: StopOptions): Promise<void> {
   } else {
     stopOnPort(3000, "Frontend");
     stopOnPort(8080, "Backend");
-    stopDocker("promptdev-db");
+    stopContainerRuntime("promptdev-db");
   }
 
   console.log(chalk.green("\n✅ Services stopped\n"));

@@ -14,9 +14,7 @@ import org.springframework.web.client.RestClient;
 public class BitbucketConfig {
 
     private String baseUrl;
-    private String projectKey;
     private String username;
-    private String password;
     private String token;
 
     @Bean
@@ -40,9 +38,6 @@ public class BitbucketConfig {
     private void configureAuth(RestClient.Builder builder) {
         if (token != null && !token.isBlank()) {
             builder.defaultHeader("Authorization", "Bearer " + token);
-        } else if (username != null && password != null) {
-            builder.defaultHeaders(headers ->
-                headers.setBasicAuth(username, password));
         }
     }
 }

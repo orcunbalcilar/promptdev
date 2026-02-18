@@ -4,7 +4,7 @@ spring:
 
   # ─── Database ────────────────────────────────────────────────────────────────
   # All connection properties are REQUIRED via environment variables.
-  # No defaults are shipped — start-all.sh / docker-compose.yml inject them.
+  # No defaults are shipped — deploy.sh / docker-compose.yml inject them.
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -45,16 +45,13 @@ logging:
 # Bitbucket (per-user settings stored in a database, these are optional global fallbacks)
 bitbucket:
   base-url: ${BITBUCKET_URL:}
-  project-key: ${BITBUCKET_PROJECT_KEY:}
   username: ${BITBUCKET_USERNAME:}
-  password: ${BITBUCKET_PASSWORD:}
   token: ${BITBUCKET_TOKEN:}
 
 # Jira Server (optional — per-user settings stored in a database, global fallback)
 jira:
   base-url: ${JIRA_URL:}
   username: ${JIRA_USERNAME:}
-  password: ${JIRA_PASSWORD:}
   token: ${JIRA_TOKEN:}
 
 # SSE & encryption

@@ -24,7 +24,7 @@ Build an AI-powered development platform where users describe features via promp
         │                       │        │   Jira Server   │
         │                       ▼        │   :55000        │
         │               ┌──────────────────┐└─────────────────┘
-        │               │   PostgreSQL 17  │
+        │               │   PostgreSQL 18  │
         │               │   :5432          │
         │               └──────────────────┘
         ▼
@@ -43,16 +43,18 @@ Build an AI-powered development platform where users describe features via promp
 | Authentication   | NextAuth.js          | v5 beta |
 | Backend          | Spring Boot          | 4.0.2   |
 | Backend Language | Java                 | 21      |
-| Database         | PostgreSQL           | 17      |
+| Native Runtime   | GraalVM Native Image | 21      |
+| Database         | PostgreSQL           | 18      |
 | Encryption       | AES-256-GCM          | —       |
-| AI Engine        | Copilot SDK          | 0.1.23  |
+| AI Engine        | Copilot SDK          | 0.1.24  |
 | VCS              | Bitbucket / Local    | —       |
 | Issues           | Jira Server          | —       |
 | Testing          | Vitest + Playwright  | 4.0.18  |
+| Package Manager  | pnpm                 | Latest  |
 | React Compiler   | babel-plugin         | Latest  |
 | CLI              | Commander.js         | Latest  |
 | Slack Bot        | @slack/bolt          | Latest  |
-| Containers       | Docker / Podman      | Latest  |
+| Containers       | Podman / Docker      | Latest  |
 
 ## Repository Structure
 
@@ -116,12 +118,17 @@ Build an AI-powered development platform where users describe features via promp
 ### Infrastructure
 
 - **Monorepo** — single Git repository for all modules
-- **Docker Compose** — full-stack container orchestration (PostgreSQL, backend, frontend, bot)
+- **Podman Compose** — full-stack container orchestration (PostgreSQL, backend, frontend, bot)
+- **GraalVM native image** — backend compiled to native executable (instant startup, low memory)
+- **Lightweight images** — `debian:bookworm-slim` (backend native), `node:alpine` (frontend/bot)
+- **Persistent volumes** — `pgdata` (database), `nextjs-cache` (ISR/component cache), `workspace-data` (task repos)
+- **Non-root containers** — all services run as non-root users
+- **Health checks** — all services have container health checks with start period
 - **Podman support** — all container features work with both Docker and Podman
-- **Zero-default configuration** — `application.yml` contains no development-specific values; all database credentials, DDL modes, and log levels are injected via environment variables by `start-all` scripts or `docker-compose.yml`
-- **Database health check** — `start-all` scripts verify container responsiveness and auto-recreate corrupt databases
-- **One-command installer** — `install.sh` / `install.ps1`
-- **Auto-generated encryption key** — `start-all` scripts generate `ENCRYPTION_KEY` via `openssl rand -hex 32`
+- **One-command deploy** — `deploy.sh` (curl | bash interactive wizard)
+- **Auto-generated secrets** — `deploy.sh` generates `ENCRYPTION_KEY` and `AUTH_SECRET` automatically
+- **Token-only auth** — Bitbucket and Jira use personal access tokens (no passwords)
+- **pnpm** — all Node.js subprojects use pnpm for faster, efficient builds
 
 ---
 
@@ -201,6 +208,6 @@ The Slack bot is an optional service in `docker-compose.yml`. Use `--profile sla
 
 > Continue building the PromptDev project. Read PROJECT_SNAPSHOT.md and README.md for full context.
 >
-> Completed: Backend (tasks, scheduled jobs, workspace types, model selection with 14+ models and dynamic discovery, iterative sessions, user management with encrypted secrets, BYOK provider support, Jira integration), Frontend (dashboard, task dialog with selectors and local project creation, task detail, scheduled jobs page, copilot chat with slash commands, authentication with NextAuth.js v5, settings page with BYOK and Jira config, login page, React Compiler), CLI, Slack bot (with /model, /review, /fleet commands), Docker Compose, Podman support, monorepo structure, one-command installer, Playwright E2E tests.
+> Completed: Backend (tasks, scheduled jobs, workspace types, model selection with 14+ models and dynamic discovery, iterative sessions, user management with encrypted secrets, BYOK provider support, Jira integration), Frontend (dashboard, task dialog with selectors and local project creation, task detail, scheduled jobs page, copilot chat with slash commands, authentication with NextAuth.js v5, settings page with BYOK and Jira config, login page, React Compiler), CLI, Slack bot (with /model, /review, /fleet commands), Docker Compose, Podman support, monorepo structure, one-command deploy, Playwright E2E tests.
 >
-> Middleware migrated to proxy.ts (Next.js 16 pattern). All Dockerfiles updated to Java 21 and Node 22. Per-user Copilot tokens and BYOK providers supported for session isolation. Application ships with zero development defaults — all env-specific config injected by start-all scripts or docker-compose.yml.
+> Middleware migrated to proxy.ts (Next.js 16 pattern). All Dockerfiles updated to Java 21 and Node 25. Per-user Copilot tokens and BYOK providers supported for session isolation. Application ships with zero development defaults — all env-specific config injected by deploy.sh or docker-compose.yml. All Node.js subprojects use pnpm. Bitbucket and Jira use token-only auth (no passwords).

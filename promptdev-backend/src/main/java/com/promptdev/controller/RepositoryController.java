@@ -1,6 +1,5 @@
 package com.promptdev.controller;
 
-import com.promptdev.config.BitbucketConfig;
 import com.promptdev.dto.bitbucket.BranchResponse;
 import com.promptdev.dto.bitbucket.ProjectResponse;
 import com.promptdev.dto.bitbucket.RepositoryResponse;
@@ -22,7 +21,6 @@ import java.util.List;
 public class RepositoryController {
 
     private final BitbucketService bitbucketService;
-    private final BitbucketConfig bitbucketConfig;
 
     /**
      * List all accessible Bitbucket projects.
@@ -133,14 +131,14 @@ public class RepositoryController {
     }
 
     /**
-     * Resolve the effective project key: use explicit param if provided,
-     * otherwise fall back to the global BitbucketConfig default.
+     * Resolve the effective project key from the explicit parameter.
+     * Returns null if no project key is provided.
      */
     private String resolveProjectKey(String projectKey) {
         if (projectKey != null && !projectKey.isBlank()) {
             return projectKey;
         }
-        return bitbucketConfig.getProjectKey();
+        return null;
     }
 
     /**

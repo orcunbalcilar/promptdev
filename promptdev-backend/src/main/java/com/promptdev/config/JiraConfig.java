@@ -20,7 +20,6 @@ public class JiraConfig {
 
     private String baseUrl;
     private String username;
-    private String password;
     private String token;
     private String projectKey;
 
@@ -38,9 +37,6 @@ public class JiraConfig {
         if (token != null && !token.isBlank()) {
             builder.defaultHeaders(headers ->
                 headers.setBearerAuth(token));
-        } else if (username != null && password != null) {
-            builder.defaultHeaders(headers ->
-                headers.setBasicAuth(username, password));
         }
     }
 }

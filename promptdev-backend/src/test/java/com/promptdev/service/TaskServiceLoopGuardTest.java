@@ -1,6 +1,5 @@
 package com.promptdev.service;
 
-import com.promptdev.config.BitbucketConfig;
 import com.promptdev.dto.AgentCallbackRequest;
 import com.promptdev.dto.TaskResponse;
 import com.promptdev.entity.*;
@@ -46,9 +45,6 @@ class TaskServiceLoopGuardTest {
 
     @Mock
     private BitbucketService bitbucketService;
-
-    @Mock
-    private BitbucketConfig bitbucketConfig;
 
     @InjectMocks
     private TaskService taskService;

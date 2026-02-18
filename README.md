@@ -26,7 +26,7 @@ PromptDev is a development platform that turns natural language prompts into wor
 - **Copilot chat** — Interactive AI assistant for ad-hoc development questions
 - **Slack integration** — Create and monitor tasks from Slack
 - **CLI tool** — Install, start, stop, and manage PromptDev from the terminal
-- **Container support** — Docker Compose and Podman compatible
+- **Container support** — Podman Compose and Docker compatible
 - **React Compiler** — Automatic memoization via the React Compiler
 
 ---
@@ -44,7 +44,7 @@ PromptDev is a development platform that turns natural language prompts into wor
         │                       │        │   Jira Server   │
         │                       ▼        │   :55000        │
         │               ┌──────────────────┐└─────────────────┘
-        │               │   PostgreSQL 17  │
+        │               │   PostgreSQL 18  │
         │               │   :5432          │
         │               └──────────────────┘
         ▼
@@ -58,7 +58,7 @@ PromptDev is a development platform that turns natural language prompts into wor
 | --------- | --------------------------------------------- | ---- |
 | Frontend  | Next.js 16, React 19, Tailwind CSS, shadcn/ui | 3000 |
 | Backend   | Spring Boot 4, Java 21, PostgreSQL            | 8080 |
-| Database  | PostgreSQL 17                                 | 5432 |
+| Database  | PostgreSQL 18                                 | 5432 |
 | Slack Bot | @slack/bolt (Socket Mode)                     | 3001 |
 | AI Engine | GitHub Copilot SDK                            | —    |
 | VCS       | Bitbucket Server or Local filesystem          | 7990 |
@@ -73,93 +73,138 @@ PromptDev is a development platform that turns natural language prompts into wor
 
 | Tool             | Version | Check              | Required?                          |
 | ---------------- | ------- | ------------------ | ---------------------------------- |
-| Java             | 21+     | `java --version`   | Yes                                |
-| Node.js          | 22+     | `node --version`   | Yes                                |
-| npm              | 10+     | `npm --version`    | Yes                                |
-| Docker or Podman | Latest  | `docker --version` | Yes (for PostgreSQL, unless local) |
+| Podman or Docker | Latest  | `podman --version` | Yes                                |
 | Git              | Latest  | `git --version`    | Yes                                |
 
-### One-Command Install
+For local development (without Docker):
 
-**macOS / Linux:**
+| Tool    | Version | Check              | Required?     |
+| ------- | ------- | ------------------ | ------------- |
+| Java    | 21+     | `java --version`   | Backend only  |
+| Node.js | 25+     | `node --version`   | Frontend/Bot  |
+| pnpm    | Latest  | `pnpm --version`   | Frontend/Bot  |
+
+### Deploy (One Command)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/orcunbalcilar/promptdev/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/orcunbalcilar/promptdev/main/deploy.sh | bash
 ```
 
-**Windows (PowerShell):**
+The deploy script:
 
-```powershell
-irm https://raw.githubusercontent.com/orcunbalcilar/promptdev/main/install.ps1 | iex
-```
+1. Clones the repository (if not already in it)
+2. Auto-generates `ENCRYPTION_KEY` and `AUTH_SECRET`
+3. Walks you through setting up GitHub OAuth, Copilot token, and optional integrations
+4. Writes `.env` and starts all containers
 
-The installer checks prerequisites, prompts for optional Slack / Bitbucket / Jira / GitHub configuration, clones the repository, and starts all services.
-
-### Development Start
+Or run it locally after cloning:
 
 ```bash
 git clone https://github.com/orcunbalcilar/promptdev.git
 cd promptdev
-chmod +x start-all.sh
-./start-all.sh            # Core services (backend, frontend, database)
-./start-all.sh --bot      # Also start the Slack bot
+./deploy.sh
 ```
 
-**Windows:**
+#### Using a Custom Environment File
 
-```powershell
-git clone https://github.com/orcunbalcilar/promptdev.git
-cd promptdev
-.\start-all.ps1            # Core services
-.\start-all.ps1 -Bot       # Also start the Slack bot
-```
-
-The startup script:
-
-1. Exports all development-only configuration (database URL, credentials, DDL mode, log levels) as environment variables — **no development defaults exist in the application itself**
-2. Creates a PostgreSQL container via Docker or Podman (or uses an existing local instance)
-3. Health-checks the database and automatically recreates a corrupt container
-4. Starts the Spring Boot backend on port 8080
-5. Installs npm dependencies and starts the Next.js frontend on port 3000
-6. Optionally starts the Slack bot on port 3001
-
-Open **http://localhost:3000** to access the dashboard. Press `q` to stop all services.
-
-### Docker Compose
-
-Run the full stack in containers — compatible with both Docker Compose and Podman Compose:
+You can provide an existing `.env` file to skip the interactive setup:
 
 ```bash
-# Copy and fill in your secrets
+./deploy.sh --env-file /path/to/custom.env
+# or
+./deploy.sh -e /path/to/custom.env
+```
+
+The script will:
+
+- Load variables from your custom file
+- Validate all required keys are present
+- Prompt only for missing values
+- Auto-generate `ENCRYPTION_KEY` and `AUTH_SECRET` if not provided
+- Merge the result back into `.env`
+
+If no `--env-file` is specified, the script looks for `.env` in the current directory.
+
+Open **http://localhost:3000** to access the dashboard.
+
+### Podman Compose (Preferred) or Docker Compose (Manual)
+
+```bash
 cp .env.example .env
+# Fill in secrets (see deploy.sh for guidance on each value)
 
-# Start core services (database, backend, frontend)
+# Start core services (database, backend, frontend) — using Podman (preferred)
+podman-compose up -d
+
+# Or with Docker (alternative)
 docker compose up -d
 
 # Include the Slack bot
-docker compose --profile slack up -d
+podman-compose --profile slack up -d
+# Or: docker compose --profile slack up -d
 
 # Tear down
-docker compose down
+podman-compose down
+# Or: docker compose down
 
-# Tear down and delete database volume
-docker compose down -v
+# Tear down and delete volumes (database, cache, workspaces)
+podman-compose down -v
+# Or: docker compose down -v
 ```
 
-The compose file defines four services: `db`, `backend`, `frontend`, and `bot` (Slack bot, opt-in via the `slack` profile). The backend waits for a healthy database before starting.
+The compose file defines four services: `db`, `backend`, `frontend`, and `bot` (Slack bot, opt-in via the `slack` profile). All images are built locally. All services have health checks; dependents wait for healthy upstreams.
+
+#### Container Architecture
+
+| Service  | Base Image             | Runtime                    | Size (approx.) |
+| -------- | ---------------------- | -------------------------- | -------------- |
+| Backend  | `debian:bookworm-slim` | GraalVM native executable  | ~90 MB         |
+| Frontend | `node:25-alpine`       | Next.js standalone         | ~150 MB        |
+| Bot      | `node:25-alpine`       | Node.js                    | ~80 MB         |
+| Database | `postgres:18-alpine`   | PostgreSQL                 | ~80 MB         |
+
+> **Note:** The first backend build compiles a GraalVM native image (~15 min, needs ~8 GB RAM). Subsequent builds are cached and much faster.
+>
+> **Container Runtime:** Podman is preferred for its open-source, daemonless architecture. Docker is also fully supported as an alternative.
+
+#### Persistent Volumes
+
+| Volume | Mounted at | Purpose |
+| --- | --- | --- |
+| `pgdata` | `/var/lib/postgresql/data` | PostgreSQL database files |
+| `nextjs-cache` | `/app/.next/cache` | Next.js ISR / component cache (survives restarts) |
+| `workspace-data` | `/data/workspaces` | Backend workspace files (task repos, generated code) |
+
+### Podman
+
+Compatible with `podman-compose`. The deploy script auto-detects Podman.
+
+```bash
+podman-compose up -d
+```
 
 ### Manual Start (step by step)
 
 #### 1. Start PostgreSQL
 
 ```bash
-docker run -d \
+# Using Podman (preferred)
+podman run -d \
   --name promptdev-db \
   -e POSTGRES_DB=promptdev \
   -e POSTGRES_USER=promptdev \
   -e POSTGRES_PASSWORD=promptdev \
   -p 5432:5432 \
   postgres:17-alpine
+
+# Or with Docker:
+# docker run -d \
+#   --name promptdev-db \
+#   -e POSTGRES_DB=promptdev \
+#   -e POSTGRES_USER=promptdev \
+#   -e POSTGRES_PASSWORD=promptdev \
+#   -p 5432:5432 \
+#   postgres:17-alpine
 ```
 
 #### 2. Start Backend
@@ -182,8 +227,8 @@ The API will be available at `http://localhost:8080/api`.
 
 ```bash
 cd promptdev-frontend
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 The UI will be available at `http://localhost:3000`.
@@ -195,8 +240,8 @@ cd promptdev-bot
 export SLACK_BOT_TOKEN=xoxb-...
 export SLACK_APP_TOKEN=xapp-...
 export SLACK_SIGNING_SECRET=...
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 ---
@@ -205,17 +250,47 @@ npm run dev
 
 ### Environment Variables
 
-The application ships with **zero development defaults** — all environment-specific values must be provided externally. The `start-all` scripts and `docker-compose.yml` supply development values automatically.
+The application ships with **zero development defaults** — all environment-specific values must be provided externally. The `deploy.sh` script and `docker-compose.yml` supply development values automatically.
+
+#### Loading Environment Files
+
+Both the `deploy.sh` script and the `promptdev` CLI support loading environment variables from custom `.env` files:
+
+```bash
+# Deploy script
+./deploy.sh --env-file /path/to/custom.env
+
+# CLI
+promptdev start --env-file ./production.env
+```
+
+**Behavior:**
+
+- Loads all key-value pairs from the specified file
+- Validates that required variables are present
+- Prompts for any missing values interactively
+- Auto-generates security keys (`ENCRYPTION_KEY`, `AUTH_SECRET`) if not provided
+- Preserves any extra variables not in the required set
+- Saves the merged configuration to `.env`
+
+**Docker Compose precedence** (highest to lowest):
+
+1. Environment variables set in your shell
+2. Variables from `--env-file` passed to `docker compose`
+3. Variables defined in `docker-compose.yml` (default: `.env`)
+4. Default values in Dockerfiles
+
+If no `--env-file` is specified, both tools default to `.env` in the project root directory.
 
 #### Backend (required)
 
-| Variable         | Description                        | Development value (injected by start-all)             |
+| Variable         | Description                        | Development value (injected by deploy.sh)             |
 | ---------------- | ---------------------------------- | ----------------------------------------------------- |
 | `DB_URL`         | JDBC connection string             | `jdbc:postgresql://localhost:5432/promptdev`      |
 | `DB_USERNAME`    | PostgreSQL username                | `promptdev`                                           |
 | `DB_PASSWORD`    | PostgreSQL password                | `promptdev`                                           |
 | `JPA_DDL_AUTO`   | Hibernate DDL strategy             | `update` (production should use `validate` or `none`) |
-| `ENCRYPTION_KEY` | AES-256 key for encrypting secrets | Auto-generated per session                            |
+| `ENCRYPTION_KEY` | AES-256 key for encrypting secrets | Auto-generated by deploy.sh                           |
 
 #### Backend (optional)
 
@@ -224,9 +299,11 @@ The application ships with **zero development defaults** — all environment-spe
 | `LOG_LEVEL`             | Application log level           |
 | `SERVER_PORT`           | Server port (default: `8080`)   |
 | `BITBUCKET_URL`         | Bitbucket Server URL            |
-| `BITBUCKET_PROJECT_KEY` | Bitbucket project key           |
 | `BITBUCKET_USERNAME`    | Bitbucket username              |
 | `BITBUCKET_TOKEN`       | Bitbucket personal access token |
+
+| Variable                | Description                     |
+| ----------------------- | ------------------------------- |
 | `JIRA_URL`              | Jira Server URL                 |
 | `JIRA_USERNAME`         | Jira username                   |
 | `JIRA_TOKEN`            | Jira personal access token      |
@@ -328,7 +405,7 @@ The `promptdev-bot` package enables task management from Slack via Socket Mode.
 4. Add Bot Token Scopes: `commands`, `chat:write`, `connections:write`
 5. **Install the app** to your workspace
 6. Set environment variables (`SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `SLACK_SIGNING_SECRET`)
-7. Start the bot: `./start-all.sh --bot` or `docker compose --profile slack up -d`
+7. Start the bot: `docker compose --profile slack up -d`
 
 ### Slack Commands
 
@@ -350,8 +427,8 @@ The `promptdev-bot` package enables task management from Slack via Socket Mode.
 
 ```bash
 cd promptdev-cli
-npm install
-npm link    # Makes 'promptdev' command available globally
+pnpm install
+pnpm link --global    # Makes 'promptdev' command available globally
 ```
 
 | Command                      | Description                  |
@@ -363,6 +440,25 @@ npm link    # Makes 'promptdev' command available globally
 | `promptdev status`           | Check service status         |
 | `promptdev update`           | Pull latest and rebuild      |
 | `promptdev config --show`    | Show current config          |
+
+### Using Environment Files with CLI
+
+The `promptdev start` and `promptdev install` commands support the `--env-file` flag:
+
+```bash
+promptdev install --env-file /path/to/custom.env
+promptdev start --env-file ./production.env
+```
+
+The CLI will:
+
+- Load variables from the specified file
+- Validate required environment keys
+- Prompt for any missing values
+- Generate `ENCRYPTION_KEY` and `AUTH_SECRET` if not present
+- Save the complete configuration to `.env`
+
+If `--env-file` is not specified, the CLI looks for `.env` in the repository root directory.
 
 ---
 
@@ -434,14 +530,13 @@ npm link    # Makes 'promptdev' command available globally
 ```
 promptdev/                          ← monorepo root
 ├── docker-compose.yml              # Full-stack container orchestration
+├── deploy.sh                       # One-command deploy (curl | bash)
 ├── .env.example                    # Environment variable template
-├── install.sh / install.ps1        # One-command installers
-├── start-all.sh / start-all.ps1    # Development startup scripts
 ├── README.md
 ├── PROJECT_SNAPSHOT.md
 │
 ├── promptdev-backend/              # Spring Boot 4 API server
-│   ├── Dockerfile
+│   ├── Dockerfile                  # GraalVM native image
 │   ├── pom.xml
 │   └── src/main/java/com/promptdev/
 │       ├── config/                 # Security, SSE, Bitbucket, Jira, Scheduler
@@ -493,20 +588,20 @@ cd promptdev-backend
 
 ```bash
 cd promptdev-frontend
-npm run dev          # Development server with hot reload
-npm run build        # Production build
-npm run test         # Unit tests (Vitest)
-npm run test:e2e     # E2E tests (Playwright — run npx playwright install once)
-npm run lint         # ESLint
+pnpm dev             # Development server with hot reload
+pnpm build           # Production build
+pnpm test            # Unit tests (Vitest)
+pnpm test:e2e        # E2E tests (Playwright — run pnpm exec playwright install once)
+pnpm lint            # ESLint
 ```
 
 ### Slack Bot
 
 ```bash
 cd promptdev-bot
-npm run dev          # Development with watch mode
-npm run build        # TypeScript build
-npm run start        # Production start
+pnpm dev             # Development with watch mode
+pnpm build           # TypeScript build
+pnpm start           # Production start
 ```
 
 ### Database
@@ -519,13 +614,13 @@ PostgreSQL is the only supported database. Tables are managed by Spring JPA with
 | `validate` | Production — validates schema but never modifies it       |
 | `none`     | Production — disables all DDL management                  |
 
-The `start-all` scripts set `JPA_DDL_AUTO=update` for development. The application default (without any script) is `validate`.
+The `docker-compose.yml` sets `JPA_DDL_AUTO=update` for development. The application default (without any script) is `validate`.
 
 To reset the development database:
 
 ```bash
 docker stop promptdev-db && docker rm promptdev-db
-# Then restart with start-all.sh — a fresh container will be created
+# Then re-deploy: ./deploy.sh
 ```
 
 ---
@@ -535,48 +630,39 @@ docker stop promptdev-db && docker rm promptdev-db
 ### macOS
 
 ```bash
-brew install openjdk@21 node docker
+brew install openjdk@21 docker
 # Start Docker Desktop from Applications
 git clone https://github.com/orcunbalcilar/promptdev.git
 cd promptdev
-./start-all.sh
+./deploy.sh
 ```
 
 ### Windows
 
-**Option A — One-command install:**
-
-```powershell
-irm https://raw.githubusercontent.com/orcunbalcilar/promptdev/main/install.ps1 | iex
-```
-
-**Option B — Manual setup:**
-
 ```powershell
 # Install with winget (Windows 11+)
 winget install EclipseAdoptium.Temurin.21.JDK
-winget install OpenJS.NodeJS.LTS
 winget install Git.Git
 winget install Docker.DockerDesktop
 
-# Clone and start
+# Clone and deploy
 git clone https://github.com/orcunbalcilar/promptdev.git
 cd promptdev
-.\start-all.ps1
+./deploy.sh
 ```
 
 ### Linux
 
 ```bash
 # Debian/Ubuntu
-sudo apt-get install openjdk-21-jdk nodejs npm docker.io git
+sudo apt-get install openjdk-21-jdk docker.io git
 
 # Fedora/RHEL
-sudo dnf install java-21-openjdk nodejs npm docker git
+sudo dnf install java-21-openjdk docker git
 
 git clone https://github.com/orcunbalcilar/promptdev.git
 cd promptdev
-./start-all.sh
+./deploy.sh
 ```
 
 ---
@@ -593,9 +679,11 @@ cd promptdev
 | Authentication   | NextAuth.js          | v5 beta |
 | Backend          | Spring Boot          | 4.0.2   |
 | Language         | Java                 | 21      |
-| Database         | PostgreSQL           | 17      |
+| Native Runtime   | GraalVM Native Image | 21      |
+| Database         | PostgreSQL           | 18      |
 | Encryption       | AES-256-GCM          | —       |
-| AI SDK           | GitHub Copilot SDK   | 0.1.23  |
+| AI SDK           | GitHub Copilot SDK   | 0.1.24  |
+| Package Manager  | pnpm                 | Latest  |
 | CLI              | Commander.js         | Latest  |
 | Slack Bot        | @slack/bolt          | Latest  |
 | Testing (Unit)   | Vitest               | 4.0.18  |

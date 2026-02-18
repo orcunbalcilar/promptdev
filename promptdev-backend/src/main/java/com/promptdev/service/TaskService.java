@@ -1,6 +1,5 @@
 package com.promptdev.service;
 
-import com.promptdev.config.BitbucketConfig;
 import com.promptdev.dto.AgentCallbackRequest;
 import com.promptdev.dto.CreatePullRequestTaskRequest;
 import com.promptdev.dto.CreateTaskRequest;
@@ -38,7 +37,6 @@ public class TaskService {
     private final TaskMapper taskMapper;
     private final SseService sseService;
     private final BitbucketService bitbucketService;
-    private final BitbucketConfig bitbucketConfig;
 
     @Transactional
     public TaskResponse createTask(CreateTaskRequest request) {
@@ -48,7 +46,7 @@ public class TaskService {
                 .title(request.getTitle())
                 .prompt(request.getPrompt())
                 .repositorySlug(request.getRepositorySlug())
-                .projectKey(request.getProjectKey() != null ? request.getProjectKey() : bitbucketConfig.getProjectKey())
+                .projectKey(request.getProjectKey())
                 .workspaceType(request.getWorkspaceType() != null ? request.getWorkspaceType() : com.promptdev.entity.WorkspaceType.BITBUCKET)
                 .workspacePath(request.getWorkspacePath())
                 .sourceBranch(request.getSourceBranch() != null ? request.getSourceBranch() : "main")

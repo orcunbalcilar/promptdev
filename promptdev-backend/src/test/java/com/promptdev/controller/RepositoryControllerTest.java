@@ -1,6 +1,5 @@
 package com.promptdev.controller;
 
-import com.promptdev.config.BitbucketConfig;
 import com.promptdev.dto.bitbucket.BranchResponse;
 import com.promptdev.dto.bitbucket.ProjectResponse;
 import com.promptdev.dto.bitbucket.RepositoryResponse;
@@ -33,9 +32,6 @@ class RepositoryControllerTest {
 
     @MockitoBean
     private BitbucketService bitbucketService;
-
-    @MockitoBean
-    private BitbucketConfig bitbucketConfig;
 
     private ProjectResponse buildProject(String key, String name) {
         return new ProjectResponse(1L, key, name, "Description", true, "NORMAL", Collections.emptyMap());
@@ -123,24 +119,23 @@ class RepositoryControllerTest {
         }
 
         @Test
-        @DisplayName("should fall back to global config project key when no query param")
-        void shouldFallBackToGlobalConfig() throws Exception {
-            var repo = buildRepo("repo", "Repo", "DEFAULT");
+        @DisplayName("should list all repos across projects when no query param")
+        void shouldListAllReposWhenNoQueryParam() throws Exception {
+            var repo1 = buildRepo("repo1", "Repo 1", "PRJ1");
+            var repo2 = buildRepo("repo2", "Repo 2", "PRJ2");
 
-            when(bitbucketConfig.getProjectKey()).thenReturn("DEFAULT");
-            when(bitbucketService.listRepositories("DEFAULT")).thenReturn(List.of(repo));
+            when(bitbucketService.listAllRepositories()).thenReturn(List.of(repo1, repo2));
 
             mockMvc.perform(get("/repositories"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$", hasSize(1)));
+                    .andExpect(jsonPath("$", hasSize(2)));
 
-            verify(bitbucketService).listRepositories("DEFAULT");
+            verify(bitbucketService).listAllRepositories();
         }
 
         @Test
-        @DisplayName("should list all repos across projects when no project key configured")
-        void shouldListAllReposWhenNoProjectKey() throws Exception {
-            when(bitbucketConfig.getProjectKey()).thenReturn("");
+        @DisplayName("should list all repos across projects when empty project key")
+        void shouldListAllReposWhenEmptyProjectKey() throws Exception {
 
             var repo1 = buildRepo("repo1", "Repo 1", "PRJ1");
             var repo2 = buildRepo("repo2", "Repo 2", "PRJ2");
@@ -178,17 +173,10 @@ class RepositoryControllerTest {
         }
 
         @Test
-        @DisplayName("should fall back to config project key when not specified")
-        void shouldFallBackToConfigForBranches() throws Exception {
-            when(bitbucketConfig.getProjectKey()).thenReturn("GLOBAL");
-            when(bitbucketService.listBranches("GLOBAL", "repo", null))
-                    .thenReturn(List.of(buildBranch("main", true)));
-
+        @DisplayName("should return error when no project key for branches")
+        void shouldReturnErrorWhenNoProjectKeyForBranches() throws Exception {
             mockMvc.perform(get("/repositories/repo/branches"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$", hasSize(1)));
-
-            verify(bitbucketService).listBranches("GLOBAL", "repo", null);
+                    .andExpect(status().is4xxClientError());
         }
 
         @Test
