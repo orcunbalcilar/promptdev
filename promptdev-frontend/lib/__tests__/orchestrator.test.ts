@@ -53,6 +53,7 @@ const MOCK_TASK = {
   title: 'Add login page',
   prompt: 'Create a login page with email and password',
   repositorySlug: 'my-app',
+  projectKey: 'PROJ',
   workspaceType: 'LOCAL' as const,
   workspacePath: '/tmp/workspace',
   sourceBranch: 'main',
@@ -336,6 +337,109 @@ describe('Task Orchestrator', () => {
         'session-abc-123',
         expect.stringContaining('Fix the failing test'),
       )
+    })
+  })
+
+  describe('executeTask with BITBUCKET workspace', () => {
+    const BITBUCKET_TASK = {
+      ...MOCK_TASK,
+      workspaceType: 'BITBUCKET' as const,
+      projectKey: 'PROJ',
+      repositorySlug: 'my-app',
+      sourceBranch: 'promptdev/task-1',
+      targetBranch: 'main',
+    }
+
+    beforeEach(() => {
+      mockFetch.mockImplementation((url: string, opts?: { method?: string }) => {
+        if (url.includes('/stream/callback')) {
+          return Promise.resolve({ ok: true })
+        }
+        if (url.includes('/tasks/')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(BITBUCKET_TASK),
+          })
+        }
+        if (url.includes('/clone') && opts?.method === 'POST') {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ path: '/tmp/workspace/task-1' }),
+          })
+        }
+        if (url.includes('/workspaces/') && opts?.method === 'POST') {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ path: '/tmp/workspace/task-1' }),
+          })
+        }
+        if (url.includes('/workspaces/')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ path: '/tmp/workspace/task-1' }),
+          })
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+      })
+    })
+
+    it('should clone repository after creating workspace for BITBUCKET tasks', async () => {
+      const result = await executeTask('task-1')
+
+      expect(result.success).toBe(true)
+
+      // Should have called the clone endpoint
+      const cloneCall = mockFetch.mock.calls.find(
+        ([url, opts]: [string, { method?: string }]) =>
+          url.includes('/clone') && opts?.method === 'POST',
+      )
+      expect(cloneCall).toBeTruthy()
+
+      // Verify clone request body
+      const cloneBody = JSON.parse(cloneCall![1].body)
+      expect(cloneBody.projectKey).toBe('PROJ')
+      expect(cloneBody.repoSlug).toBe('my-app')
+      expect(cloneBody.sourceBranch).toBe('promptdev/task-1')
+    })
+
+    it('should not clone for LOCAL workspace type', async () => {
+      // Use default MOCK_TASK which has workspaceType: 'LOCAL'
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/stream/callback')) {
+          return Promise.resolve({ ok: true })
+        }
+        if (url.includes('/tasks/')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(MOCK_TASK),
+          })
+        }
+        if (url.includes('/workspaces/')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ path: '/tmp/workspace/task-1' }),
+          })
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+      })
+
+      await executeTask('task-1')
+
+      const cloneCall = mockFetch.mock.calls.find(
+        ([url]: [string]) => url.includes('/clone'),
+      )
+      expect(cloneCall).toBeUndefined()
+    })
+
+    it('should include "already cloned" in git workflow for BITBUCKET tasks', async () => {
+      await executeTask('task-1')
+
+      const systemMessage = (createCopilotSession as ReturnType<typeof vi.fn>).mock.calls[0][0].systemMessage
+      expect(systemMessage.content).toContain('already cloned')
+      expect(systemMessage.content).toContain('git add -A')
+      expect(systemMessage.content).toContain('git push origin')
+      // Should NOT contain the old "git checkout -B" instructions
+      expect(systemMessage.content).not.toContain('Check out the source branch')
     })
   })
 

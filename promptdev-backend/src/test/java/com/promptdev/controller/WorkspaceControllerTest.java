@@ -1,5 +1,7 @@
 package com.promptdev.controller;
 
+import com.promptdev.config.BitbucketConfig;
+import com.promptdev.service.BitbucketService;
 import com.promptdev.service.WorkspaceService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -7,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -26,6 +29,12 @@ class WorkspaceControllerTest {
 
     @MockitoBean
     private WorkspaceService workspaceService;
+
+    @MockitoBean
+    private BitbucketService bitbucketService;
+
+    @MockitoBean
+    private BitbucketConfig bitbucketConfig;
 
     @Nested
     @DisplayName("POST /workspaces/{taskId}")
@@ -133,6 +142,73 @@ class WorkspaceControllerTest {
                     .andExpect(jsonPath("$.deleted").value(true));
 
             verify(workspaceService).cleanupWorkspace(taskId);
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /workspaces/{taskId}/clone")
+    class CloneRepository {
+
+        @Test
+        @DisplayName("should clone repository and return 200")
+        void shouldCloneRepository() throws Exception {
+            UUID taskId = UUID.randomUUID();
+            String expectedPath = "/tmp/promptdev-workspaces/" + taskId;
+            String cloneUrl = "https://bitbucket.example.com/scm/proj/repo.git";
+
+            when(bitbucketService.getCloneUrl("PROJ", "my-repo")).thenReturn(cloneUrl);
+            when(bitbucketConfig.getUsername()).thenReturn("user");
+            when(bitbucketConfig.getToken()).thenReturn("token123");
+            when(workspaceService.cloneRepository(taskId, cloneUrl, "user", "token123", "feature/branch"))
+                    .thenReturn(expectedPath);
+
+            mockMvc.perform(post("/workspaces/" + taskId + "/clone")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                {"projectKey":"PROJ","repoSlug":"my-repo","sourceBranch":"feature/branch"}
+                                """))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.taskId").value(taskId.toString()))
+                    .andExpect(jsonPath("$.path").value(expectedPath))
+                    .andExpect(jsonPath("$.cloned").value(true));
+
+            verify(workspaceService).cloneRepository(taskId, cloneUrl, "user", "token123", "feature/branch");
+        }
+
+        @Test
+        @DisplayName("should return 400 when required fields are missing")
+        void shouldReturn400WhenFieldsMissing() throws Exception {
+            UUID taskId = UUID.randomUUID();
+
+            mockMvc.perform(post("/workspaces/" + taskId + "/clone")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                {"projectKey":"PROJ"}
+                                """))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").exists());
+        }
+
+        @Test
+        @DisplayName("should return 500 when clone fails")
+        void shouldReturn500WhenCloneFails() throws Exception {
+            UUID taskId = UUID.randomUUID();
+            String cloneUrl = "https://bitbucket.example.com/scm/proj/repo.git";
+
+            when(bitbucketService.getCloneUrl("PROJ", "my-repo")).thenReturn(cloneUrl);
+            when(bitbucketConfig.getUsername()).thenReturn("user");
+            when(bitbucketConfig.getToken()).thenReturn("token123");
+            when(workspaceService.cloneRepository(taskId, cloneUrl, "user", "token123", "main"))
+                    .thenThrow(new IOException("Clone failed: repository not found"));
+
+            mockMvc.perform(post("/workspaces/" + taskId + "/clone")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                {"projectKey":"PROJ","repoSlug":"my-repo","sourceBranch":"main"}
+                                """))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(jsonPath("$.error").value("Failed to clone repository"))
+                    .andExpect(jsonPath("$.message").exists());
         }
     }
 }

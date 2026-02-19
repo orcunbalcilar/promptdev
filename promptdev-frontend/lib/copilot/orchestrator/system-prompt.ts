@@ -87,14 +87,17 @@ ${task.completionCriteria}\n\nReport your progress after each iteration.`);
       ? task.commitMessagePattern.replace("{message}", "<describe changes>")
       : `[${task.jiraIssueKey || "promptdev"}] <describe changes>`;
     parts.push(`\n## Git Workflow (CRITICAL)
-You MUST follow these git steps after implementing your changes:
-1. Check out the source branch: \`git checkout -B ${task.sourceBranch}\`
-2. Stage all your changes: \`git add -A\`
-3. Commit with a descriptive message: \`git commit -m "${commitMsg}"\`
-4. Push to the remote: \`git push origin ${task.sourceBranch}\`
+The repository has been cloned into your working directory and the branch \`${task.sourceBranch}\` is already checked out.
+You MUST work in the current working directory — this is the cloned repository.
+
+After implementing your changes, follow these git steps:
+1. Stage all your changes: \`git add -A\`
+2. Commit with a descriptive message: \`git commit -m "${commitMsg}"\`
+3. Push to the remote: \`git push origin ${task.sourceBranch}\`
 
 This is REQUIRED before the task is considered complete. The system will create a pull request automatically after you push.
-Do NOT skip the commit and push steps.`);
+Do NOT skip the commit and push steps.
+Do NOT clone the repository again — it is already cloned and ready.`);
   }
 
   return parts;

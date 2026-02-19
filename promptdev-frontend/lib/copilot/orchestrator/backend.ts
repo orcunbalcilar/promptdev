@@ -62,6 +62,27 @@ export async function createWorkspace(taskId: string): Promise<string> {
   return data.path;
 }
 
+export async function cloneRepository(
+  taskId: string,
+  projectKey: string,
+  repoSlug: string,
+  sourceBranch: string,
+): Promise<string> {
+  const res = await fetch(`${BACKEND_API}/workspaces/${taskId}/clone`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ projectKey, repoSlug, sourceBranch }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(
+      `Failed to clone repository: ${errorData.message || res.statusText}`,
+    );
+  }
+  const data = await res.json();
+  return data.path;
+}
+
 export async function cleanupWorkspace(taskId: string): Promise<void> {
   try {
     await fetch(`${BACKEND_API}/workspaces/${taskId}`, { method: "DELETE" });

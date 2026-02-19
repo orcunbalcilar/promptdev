@@ -27,6 +27,7 @@ import {
 import type { BYOKProvider } from "../types";
 import {
   createWorkspace,
+  cloneRepository,
   fetchTask,
   sendCallback,
 } from "./backend";
@@ -61,6 +62,20 @@ export async function executeTask(
         message: `Workspace created: ${workspacePath}`,
         details: { workspacePath },
       });
+
+      // Clone Bitbucket repository into workspace
+      if (task.workspaceType === "BITBUCKET" && task.repositorySlug) {
+        workspacePath = await cloneRepository(
+          taskId,
+          task.projectKey,
+          task.repositorySlug,
+          task.sourceBranch,
+        );
+        await sendCallback(taskId, "PROGRESS", {
+          message: `Repository cloned into workspace: ${workspacePath}`,
+          details: { workspacePath, repository: task.repositorySlug },
+        });
+      }
     } catch (err) {
       console.warn(
         "[Orchestrator] Workspace creation failed, using default:",
