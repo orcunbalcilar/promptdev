@@ -303,6 +303,7 @@ export interface CreateSessionRequest {
     mode?: 'append' | 'replace'
   }
   provider?: BYOKProvider
+  workingDirectory?: string
 }
 
 // Create session response

@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { createTask, type CreateTaskRequest } from "@/lib/api";
+import { createTask, startTask, type CreateTaskRequest } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import React, { useState } from "react";
@@ -71,8 +71,7 @@ function TaskForm({ onClose }: Readonly<{ onClose: () => void }>) {
   const createMutation = useMutation({
     mutationFn: async (data: CreateTaskRequest) => {
       const task = await createTask(data);
-      // We no longer auto-start the task. It will be in PENDING state.
-      // The user can review it on the task page and click "Start".
+      await startTask(task.id);
       return task;
     },
     onSuccess: () => {

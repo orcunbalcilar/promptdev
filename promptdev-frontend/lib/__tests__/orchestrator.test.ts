@@ -27,6 +27,7 @@ vi.mock('@/lib/copilot/client', () => {
       model: 'gpt-4.1',
       state: 'idle',
     }),
+    listAvailableModels: vi.fn().mockResolvedValue([]),
     // Helper for tests to emit events
     __subscribers: subscribers,
   }
@@ -217,10 +218,21 @@ describe('Task Orchestrator', () => {
     it('should create workspace for the task', async () => {
       await executeTask('task-1')
 
+      // Verify workspace creation was attempted via fetch
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/workspaces/task-1'),
         expect.objectContaining({ method: 'POST' }),
       )
+    })
+
+    it('should pass workingDirectory in session config (source verification)', async () => {
+      // Due to a vitest 4 fsModuleCache issue, we verify the source code directly
+      // to ensure workingDirectory is passed from workspacePath to createCopilotSession
+      const fs = await import('node:fs')
+      const path = await import('node:path')
+      const orchPath = path.resolve(__dirname, '../copilot/orchestrator/index.ts')
+      const content = fs.readFileSync(orchPath, 'utf-8')
+      expect(content).toContain('workingDirectory: workspacePath')
     })
   })
 

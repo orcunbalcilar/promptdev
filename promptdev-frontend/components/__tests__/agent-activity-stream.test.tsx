@@ -307,7 +307,7 @@ describe('AgentActivityStream', () => {
     const events = [createEvent({ eventType: 'AGENT_STARTED' })]
     render(<AgentActivityStream events={events} task={task} isLive={true} />)
     expect(screen.getByTestId('agent-header')).toHaveTextContent(
-      'PromptDev Agent - GPT-5.2',
+      'PromptDev Agent - gpt-5.2',
     )
   })
 

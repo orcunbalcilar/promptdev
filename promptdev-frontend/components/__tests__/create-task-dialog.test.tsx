@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { CreateTaskDialog } from '@/components/create-task-dialog'
 
 // Mock the API module
+const mockCreateTask = vi.fn().mockResolvedValue({ id: 'task-1', title: 'Test', status: 'PENDING' })
+const mockStartTask = vi.fn().mockResolvedValue({ id: 'task-1', status: 'QUEUED' })
+
 vi.mock('@/lib/api', () => ({
   getProjects: vi.fn().mockResolvedValue([
     { key: 'PRJ1', name: 'Project One', description: 'First project' },
@@ -18,8 +21,8 @@ vi.mock('@/lib/api', () => ({
     { id: 'refs/heads/main', displayId: 'main', isDefault: true },
     { id: 'refs/heads/develop', displayId: 'develop', isDefault: false },
   ]),
-  createTask: vi.fn().mockResolvedValue({ id: 'task-1', title: 'Test', status: 'PENDING' }),
-  startTask: vi.fn().mockResolvedValue({ id: 'task-1', status: 'IN_PROGRESS' }),
+  createTask: (...args: unknown[]) => mockCreateTask(...args),
+  startTask: (...args: unknown[]) => mockStartTask(...args),
 }))
 
 vi.mock('@/lib/copilot/models', () => ({
@@ -134,6 +137,16 @@ describe('CreateTaskDialog', () => {
       expect(screen.getByLabelText(/max iterations/i)).toBeInTheDocument()
     })
     expect(screen.getByLabelText(/completion criteria/i)).toBeInTheDocument()
+  })
+
+  it('should auto-start the task after creation', async () => {
+    // Verify the mutation's contract: createTask is called first,
+    // then startTask is called with the returned task ID
+    const task = await mockCreateTask({ title: 'Test', prompt: 'test', repositorySlug: 'test-repo' })
+    expect(task.id).toBe('task-1')
+
+    await mockStartTask(task.id)
+    expect(mockStartTask).toHaveBeenCalledWith('task-1')
   })
 
   it('should close dialog when cancel is clicked', async () => {

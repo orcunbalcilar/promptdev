@@ -154,6 +154,7 @@ export async function createCopilotSession(
     reasoningEffort: supportsReasoning ? request.reasoningEffort : undefined,
     systemMessage: request.systemMessage,
     streaming: true,
+    ...(request.workingDirectory && { workingDirectory: request.workingDirectory }),
   };
 
   // Add BYOK provider if specified

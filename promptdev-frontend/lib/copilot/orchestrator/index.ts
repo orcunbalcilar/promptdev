@@ -97,6 +97,7 @@ export async function executeTask(
           mode: "append",
         },
         provider: byokProvider,
+        workingDirectory: workspacePath,
       },
       userGithubToken,
     );
