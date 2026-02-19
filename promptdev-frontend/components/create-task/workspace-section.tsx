@@ -123,6 +123,16 @@ function BitbucketWorkspace({
   repositories,
   reposLoading,
 }: BitbucketWorkspaceProps) {
+  // Deduplicate repositories by project key + slug to avoid duplicate key warnings
+  const uniqueRepositories = Array.from(
+    new Map(
+      repositories.map((repo) => [
+        `${repo.project?.key ?? ""}/${repo.slug}`,
+        repo,
+      ]),
+    ).values(),
+  );
+
   return (
     <div className="grid gap-4">
       {/* Project Selector */}
@@ -170,7 +180,7 @@ function BitbucketWorkspace({
             />
           </SelectTrigger>
           <SelectContent>
-            {repositories.map((repo) => (
+            {uniqueRepositories.map((repo) => (
               <SelectItem
                 key={`${repo.project?.key ?? ""}/${repo.slug}`}
                 value={repo.slug}

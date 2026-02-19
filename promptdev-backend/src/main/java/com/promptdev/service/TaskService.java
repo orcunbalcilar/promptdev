@@ -87,7 +87,7 @@ public class TaskService {
         // Handle auto-generated branch name
         if ("__AUTO_GENERATED__".equals(request.getSourceBranch())) {
             String projectKey = task.getProjectKey();
-            String newBranchName = (projectKey != null ? projectKey.toLowerCase() : "promptdev") + "/" + task.getId();
+            String newBranchName = "promptdev/" + task.getId();
             String repoSlug = task.getRepositorySlug();
             // Default to main if target branch is not specified
             String startPoint = request.getTargetBranch() != null ? request.getTargetBranch() : "main";

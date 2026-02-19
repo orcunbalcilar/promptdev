@@ -51,8 +51,6 @@ services:
     build:
       context: ./promptdev-backend
       dockerfile: Dockerfile
-      args:
-        BUILDKIT_INLINE_CACHE: 1
     container_name: promptdev-backend
     restart: unless-stopped
     depends_on:
@@ -77,7 +75,7 @@ services:
     volumes:
       - workspace-data:/data/workspaces
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/api/actuator/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5

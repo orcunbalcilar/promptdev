@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # =============================================================================
 # PromptDev Frontend — Next.js Standalone (lightweight + cached)
 # =============================================================================
@@ -5,39 +6,42 @@
 # Mount .next/cache as a volume for persistent ISR/component caching.
 # =============================================================================
 
-FROM node:25-slim AS base
+# ── Base: pinned pnpm (matches lockfileVersion 9.0) ──────────────────────────
+FROM node:25.6.1-alpine3.23 AS base
+RUN npm install -g pnpm@latest
+WORKDIR /app
 
 # ── Stage 1: Install dependencies ────────────────────────────────────────────
 FROM base AS deps
-RUN npm install -g pnpm@latest
-WORKDIR /app
-COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile
+COPY package.json pnpm-lock.yaml ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --store-dir /pnpm/store
 
 # ── Stage 2: Build application ──────────────────────────────────────────────
 FROM base AS builder
-RUN npm install -g pnpm@latest
-WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN pnpm run build
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN --mount=type=cache,target=/app/.next/cache \
+    pnpm run build
 
 # ── Stage 3: Production runtime ─────────────────────────────────────────────
-FROM base AS runner
+FROM node:25.6.1-alpine3.23 AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nextjs
 
 # Copy standalone output + static assets
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # Pre-create cache dir owned by nextjs for ISR/component cache persistence
-RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next/cache
+RUN install -d -m 0755 -o nextjs -g nodejs .next/cache
 
 USER nextjs
 
