@@ -8,7 +8,7 @@ import {
   trackOperation,
 } from "../../monitoring";
 import { destroySession, sendMessage } from "../client";
-import { fetchTask, sendCallback, cleanupWorkspace } from "./backend";
+import { cleanupWorkspace, fetchTask, sendCallback } from "./backend";
 import { addJiraComment, transitionJiraIssue } from "./jira";
 import { createPullRequest } from "./pull-request";
 import { reviewPending, taskSessions, type TaskData } from "./types";
@@ -33,12 +33,24 @@ export async function handleSessionIdle(
 
   // If review was pending, this idle means review is complete
   if (reviewPending.has(taskId)) {
-    return finalizeReview(taskId, sessionId, task, lastMessage, messageCount, toolCount);
+    return finalizeReview(
+      taskId,
+      sessionId,
+      task,
+      lastMessage,
+      messageCount,
+      toolCount,
+    );
   }
 
   // If this is an iterative task, check completion
   if (task.iterative) {
-    const shouldContinue = await handleIterativeCheck(taskId, sessionId, task, lastMessage);
+    const shouldContinue = await handleIterativeCheck(
+      taskId,
+      sessionId,
+      task,
+      lastMessage,
+    );
     if (shouldContinue) return false;
   }
 
@@ -112,7 +124,7 @@ Provide your review as a structured JSON array:
 ]
 
 If you find critical issues, fix them first and then provide the review summary.
-If everything looks good, return an empty array [].`;
+If everything looks good, return the message: "No issues found, code looks good!"`;
 
   await sendMessage(sessionId, reviewPrompt);
 
@@ -181,10 +193,7 @@ async function handleIterativeCheck(
   return false; // Should not continue, proceed to finalization
 }
 
-function checkCompletionCriteria(
-  task: TaskData,
-  lastMessage: string,
-): boolean {
+function checkCompletionCriteria(task: TaskData, lastMessage: string): boolean {
   if (!task.completionCriteria) return true;
 
   const completionIndicators = [
