@@ -26,6 +26,7 @@ class WorkspaceServiceTest {
         workspaceService = new WorkspaceService();
         ReflectionTestUtils.setField(workspaceService, "basePath", tempDir.toString());
         ReflectionTestUtils.setField(workspaceService, "maxSizeMb", 500);
+        ReflectionTestUtils.setField(workspaceService, "cloneTimeoutSeconds", 300);
     }
 
     @Nested
@@ -278,6 +279,77 @@ class WorkspaceServiceTest {
 
             assertThat(cleaned).isEqualTo(0);
             assertThat(workspaceService.workspaceExists(taskId)).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("buildAuthenticatedUrl")
+    class BuildAuthenticatedUrl {
+
+        @Test
+        @DisplayName("should embed credentials into HTTPS URL")
+        void shouldEmbedCredentialsInHttpsUrl() {
+            String url = "https://bitbucket.example.com/scm/proj/repo.git";
+
+            String result = workspaceService.buildAuthenticatedUrl(url, "user", "token123");
+
+            assertThat(result).isEqualTo("https://user:token123@bitbucket.example.com/scm/proj/repo.git");
+        }
+
+        @Test
+        @DisplayName("should embed credentials into HTTP URL with port")
+        void shouldEmbedCredentialsInHttpUrlWithPort() {
+            String url = "http://bitbucket.local:7990/scm/proj/repo.git";
+
+            String result = workspaceService.buildAuthenticatedUrl(url, "admin", "secret");
+
+            assertThat(result).isEqualTo("http://admin:secret@bitbucket.local:7990/scm/proj/repo.git");
+        }
+
+        @Test
+        @DisplayName("should return URL as-is when username is null")
+        void shouldReturnAsIsWhenUsernameNull() {
+            String url = "https://bitbucket.example.com/scm/proj/repo.git";
+
+            String result = workspaceService.buildAuthenticatedUrl(url, null, "token");
+
+            assertThat(result).isEqualTo(url);
+        }
+
+        @Test
+        @DisplayName("should return URL as-is when token is blank")
+        void shouldReturnAsIsWhenTokenBlank() {
+            String url = "https://bitbucket.example.com/scm/proj/repo.git";
+
+            String result = workspaceService.buildAuthenticatedUrl(url, "user", "");
+
+            assertThat(result).isEqualTo(url);
+        }
+
+        @Test
+        @DisplayName("should return URL as-is when both credentials are null")
+        void shouldReturnAsIsWhenBothNull() {
+            String url = "https://bitbucket.example.com/scm/proj/repo.git";
+
+            String result = workspaceService.buildAuthenticatedUrl(url, null, null);
+
+            assertThat(result).isEqualTo(url);
+        }
+    }
+
+    @Nested
+    @DisplayName("cloneRepository")
+    class CloneRepository {
+
+        @Test
+        @DisplayName("should throw when workspace does not exist")
+        void shouldThrowWhenWorkspaceDoesNotExist() {
+            UUID taskId = UUID.randomUUID();
+
+            assertThatThrownBy(() -> workspaceService.cloneRepository(
+                    taskId, "https://example.com/repo.git", "user", "token", "main"))
+                    .isInstanceOf(IOException.class)
+                    .hasMessageContaining("Workspace does not exist");
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.promptdev.controller;
 
+import com.promptdev.config.BitbucketConfig;
+import com.promptdev.service.BitbucketService;
 import com.promptdev.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,8 @@ import java.util.UUID;
 public class WorkspaceController {
 
     private final WorkspaceService workspaceService;
+    private final BitbucketService bitbucketService;
+    private final BitbucketConfig bitbucketConfig;
 
     /**
      * Create an ephemeral workspace for a task.
@@ -88,5 +92,42 @@ public class WorkspaceController {
                 "taskId", taskId.toString(),
                 "deleted", true
         ));
+    }
+
+    /**
+     * Clone a Bitbucket repository into the task workspace.
+     */
+    @PostMapping("/{taskId}/clone")
+    public ResponseEntity<Map<String, Object>> cloneRepository(
+            @PathVariable UUID taskId,
+            @RequestBody Map<String, String> request) {
+        String projectKey = request.get("projectKey");
+        String repoSlug = request.get("repoSlug");
+        String sourceBranch = request.get("sourceBranch");
+
+        if (projectKey == null || repoSlug == null || sourceBranch == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Missing required fields: projectKey, repoSlug, sourceBranch"
+            ));
+        }
+
+        try {
+            String cloneUrl = bitbucketService.getCloneUrl(projectKey, repoSlug);
+            String path = workspaceService.cloneRepository(
+                    taskId, cloneUrl,
+                    bitbucketConfig.getUsername(), bitbucketConfig.getToken(),
+                    sourceBranch);
+            return ResponseEntity.ok(Map.of(
+                    "taskId", taskId.toString(),
+                    "path", path,
+                    "cloned", true
+            ));
+        } catch (IOException e) {
+            log.error("Failed to clone repository for task {}", taskId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "error", "Failed to clone repository",
+                    "message", e.getMessage()
+            ));
+        }
     }
 }
