@@ -2,6 +2,14 @@
 
 Next.js 16 web application with React 19, Tailwind CSS, and shadcn/ui.
 
+## Features
+
+- **Task Management**: Create and manage AI-powered development tasks
+- **Copilot Chat**: Interactive AI assistant for development questions
+- **Monitoring**: Track sessions, reviews, and activity
+- **WireMock Mappings**: Manage API mocks with delay and fault simulation
+- **Settings**: Configure providers, authentication, and integrations
+
 ## Getting Started
 
 ```bash

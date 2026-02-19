@@ -7,3 +7,10 @@ playwright-report/
 test-results/
 coverage/
 .env*
+e2e/
+**/__tests__/
+**/*.test.ts
+**/*.test.tsx
+vitest.config.ts
+vitest.setup.ts
+playwright.config.ts
