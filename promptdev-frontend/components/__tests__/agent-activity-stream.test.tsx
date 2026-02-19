@@ -621,6 +621,23 @@ describe('AgentActivityStream', () => {
     expect(steps[1]).toHaveTextContent('Triage complete')
   })
 
+  it('shows triage as pending when task is terminal and triage is incomplete', () => {
+    const task = createTask({ status: 'COMPLETED' })
+    const events = [
+      createEvent({
+        id: 'tri-pending-1',
+        eventType: 'TRIAGING_STARTED',
+        message: 'Triaging',
+      }),
+    ]
+
+    render(<AgentActivityStream events={events} task={task} isLive={false} isProcessing={false} />)
+
+    expect(screen.getByTestId('chain-of-thought')).toBeInTheDocument()
+    expect(screen.getByText('Triage pending')).toBeInTheDocument()
+    expect(screen.queryByText('Processing...')).not.toBeInTheDocument()
+  })
+
   // ---------- 19. Step grouping ----------
   it('groups consecutive STEP_STARTED + STEP_COMPLETED events', () => {
     const events = [

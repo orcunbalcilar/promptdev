@@ -1,6 +1,9 @@
 package com.promptdev.controller;
 
 import com.promptdev.config.BitbucketConfig;
+import com.promptdev.entity.Task;
+import com.promptdev.entity.WorkspaceType;
+import com.promptdev.repository.TaskRepository;
 import com.promptdev.service.BitbucketService;
 import com.promptdev.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
@@ -26,14 +29,41 @@ public class WorkspaceController {
     private final WorkspaceService workspaceService;
     private final BitbucketService bitbucketService;
     private final BitbucketConfig bitbucketConfig;
+    private final TaskRepository taskRepository;
 
     /**
      * Create an ephemeral workspace for a task.
+     * For LOCAL workspaces with an existing git repo, creates a git worktree.
+     * For LOCAL workspaces with a custom path (new project), creates the directory at that path.
+     * For other workspaces, creates a temporary directory in the default base path.
      */
     @PostMapping("/{taskId}")
     public ResponseEntity<Map<String, Object>> createWorkspace(@PathVariable UUID taskId) {
         try {
-            String path = workspaceService.createWorkspace(taskId);
+            // Fetch the task to check workspace type and custom path
+            Task task = taskRepository.findById(taskId).orElse(null);
+            String path;
+
+            if (task != null && WorkspaceType.LOCAL == task.getWorkspaceType() && task.getWorkspacePath() != null && !task.getWorkspacePath().isBlank()) {
+                String workspacePath = task.getWorkspacePath();
+                boolean isExistingProject = workspacePath.equals(task.getRepositorySlug());
+
+                if (isExistingProject && workspaceService.isGitRepository(workspacePath)) {
+                    // Existing project: create a git worktree so the original repo is not modified
+                    String branchName = task.getSourceBranch() != null ? task.getSourceBranch() : "promptdev/" + taskId;
+                    path = workspaceService.createGitWorktree(workspacePath, taskId, branchName);
+                    log.info("Created git worktree for LOCAL task {}: {}", taskId, path);
+                } else {
+                    // New project: create at the specified location
+                    path = workspaceService.createLocalWorkspace(workspacePath);
+                    log.info("Created LOCAL workspace at custom path for task {}: {}", taskId, path);
+                }
+            } else {
+                // For other workspaces (including BITBUCKET), use the ephemeral path
+                path = workspaceService.createWorkspace(taskId);
+                log.info("Created ephemeral workspace for task {}: {}", taskId, path);
+            }
+
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "taskId", taskId.toString(),
                     "path", path,

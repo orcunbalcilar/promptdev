@@ -70,6 +70,18 @@ public class TaskController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Clone a task to create a new task with the same configuration but fresh state.
+     * Used by the retry flow: instead of restarting a failed task in-place,
+     * a brand-new task is created from the original's configuration.
+     */
+    @PostMapping("/{taskId}/clone")
+    public ResponseEntity<TaskResponse> cloneTask(@PathVariable UUID taskId) {
+        log.info("Cloning task: {}", taskId);
+        TaskResponse response = taskService.cloneTask(taskId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @GetMapping("/pending")
     public ResponseEntity<List<TaskResponse>> getPendingTasks() {
         List<TaskResponse> tasks = taskService.getPendingTasks();

@@ -422,10 +422,23 @@ function ReviewEvent({ events }: Readonly<{ events: TaskEvent[] }>) {
   );
 }
 
-function TriageEvent({ events }: Readonly<{ events: TaskEvent[] }>) {
+function TriageEvent({
+  events,
+  isProcessing,
+}: Readonly<{ events: TaskEvent[]; isProcessing: boolean }>) {
   const started = events.find((e) => e.eventType === "TRIAGING_STARTED");
   const completed = events.find((e) => e.eventType === "TRIAGING_COMPLETED");
   const isComplete = !!completed;
+  const isTriageActive = !isComplete && isProcessing;
+  let triageLabel = "Triage pending";
+  let triageStatus: "complete" | "active" | "pending" = "pending";
+  if (isComplete) {
+    triageLabel = "Triage complete";
+    triageStatus = "complete";
+  } else if (isTriageActive) {
+    triageLabel = "Processing...";
+    triageStatus = "active";
+  }
 
   return (
     <ChainOfThought defaultOpen={!isComplete}>
@@ -438,8 +451,8 @@ function TriageEvent({ events }: Readonly<{ events: TaskEvent[] }>) {
         />
         <ChainOfThoughtStep
           icon={CheckIcon}
-          label={isComplete ? "Triage complete" : "Processing..."}
-          status={isComplete ? "complete" : "active"}
+          label={triageLabel}
+          status={triageStatus}
           description={completed?.details || completed?.message}
         />
       </ChainOfThoughtContent>
@@ -662,13 +675,14 @@ function QueuedEvent({ event }: Readonly<{ event: TaskEvent }>) {
 export function renderGroupedEvent(
   group: EventGroup,
   task: Task,
+  isProcessing: boolean,
 ): React.ReactNode {
   const rendererMap: Record<string, () => React.ReactNode> = {
     "tool-pair": () => (
       <ToolCallEvent event={group.events[0]} resultEvent={group.events[1]} />
     ),
     review: () => <ReviewEvent events={group.events} />,
-    triage: () => <TriageEvent events={group.events} />,
+    triage: () => <TriageEvent events={group.events} isProcessing={isProcessing} />,
     step: () => <StepEvent events={group.events} />,
     iteration: () => <IterationEvent events={group.events} />,
   };

@@ -70,12 +70,14 @@ interface Task {
 export function TaskSidebar({
   task,
   isLive,
+  isProcessing,
   models,
   sessionDetails,
   allEvents,
 }: Readonly<{
   task: Task;
   isLive: boolean;
+  isProcessing: boolean;
   models: ModelInfo[];
   sessionDetails?: MonitoringSession | null;
   allEvents: TaskEvent[];
@@ -92,8 +94,7 @@ export function TaskSidebar({
         <Bot
           className={cn(
             "h-5 w-5",
-            isLive &&
-              !["COMPLETED", "FAILED", "CANCELLED"].includes(task.status)
+            isProcessing
               ? "text-blue-600 animate-pulse"
               : "text-muted-foreground",
           )}
@@ -109,10 +110,7 @@ export function TaskSidebar({
             {task.status.replaceAll("_", " ").toLowerCase()}
           </p>
         </div>
-        {isLive &&
-          !["COMPLETED", "FAILED", "CANCELLED"].includes(task.status) && (
-            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-          )}
+        {isProcessing && <Loader2 className="h-4 w-4 animate-spin text-blue-600" />}
       </div>
 
       {/* Task Progress */}
@@ -202,7 +200,7 @@ function TaskDetailsCard({ task }: Readonly<{ task: Task }>) {
         </div>
 
         {/* Branches */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex justify-between gap-3">
           <div className="space-y-1">
             <span className="text-muted-foreground font-medium text-xs">
               Source

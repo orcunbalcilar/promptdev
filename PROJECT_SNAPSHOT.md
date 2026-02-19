@@ -74,6 +74,9 @@ Build an AI-powered development platform where users describe features via promp
 ### Backend
 
 - Task CRUD with workspace types (LOCAL / BITBUCKET)
+- Task cloning for retry flow (creates fresh task from existing config)
+- Git worktree support for LOCAL workspaces with existing projects
+- Incremented workspace folder naming for LOCAL new project retries
 - Model selection (14+ models) with dynamic discovery
 - BYOK provider support (OpenAI-compatible, Azure, Anthropic) with AES-256-GCM encrypted API keys
 - Iterative sessions (multi-iteration, self-referential AI loops with completion criteria)
@@ -156,7 +159,8 @@ The Slack bot is an optional service in `docker-compose.yml`. Use `--profile sla
 
 ### Task
 
-- Fields: id, title, prompt, repositorySlug, workspaceType (LOCAL/BITBUCKET), workspacePath, sourceBranch, targetBranch, status (12 states), modelId, copilotSessionId, iterative, maxIterations, currentIteration, completionCriteria, steps, currentStepIndex, scheduledJobId, jiraIssueKey, user (FK), pullRequestId/Url, errorMessage, timestamps
+- Fields: id, title, prompt, repositorySlug, workspaceType (LOCAL/BITBUCKET), workspacePath, sourceBranch, targetBranch, status (14 states), modelId, copilotSessionId, iterative, maxIterations, currentIteration, completionCriteria, steps, currentStepIndex, scheduledJobId, jiraIssueKey, user (FK), pullRequestId/Url, errorMessage, timestamps
+- Retry behavior: Clones the task (new ID, fresh state) instead of restarting in-place. For Bitbucket: auto-generates new branch. For LOCAL existing projects: git worktrees isolate each task. For LOCAL new projects: increments folder name (my-project, my-project-1, ...)
 
 ### ScheduledJob
 
@@ -184,7 +188,8 @@ The Slack bot is an optional service in `docker-compose.yml`. Use `--profile sla
 | GET    | /api/tasks/{id}/events             | Get task events          |
 | POST   | /api/tasks/{id}/start              | Start task               |
 | POST   | /api/tasks/{id}/cancel             | Cancel task              |
-| POST   | /api/tasks/{id}/retry              | Retry task               |
+| POST   | /api/tasks/{id}/retry              | Retry task (set PENDING)  |
+| POST   | /api/tasks/{id}/clone              | Clone task (retry flow)   |
 | POST   | /api/tasks/{id}/create-pr          | Create PR                |
 | GET    | /api/repositories                  | List repos               |
 | GET    | /api/repositories/{slug}/branches  | List branches            |

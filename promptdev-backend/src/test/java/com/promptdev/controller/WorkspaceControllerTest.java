@@ -1,6 +1,7 @@
 package com.promptdev.controller;
 
 import com.promptdev.config.BitbucketConfig;
+import com.promptdev.repository.TaskRepository;
 import com.promptdev.service.BitbucketService;
 import com.promptdev.service.WorkspaceService;
 import org.junit.jupiter.api.DisplayName;
@@ -35,6 +36,9 @@ class WorkspaceControllerTest {
 
     @MockitoBean
     private BitbucketConfig bitbucketConfig;
+
+    @MockitoBean
+    private TaskRepository taskRepository;
 
     @Nested
     @DisplayName("POST /workspaces/{taskId}")

@@ -520,6 +520,129 @@ public class TaskService {
     }
 
     /**
+     * Clone a task to create a new task with the same configuration but fresh state.
+     * Used by the retry flow to start a fresh execution.
+     *
+     * <p>For BITBUCKET workspaces, the new task gets a new auto-generated branch.
+     * For LOCAL workspaces with a new project (workspacePath != repositorySlug),
+     * the workspace folder name is incremented (my-project → my-project-1).
+     * For LOCAL workspaces with an existing project path (workspacePath == repositorySlug),
+     * the path is kept as-is because git worktrees handle isolation.
+     */
+    @Transactional
+    public TaskResponse cloneTask(UUID taskId) {
+        Task original = taskRepository.findById(taskId)
+            .orElseThrow(() -> new IllegalArgumentException(TASK_NOT_FOUND_MSG + taskId));
+
+        // Resolve workspace path for LOCAL + new project (increment folder name)
+        String newWorkspacePath = original.getWorkspacePath();
+        if (original.getWorkspaceType() == WorkspaceType.LOCAL
+                && newWorkspacePath != null
+                && !newWorkspacePath.isBlank()
+                && !newWorkspacePath.equals(original.getRepositorySlug())) {
+            // New project scenario: increment folder name
+            newWorkspacePath = resolveIncrementedPath(newWorkspacePath);
+        }
+
+        Task clone = Task.builder()
+                .title(original.getTitle())
+                .prompt(original.getPrompt())
+                .repositorySlug(original.getRepositorySlug())
+                .projectKey(original.getProjectKey())
+                .workspaceType(original.getWorkspaceType())
+                .workspacePath(newWorkspacePath)
+                .sourceBranch(original.getWorkspaceType() == WorkspaceType.BITBUCKET
+                        ? "__AUTO_GENERATED__" : original.getSourceBranch())
+                .targetBranch(original.getTargetBranch())
+                .modelId(original.getModelId())
+                .status(TaskStatus.PENDING)
+                .currentAttempt(0)
+                .maxAttempts(original.getMaxAttempts())
+                .iterative(original.getIterative())
+                .maxIterations(original.getMaxIterations())
+                .currentIteration(0)
+                .completionCriteria(original.getCompletionCriteria())
+                .steps(original.getSteps())
+                .currentStepIndex(0)
+                .jiraIssueKey(original.getJiraIssueKey())
+                .user(original.getUser())
+                .reviewEnabled(original.getReviewEnabled())
+                .reviewModelId(original.getReviewModelId())
+                .commitMessagePattern(original.getCommitMessagePattern())
+                .bootScript(original.getBootScript())
+                .skills(original.getSkills())
+                .additionalRepositories(original.getAdditionalRepositories())
+                .systemPrompt(original.getSystemPrompt())
+                .environmentVariablesEncrypted(original.getEnvironmentVariablesEncrypted())
+                .build();
+
+        clone = taskRepository.save(clone);
+
+        // Handle auto-generated branch for Bitbucket
+        if ("__AUTO_GENERATED__".equals(clone.getSourceBranch())) {
+            String newBranchName = "promptdev/" + clone.getId();
+            String startPoint = clone.getTargetBranch() != null ? clone.getTargetBranch() : "main";
+            try {
+                log.info("Auto-creating branch '{}' from '{}' for cloned task {}", newBranchName, startPoint, clone.getId());
+                bitbucketService.createBranch(clone.getProjectKey(), clone.getRepositorySlug(), newBranchName, startPoint);
+            } catch (Exception e) {
+                log.warn("Failed to auto-create branch '{}': {}", newBranchName, e.getMessage());
+            }
+            clone.setSourceBranch(newBranchName);
+            clone = taskRepository.save(clone);
+        }
+
+        TaskEvent event = TaskEvent.builder()
+                .task(clone)
+                .eventType(EventType.TASK_CREATED)
+                .message("Task cloned from " + taskId)
+                .build();
+        taskEventRepository.save(event);
+
+        TaskResponse response = taskMapper.toResponse(clone);
+        sseService.broadcastTaskUpdate(response);
+
+        log.info("Task {} cloned from {} (workspace: {})", clone.getId(), taskId, newWorkspacePath);
+        return response;
+    }
+
+    /**
+     * Resolve an incremented path when the base path already exists.
+     * For example: /path/my-project → /path/my-project-1 → /path/my-project-2
+     */
+    static String resolveIncrementedPath(String basePath) {
+        java.nio.file.Path path = java.nio.file.Path.of(basePath);
+        if (!java.nio.file.Files.exists(path)) {
+            return basePath;
+        }
+
+        // Strip any existing numeric suffix to find the root name
+        String fileName = path.getFileName().toString();
+        java.nio.file.Path parent = path.getParent();
+        String rootName;
+        int startIndex;
+
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("^(.+)-(\\d+)$").matcher(fileName);
+        if (matcher.matches()) {
+            rootName = matcher.group(1);
+            startIndex = Integer.parseInt(matcher.group(2)) + 1;
+        } else {
+            rootName = fileName;
+            startIndex = 1;
+        }
+
+        for (int i = startIndex; i < 1000; i++) {
+            java.nio.file.Path candidate = parent.resolve(rootName + "-" + i);
+            if (!java.nio.file.Files.exists(candidate)) {
+                return candidate.toString();
+            }
+        }
+
+        // Fallback: append UUID fragment
+        return parent.resolve(rootName + "-" + UUID.randomUUID().toString().substring(0, 8)).toString();
+    }
+
+    /**
      * Resolve the commit message pattern, enforcing Jira ID inclusion when a Jira key is provided.
      */
     private static String resolveCommitMessagePattern(CreateTaskRequest request) {

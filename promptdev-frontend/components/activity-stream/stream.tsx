@@ -13,12 +13,14 @@ interface AgentActivityStreamProps {
   events: TaskEvent[];
   task: Task;
   isLive: boolean;
+  isProcessing?: boolean;
 }
 
 export function AgentActivityStream({
   events,
   task,
   isLive,
+  isProcessing,
 }: Readonly<AgentActivityStreamProps>) {
   const endRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -31,8 +33,9 @@ export function AgentActivityStream({
     }
   }, [groups.length]);
 
-  const isInProgress =
-    isLive && !["COMPLETED", "FAILED", "CANCELLED"].includes(task.status);
+  const shouldShowProcessing =
+    isProcessing ??
+    (isLive && !["COMPLETED", "FAILED", "CANCELLED"].includes(task.status));
 
   return (
     <div ref={containerRef} className="flex flex-col h-full overflow-y-auto">
@@ -48,12 +51,12 @@ export function AgentActivityStream({
               key={group.key}
               className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300"
             >
-              {renderGroupedEvent(group, task)}
+              {renderGroupedEvent(group, task, shouldShowProcessing)}
             </div>
           ))
         )}
 
-        {isInProgress && (
+        {shouldShowProcessing && (
           <div className="flex items-center gap-2 py-2">
             <Shimmer>Processing...</Shimmer>
           </div>

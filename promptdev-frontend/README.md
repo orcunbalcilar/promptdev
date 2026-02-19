@@ -5,6 +5,7 @@ Next.js 16 web application with React 19, Tailwind CSS, and shadcn/ui.
 ## Features
 
 - **Task Management**: Create and manage AI-powered development tasks
+- **Live Task Status**: Processing indicators automatically stop when tasks reach terminal states (completed, failed, or cancelled)
 - **Copilot Chat**: Interactive AI assistant for development questions
 - **Monitoring**: Track sessions, reviews, and activity
 - **WireMock Mappings**: Manage API mocks with delay and fault simulation
@@ -27,5 +28,5 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
 | `pnpm build`     | Production build                      |
 | `pnpm start`     | Start production server               |
 | `pnpm test`      | Unit tests (Vitest)                   |
-| `pnpm test:e2e`  | E2E tests (Playwright)               |
+| `pnpm test:e2e`  | E2E tests (Playwright)                |
 | `pnpm lint`      | ESLint                                |

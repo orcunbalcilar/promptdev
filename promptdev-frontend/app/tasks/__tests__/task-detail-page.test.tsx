@@ -17,6 +17,7 @@ const mockGetTaskEvents = vi.fn()
 const mockCancelTask = vi.fn()
 const mockStartTask = vi.fn()
 const mockResumeTask = vi.fn()
+const mockCloneTask = vi.fn()
 const mockSubscribeToTaskEvents = vi.fn()
 vi.mock('@/lib/api', () => ({
   getTask: (...args: unknown[]) => mockGetTask(...args),
@@ -24,6 +25,7 @@ vi.mock('@/lib/api', () => ({
   cancelTask: (...args: unknown[]) => mockCancelTask(...args),
   startTask: (...args: unknown[]) => mockStartTask(...args),
   resumeTask: (...args: unknown[]) => mockResumeTask(...args),
+  cloneTask: (...args: unknown[]) => mockCloneTask(...args),
   subscribeToTaskEvents: (...args: unknown[]) => mockSubscribeToTaskEvents(...args),
 }))
 
@@ -372,6 +374,29 @@ describe('TaskDetailPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Task not found')).toBeInTheDocument()
+    })
+  })
+
+  it('retry button clones task, starts it, and navigates to cloned task', async () => {
+    mockGetTask.mockResolvedValue(createTask({ status: 'FAILED' }))
+    const clonedTask = createTask({ id: 'cloned-task-id', status: 'PENDING' })
+    mockCloneTask.mockResolvedValue(clonedTask)
+    mockStartTask.mockResolvedValue({ ...clonedTask, status: 'QUEUED' })
+
+    const Page = await getTaskDetailPage()
+    const user = userEvent.setup()
+    renderWithProviders(<Page />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /retry/i }))
+
+    await waitFor(() => {
+      expect(mockCloneTask).toHaveBeenCalledWith('task-1')
+      expect(mockStartTask).toHaveBeenCalledWith('cloned-task-id')
+      expect(mockPush).toHaveBeenCalledWith('/tasks/cloned-task-id')
     })
   })
 })

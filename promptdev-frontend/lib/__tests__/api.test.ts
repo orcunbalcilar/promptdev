@@ -6,6 +6,7 @@ import {
   getTaskEvents,
   cancelTask,
   retryTask,
+  cloneTask,
   startTask,
   resumeTask,
   getRepositories,
@@ -167,6 +168,19 @@ describe('API Client', () => {
 
       expect(mockFetch.mock.calls[0][0]).toBe(`${API_BASE}/tasks/task-1/retry`)
       expect(mockFetch.mock.calls[0][1].method).toBe('POST')
+    })
+  })
+
+  describe('cloneTask', () => {
+    it('should POST /tasks/:id/clone', async () => {
+      const cloned = { id: 'task-2', title: 'Test', status: 'PENDING' }
+      mockFetch.mockResolvedValue(jsonResponse(cloned))
+
+      const result = await cloneTask('task-1')
+
+      expect(mockFetch.mock.calls[0][0]).toBe(`${API_BASE}/tasks/task-1/clone`)
+      expect(mockFetch.mock.calls[0][1].method).toBe('POST')
+      expect(result).toEqual(cloned)
     })
   })
 

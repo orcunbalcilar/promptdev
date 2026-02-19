@@ -318,6 +318,12 @@ export async function retryTask(taskId: string): Promise<Task> {
   });
 }
 
+export async function cloneTask(taskId: string): Promise<Task> {
+  return apiFetch<Task>(`/tasks/${taskId}/clone`, {
+    method: "POST",
+  });
+}
+
 export async function startTask(taskId: string): Promise<Task> {
   // First mark the task as QUEUED in the backend
   const task = await apiFetch<Task>(`/tasks/${taskId}/start`, {

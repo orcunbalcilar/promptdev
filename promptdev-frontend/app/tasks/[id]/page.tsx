@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   cancelTask,
+  cloneTask,
   getTask,
   getTaskEvents,
   resumeTask,
@@ -114,7 +115,7 @@ export default function TaskDetailPage() {
       if (status && ["COMPLETED", "FAILED", "CANCELLED"].includes(status))
         return false;
       // Use a slow fallback poll only when SSE is not connected
-      return sseConnected.current ? false : 5000;
+      return sseConnected.current ? false : 2000;
     },
   });
 
@@ -122,6 +123,13 @@ export default function TaskDetailPage() {
   const { data: initialEvents } = useQuery({
     queryKey: ["task-events", id],
     queryFn: () => getTaskEvents(id),
+    refetchInterval: (query) => {
+      // Stop refetching when task is in a terminal state
+      if (task?.status && ["COMPLETED", "FAILED", "CANCELLED"].includes(task.status))
+        return false;
+      // Refetch events every 1 second while task is running
+      return task && !["COMPLETED", "FAILED", "CANCELLED"].includes(task.status) ? 1000 : false;
+    },
   });
 
   // Fetch monitoring session details (if copilotSessionId is available)
@@ -187,6 +195,7 @@ export default function TaskDetailPage() {
   const isLive = !["COMPLETED", "FAILED", "CANCELLED"].includes(
     task?.status ?? "",
   );
+  const isProcessing = isLive;
 
   const handleCancel = async () => {
     if (!task) return;
@@ -195,7 +204,7 @@ export default function TaskDetailPage() {
 
     try {
       await cancelTask(task.id);
-      queryClient.invalidateQueries({ queryKey: ["task", id] });
+      await queryClient.refetchQueries({ queryKey: ["task", id] });
       toast.success("Task cancelled");
     } catch (e) {
       console.error("Failed to cancel task:", e);
@@ -207,7 +216,7 @@ export default function TaskDetailPage() {
     if (!task) return;
     try {
       await startTask(task.id);
-      queryClient.invalidateQueries({ queryKey: ["task", id] });
+      await queryClient.refetchQueries({ queryKey: ["task", id] });
       toast.success("Task started");
     } catch (e) {
       console.error("Failed to start task:", e);
@@ -218,9 +227,11 @@ export default function TaskDetailPage() {
   const handleRetry = async () => {
     if (!task) return;
     try {
-      await startTask(task.id);
-      queryClient.invalidateQueries({ queryKey: ["task", id] });
-      setRealtimeEvents([]); // Reset realtime events on retry
+      // Clone the task to create a fresh copy, then start it
+      const cloned = await cloneTask(task.id);
+      await startTask(cloned.id);
+      toast.success("New task created and started");
+      router.push(`/tasks/${cloned.id}`);
     } catch (e) {
       console.error("Failed to retry task:", e);
       toast.error("Failed to retry task");
@@ -232,7 +243,7 @@ export default function TaskDetailPage() {
     setIsResuming(true);
     try {
       await resumeTask(task.id, resumePrompt.trim());
-      queryClient.invalidateQueries({ queryKey: ["task", id] });
+      await queryClient.refetchQueries({ queryKey: ["task", id] });
       setShowResumeForm(false);
       setResumePrompt("");
       setRealtimeEvents([]);
@@ -328,6 +339,7 @@ export default function TaskDetailPage() {
           <TaskSidebar
             task={task}
             isLive={isLive}
+            isProcessing={isProcessing}
             models={models}
             sessionDetails={sessionDetails}
             allEvents={allEvents}
@@ -386,6 +398,7 @@ export default function TaskDetailPage() {
                   events={allEvents}
                   task={task}
                   isLive={isLive}
+                  isProcessing={isProcessing}
                 />
               </TabsContent>
               <TabsContent

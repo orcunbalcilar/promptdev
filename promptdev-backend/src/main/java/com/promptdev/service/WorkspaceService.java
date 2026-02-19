@@ -50,6 +50,90 @@ public class WorkspaceService {
     }
 
     /**
+     * Create a LOCAL workspace directory at a custom path.
+     * This is used for new projects created in user-specified directories.
+     *
+     * @param customPath the custom path where the workspace should be created
+     * @return the absolute path to the workspace directory
+     */
+    public String createLocalWorkspace(String customPath) throws IOException {
+        Path workspaceDir = Path.of(customPath);
+        
+        if (Files.exists(workspaceDir)) {
+            log.warn("Workspace already exists at {}, cleaning up first", customPath);
+            cleanDirectoryContents(workspaceDir);
+        } else {
+            Files.createDirectories(workspaceDir);
+        }
+
+        log.info("Created LOCAL workspace at custom path: {}", workspaceDir);
+        return workspaceDir.toAbsolutePath().toString();
+    }
+
+    /**
+     * Check whether a path is an existing git repository.
+     */
+    public boolean isGitRepository(String path) {
+        Path gitDir = Path.of(path, ".git");
+        return Files.exists(gitDir);
+    }
+
+    /**
+     * Create a git worktree for a task from an existing local repository.
+     * The worktree is created in the ephemeral workspace area so the original
+     * repo directory is never modified.
+     *
+     * @param repoPath    the original repository path
+     * @param taskId      the task ID (used for worktree directory naming)
+     * @param branchName  the branch name to create/checkout in the worktree
+     * @return the absolute path to the worktree directory
+     */
+    public String createGitWorktree(String repoPath, UUID taskId, String branchName) throws IOException {
+        Path worktreeDir = Path.of(basePath, taskId.toString());
+
+        if (Files.exists(worktreeDir)) {
+            log.warn("Worktree directory already exists for task {}, cleaning up first", taskId);
+            removeGitWorktree(repoPath, worktreeDir.toString());
+        }
+
+        Files.createDirectories(worktreeDir.getParent());
+
+        try {
+            // Try creating worktree with an existing branch first
+            runGitCommand(Path.of(repoPath), "git", "worktree", "add", worktreeDir.toAbsolutePath().toString(), branchName);
+            log.info("Created git worktree for task {} at {} (branch: {})", taskId, worktreeDir, branchName);
+        } catch (IOException e) {
+            // Branch doesn't exist yet — create it with -b
+            log.info("Branch '{}' not found, creating new branch in worktree", branchName);
+            runGitCommand(Path.of(repoPath), "git", "worktree", "add", "-b", branchName, worktreeDir.toAbsolutePath().toString());
+            log.info("Created git worktree with new branch for task {} at {} (branch: {})", taskId, worktreeDir, branchName);
+        }
+
+        return worktreeDir.toAbsolutePath().toString();
+    }
+
+    /**
+     * Remove a git worktree.
+     */
+    private void removeGitWorktree(String repoPath, String worktreePath) {
+        try {
+            runGitCommand(Path.of(repoPath), "git", "worktree", "remove", "--force", worktreePath);
+        } catch (IOException e) {
+            log.warn("Failed to remove git worktree at {}: {}", worktreePath, e.getMessage());
+            // Fall back to manual cleanup
+            try {
+                Path path = Path.of(worktreePath);
+                if (Files.exists(path)) {
+                    cleanDirectoryContents(path);
+                    Files.deleteIfExists(path);
+                }
+            } catch (IOException ex) {
+                log.error("Failed to manually clean worktree directory: {}", ex.getMessage());
+            }
+        }
+    }
+
+    /**
      * Create a workspace directory for a specific repository within a task workspace.
      *
      * @param taskId the task ID
