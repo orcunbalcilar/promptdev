@@ -32,10 +32,7 @@ export function CreateTaskDialog() {
   const [open, setOpen] = useState(false);
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={setOpen}
-    >
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button data-create-task-trigger>
           <Plus className="h-4 w-4 mr-2" />

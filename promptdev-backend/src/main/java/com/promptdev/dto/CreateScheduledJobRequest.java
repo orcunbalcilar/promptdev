@@ -37,6 +37,8 @@ public class CreateScheduledJobRequest {
     @NotBlank(message = "Workspace reference (repo slug or local path) is required")
     private String workspaceRef;
 
+    private String projectKey;
+
     private String sourceBranch;
 
     private String targetBranch;

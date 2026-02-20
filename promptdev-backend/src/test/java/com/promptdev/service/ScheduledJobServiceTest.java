@@ -367,6 +367,8 @@ class ScheduledJobServiceTest {
                     .build();
             when(taskService.createTask(any(CreateTaskRequest.class)))
                     .thenReturn(taskResponse);
+            when(taskService.startTask(any(UUID.class)))
+                    .thenReturn(taskResponse);
             when(scheduledJobRepository.save(any(ScheduledJob.class)))
                     .thenAnswer(inv -> inv.getArgument(0));
 
@@ -374,6 +376,7 @@ class ScheduledJobServiceTest {
 
             ArgumentCaptor<CreateTaskRequest> captor = ArgumentCaptor.forClass(CreateTaskRequest.class);
             verify(taskService).createTask(captor.capture());
+            verify(taskService).startTask(taskResponse.getId());
 
             CreateTaskRequest createdRequest = captor.getValue();
             assertThat(createdRequest.getTitle()).isEqualTo(SCHEDULED_TITLE);
@@ -396,6 +399,8 @@ class ScheduledJobServiceTest {
                     .status(TaskStatus.PENDING)
                     .build();
             when(taskService.createTask(any(CreateTaskRequest.class)))
+                    .thenReturn(taskResponse);
+            when(taskService.startTask(any(UUID.class)))
                     .thenReturn(taskResponse);
             when(scheduledJobRepository.save(any(ScheduledJob.class)))
                     .thenAnswer(inv -> inv.getArgument(0));
@@ -444,6 +449,9 @@ class ScheduledJobServiceTest {
                             .title("Success")
                             .status(TaskStatus.PENDING)
                             .build());
+
+            lenient().when(taskService.startTask(any(UUID.class)))
+                    .thenReturn(TaskResponse.builder().build());
 
             when(scheduledJobRepository.save(any(ScheduledJob.class)))
                     .thenAnswer(inv -> inv.getArgument(0));

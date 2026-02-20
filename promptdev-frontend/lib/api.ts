@@ -200,6 +200,7 @@ export interface ScheduledJob {
   jobType: ScheduledJobType;
   workspaceType: WorkspaceType;
   workspaceRef: string;
+  projectKey?: string;
   sourceBranch: string;
   targetBranch: string;
   modelId?: string;
@@ -221,6 +222,7 @@ export interface CreateScheduledJobRequest {
   jobType?: ScheduledJobType;
   workspaceType?: WorkspaceType;
   workspaceRef: string;
+  projectKey?: string;
   sourceBranch?: string;
   targetBranch?: string;
   modelId?: string;

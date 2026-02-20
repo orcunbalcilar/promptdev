@@ -53,6 +53,10 @@ public class ScheduledJob {
     @Column(name = "workspace_ref", nullable = false)
     private String workspaceRef;
 
+    /** Bitbucket project key when using BITBUCKET workspace */
+    @Column(name = "project_key")
+    private String projectKey;
+
     @Column(name = "source_branch")
     @Builder.Default
     private String sourceBranch = "main";

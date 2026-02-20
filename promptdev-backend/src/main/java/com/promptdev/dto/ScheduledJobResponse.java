@@ -27,6 +27,8 @@ public class ScheduledJobResponse {
     private ScheduledJobType jobType;
     private WorkspaceType workspaceType;
     private String workspaceRef;
+
+    private String projectKey;
     private String sourceBranch;
     private String targetBranch;
     private String modelId;

@@ -46,6 +46,7 @@ public class ScheduledJobService {
                 .jobType(request.getJobType() != null ? request.getJobType() : ScheduledJobType.MAINTENANCE)
                 .workspaceType(request.getWorkspaceType())
                 .workspaceRef(request.getWorkspaceRef())
+                .projectKey(request.getProjectKey())
                 .sourceBranch(request.getSourceBranch() != null ? request.getSourceBranch() : "main")
                 .targetBranch(request.getTargetBranch() != null ? request.getTargetBranch() : "main")
                 .modelId(request.getModelId() != null ? request.getModelId() : "gpt-5.2")
@@ -125,6 +126,7 @@ public class ScheduledJobService {
                         .title("[Scheduled] " + job.getName())
                         .prompt(job.getPromptTemplate())
                         .repositorySlug(job.getWorkspaceRef())
+                    .projectKey(job.getProjectKey())
                         .workspaceType(job.getWorkspaceType())
                         .sourceBranch(job.getSourceBranch())
                         .targetBranch(job.getTargetBranch())
@@ -134,6 +136,10 @@ public class ScheduledJobService {
                         .build();
 
                 TaskResponse task = taskService.createTask(taskRequest);
+
+                // Scheduled jobs should start automatically
+                taskService.startTask(task.getId());
+                log.info("Started scheduled task {}", task.getId());
 
                 // Update job metadata
                 job.setLastRunAt(LocalDateTime.now());
@@ -169,6 +175,7 @@ public class ScheduledJobService {
                 .jobType(job.getJobType())
                 .workspaceType(job.getWorkspaceType())
                 .workspaceRef(job.getWorkspaceRef())
+                .projectKey(job.getProjectKey())
                 .sourceBranch(job.getSourceBranch())
                 .targetBranch(job.getTargetBranch())
                 .modelId(job.getModelId())
