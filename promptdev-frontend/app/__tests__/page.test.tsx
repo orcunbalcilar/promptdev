@@ -407,23 +407,31 @@ describe("Dashboard", () => {
     });
 
     // Get the EventSource instance and trigger an error
-    const esMock = globalThis.EventSource as unknown as ReturnType<typeof vi.fn>;
+    const esMock = globalThis.EventSource as unknown as ReturnType<
+      typeof vi.fn
+    >;
     const firstInstance = esMock.mock.results[0].value;
     firstInstance.onerror?.();
 
     // First reconnect after ~1s (initial delay)
-    await waitFor(() => {
-      expect(mockEventSourceConstructor).toHaveBeenCalledTimes(2);
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(mockEventSourceConstructor).toHaveBeenCalledTimes(2);
+      },
+      { timeout: 3000 },
+    );
 
     // Trigger another error
     const secondInstance = esMock.mock.results[1].value;
     secondInstance.onerror?.();
 
     // Second reconnect takes ~2s (doubled delay)
-    await waitFor(() => {
-      expect(mockEventSourceConstructor).toHaveBeenCalledTimes(3);
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        expect(mockEventSourceConstructor).toHaveBeenCalledTimes(3);
+      },
+      { timeout: 5000 },
+    );
   });
 
   it("resets SSE backoff delay on successful connection", async () => {
@@ -435,13 +443,18 @@ describe("Dashboard", () => {
     });
 
     // First error
-    const esMock = globalThis.EventSource as unknown as ReturnType<typeof vi.fn>;
+    const esMock = globalThis.EventSource as unknown as ReturnType<
+      typeof vi.fn
+    >;
     const firstInstance = esMock.mock.results[0].value;
     firstInstance.onerror?.();
 
-    await waitFor(() => {
-      expect(mockEventSourceConstructor).toHaveBeenCalledTimes(2);
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(mockEventSourceConstructor).toHaveBeenCalledTimes(2);
+      },
+      { timeout: 3000 },
+    );
 
     // Simulate successful connection (onopen) — resets delay to 1s
     const secondInstance = esMock.mock.results[1].value;
@@ -450,8 +463,11 @@ describe("Dashboard", () => {
     // Another error — delay should be reset to 1s (not 2s)
     secondInstance.onerror?.();
 
-    await waitFor(() => {
-      expect(mockEventSourceConstructor).toHaveBeenCalledTimes(3);
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(mockEventSourceConstructor).toHaveBeenCalledTimes(3);
+      },
+      { timeout: 3000 },
+    );
   });
 });

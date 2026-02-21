@@ -27,7 +27,13 @@ const columns: KanbanColumn[] = [
   },
   {
     title: "Review",
-    statuses: ["REVIEWING", "CODE_GENERATED", "COMMITTING", "PUSHING", "CREATING_PR"],
+    statuses: [
+      "REVIEWING",
+      "CODE_GENERATED",
+      "COMMITTING",
+      "PUSHING",
+      "CREATING_PR",
+    ],
     columnClass: "kanban-column-review",
   },
   {
@@ -50,19 +56,19 @@ export function KanbanBoard({
     return tasks.filter((task) => column.statuses.includes(task.status));
   };
 
+  console.log("Rendering KanbanBoard with tasks:", tasks);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 h-[calc(100vh-220px)]">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 lg:h-full lg:min-h-0 lg:overflow-hidden">
       {columns.map((column) => {
         const columnTasks = getTasksForColumn(column);
         return (
-          <div key={column.title} className="flex flex-col h-full gap-3">
-            <div className="flex items-center justify-between px-1">
+          <div key={column.title} className="flex flex-col lg:h-full gap-3 min-h-0">
+            <div className="flex items-center justify-between px-1 shrink-0">
               <h2 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">
                 {column.title}
               </h2>
-              <span className="count-badge">
-                {columnTasks.length}
-              </span>
+              <span className="count-badge">{columnTasks.length}</span>
             </div>
 
             <div

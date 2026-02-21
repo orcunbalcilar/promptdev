@@ -4,7 +4,7 @@
  */
 import { getDb } from "../db";
 import { tasks, taskEvents, jiraIssueOptOuts, users } from "../db/schema";
-import { eq, desc, inArray, and, gt, not, sql } from "drizzle-orm";
+import { eq, desc, inArray, and, gt, not, sql, ilike, or } from "drizzle-orm";
 import { broadcastTaskUpdate, sendTaskEvent } from "./sse-service";
 import * as bitbucketService from "./bitbucket-service";
 import { resolveIncrementedPath } from "./workspace-service";
@@ -300,12 +300,45 @@ export async function updateTask(
   return response;
 }
 
-export async function getAllTasks(page = 0, size = 20) {
+export async function getAllTasks(
+  page = 0,
+  size = 20,
+  filters?: {
+    search?: string;
+    statuses?: string[];
+    workspaceType?: string;
+  }
+) {
   const offset = page * size;
+  const conditions = [];
+
+  if (filters?.search) {
+    const searchPattern = `%${filters.search}%`;
+    conditions.push(or(ilike(tasks.title, searchPattern), ilike(tasks.prompt, searchPattern)));
+  }
+
+  if (filters?.statuses && filters.statuses.length > 0) {
+    conditions.push(inArray(tasks.status, filters.statuses));
+  }
+
+  if (filters?.workspaceType && filters.workspaceType !== "all") {
+    conditions.push(eq(tasks.workspaceType, filters.workspaceType));
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   const [result, countResult] = await Promise.all([
-    getDb().select().from(tasks).orderBy(desc(tasks.createdAt)).limit(size).offset(offset),
-    getDb().select({ count: sql<number>`count(*)` }).from(tasks),
+    getDb()
+      .select()
+      .from(tasks)
+      .where(whereClause)
+      .orderBy(desc(tasks.createdAt))
+      .limit(size)
+      .offset(offset),
+    getDb()
+      .select({ count: sql<number>`count(*)` })
+      .from(tasks)
+      .where(whereClause),
   ]);
 
   const totalElements = Number(countResult[0].count);

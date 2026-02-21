@@ -337,8 +337,28 @@ export async function getTask(taskId: string): Promise<Task> {
 export async function getTasks(
   page = 0,
   size = 20,
+  filters?: {
+    status?: string;
+    search?: string;
+    workspaceType?: string;
+  },
 ): Promise<PagedResponse<Task>> {
-  return apiFetch<PagedResponse<Task>>(`/tasks?page=${page}&size=${size}`);
+  const query = new URLSearchParams({
+    page: page.toString(),
+    size: size.toString(),
+  });
+
+  if (filters?.status && filters.status !== "all") {
+    query.set("status", filters.status);
+  }
+  if (filters?.search) {
+    query.set("search", filters.search);
+  }
+  if (filters?.workspaceType && filters.workspaceType !== "all") {
+    query.set("workspaceType", filters.workspaceType);
+  }
+
+  return apiFetch<PagedResponse<Task>>(`/tasks?${query.toString()}`);
 }
 
 export async function getTaskEvents(taskId: string): Promise<TaskEvent[]> {
