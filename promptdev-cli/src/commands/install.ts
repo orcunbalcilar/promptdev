@@ -24,7 +24,6 @@ export async function installCommand(options: InstallOptions): Promise<void> {
 
   const checks = [
     { name: 'git', required: true },
-    { name: 'java', required: true },
     { name: 'node', required: true },
     { name: 'pnpm', required: true },
     { name: 'podman', required: false },
@@ -65,20 +64,8 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     console.log(chalk.dim('  No repo URL provided, assuming local project directory'))
   }
 
-  // Install backend dependencies
+  // Install frontend dependencies
   if (!options.skipDeps) {
-    const backendSpinner = ora('Building backend (Maven)...').start()
-    try {
-      const mvnCmd = process.platform === 'win32' ? 'mvnw.cmd' : './mvnw'
-      exec(`${mvnCmd} clean install -DskipTests -q`, `${projectDir}/promptdev-backend`)
-      backendSpinner.succeed('Backend built successfully')
-    } catch (err) {
-      backendSpinner.fail('Backend build failed')
-      console.error(chalk.red('  Run with -q removed for full output'))
-      throw err
-    }
-
-    // Install frontend dependencies
     const frontendSpinner = ora('Installing frontend dependencies...').start()
     try {
       exec('pnpm install', `${projectDir}/promptdev-frontend`)
@@ -121,11 +108,6 @@ export async function installCommand(options: InstallOptions): Promise<void> {
   console.log(`  ${chalk.cyan('promptdev --help')}     - Show all commands`)
   console.log()
 
-  // Java version info
-  const javaVersion = execSafe('java --version 2>&1 | head -1')
-  if (javaVersion) {
-    console.log(chalk.dim(`  Java: ${javaVersion}`))
-  }
   const nodeVersion = execSafe('node --version')
   if (nodeVersion) {
     console.log(chalk.dim(`  Node: ${nodeVersion}`))

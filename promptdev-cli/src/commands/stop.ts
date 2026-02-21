@@ -63,9 +63,6 @@ export async function stopCommand(options: StopOptions): Promise<void> {
 
   if (options.service) {
     switch (options.service) {
-      case "backend":
-        stopOnPort(8080, "Backend");
-        break;
       case "frontend":
         stopOnPort(3000, "Frontend");
         break;
@@ -78,7 +75,6 @@ export async function stopCommand(options: StopOptions): Promise<void> {
     }
   } else {
     stopOnPort(3000, "Frontend");
-    stopOnPort(8080, "Backend");
     stopContainerRuntime("promptdev-db");
   }
 

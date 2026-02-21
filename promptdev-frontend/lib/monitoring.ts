@@ -1,9 +1,9 @@
 /**
  * Monitoring API client for tracking Copilot operations.
- * Sends tracking data to the Spring Boot backend for persistence and analytics.
+ * Sends tracking data to local Next.js API routes for persistence and analytics.
  */
 
-const MONITORING_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+const MONITORING_API_BASE = '/api'
 
 interface RegisterSessionParams {
   sdkSessionId: string

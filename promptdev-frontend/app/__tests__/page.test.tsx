@@ -9,15 +9,15 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/lib/api", () => ({
-  API_BASE_URL: "http://localhost:8080/api",
+  API_BASE_URL: "/api",
   getTasks: vi.fn(),
 }));
 
-vi.mock("@/components/create-task-dialog", () => ({
+vi.mock("@/components/tasks/create-task-dialog", () => ({
   CreateTaskDialog: () => <button>New Task</button>,
 }));
 
-vi.mock("@/components/kanban-board", () => ({
+vi.mock("@/components/dashboard/kanban-board", () => ({
   KanbanBoard: ({
     tasks,
     onTaskClick,
@@ -392,7 +392,7 @@ describe("Dashboard", () => {
 
     await waitFor(() => {
       expect(mockEventSourceConstructor).toHaveBeenCalledWith(
-        "http://localhost:8080/api/stream/tasks",
+        "/api/stream/tasks",
       );
     });
   });

@@ -15,6 +15,7 @@ const mockToggleScheduledJob = vi.fn()
 const mockDeleteScheduledJob = vi.fn()
 const mockGetRepositories = vi.fn()
 const mockGetBranches = vi.fn()
+const mockGetProjects = vi.fn()
 
 vi.mock('@/lib/api', () => ({
   getScheduledJobs: (...args: unknown[]) => mockGetScheduledJobs(...args),
@@ -23,6 +24,7 @@ vi.mock('@/lib/api', () => ({
   deleteScheduledJob: (...args: unknown[]) => mockDeleteScheduledJob(...args),
   getRepositories: (...args: unknown[]) => mockGetRepositories(...args),
   getBranches: (...args: unknown[]) => mockGetBranches(...args),
+  getProjects: (...args: unknown[]) => mockGetProjects(...args),
 }))
 
 vi.mock('@/lib/copilot/models', () => ({

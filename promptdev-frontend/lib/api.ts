@@ -1,9 +1,9 @@
 /**
- * API client for the PromptDev backend.
+ * API client for the PromptDev application.
+ * All calls go to the local Next.js API routes (no external backend).
  */
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+export const API_BASE_URL = "/api";
 
 export type TaskStatus =
   | "PENDING"
@@ -191,6 +191,24 @@ export interface CreateTaskRequest {
   systemPrompt?: string;
 }
 
+export interface UpdateTaskRequest {
+  title?: string;
+  prompt?: string;
+  sourceBranch?: string;
+  targetBranch?: string;
+  modelId?: string;
+  iterative?: boolean;
+  maxIterations?: number;
+  completionCriteria?: string;
+  steps?: string;
+  reviewEnabled?: boolean;
+  reviewModelId?: string;
+  commitMessagePattern?: string;
+  bootScript?: string;
+  skills?: string;
+  systemPrompt?: string;
+}
+
 export interface ScheduledJob {
   id: string;
   name: string;
@@ -289,6 +307,13 @@ async function apiFetch<T>(
 export async function createTask(request: CreateTaskRequest): Promise<Task> {
   return apiFetch<Task>("/tasks", {
     method: "POST",
+    body: JSON.stringify(request),
+  });
+}
+
+export async function updateTask(taskId: string, request: UpdateTaskRequest): Promise<Task> {
+  return apiFetch<Task>(`/tasks/${taskId}`, {
+    method: "PATCH",
     body: JSON.stringify(request),
   });
 }

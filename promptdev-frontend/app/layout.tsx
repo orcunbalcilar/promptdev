@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 import Providers from "./providers";
-import { CommandPalette } from "@/components/command-palette";
+import { CommandPalette } from "@/components/shared/command-palette";
 
 export default function RootLayout({
   children,

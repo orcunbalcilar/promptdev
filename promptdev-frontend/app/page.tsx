@@ -19,11 +19,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // bundle-dynamic-imports: Lazy-load heavy components to reduce initial JS bundle
 const CreateTaskDialog = dynamic(
-  () => import("@/components/create-task-dialog").then((m) => ({ default: m.CreateTaskDialog })),
+  () => import("@/components/tasks/create-task-dialog").then((m) => ({ default: m.CreateTaskDialog })),
   { ssr: false },
 );
 const KanbanBoard = dynamic(
-  () => import("@/components/kanban-board").then((m) => ({ default: m.KanbanBoard })),
+  () => import("@/components/dashboard/kanban-board").then((m) => ({ default: m.KanbanBoard })),
   { ssr: false, loading: () => <div className="h-64 flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div> },
 );
 

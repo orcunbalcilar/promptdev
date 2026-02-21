@@ -1,8 +1,12 @@
 /**
  * Backend communication helpers for the orchestrator.
+ * Now calls services directly (no HTTP to external backend).
  */
 
-import { BACKEND_API, type TaskData } from "./types";
+import type { TaskData } from "./types";
+import * as taskService from "../../services/task-service";
+import * as workspaceService from "../../services/workspace-service";
+import { getCloneUrl, getBitbucketConfig } from "../../services/bitbucket-service";
 
 export function serializeField(value: unknown): string | undefined {
   if (value == null) return undefined;
@@ -16,25 +20,21 @@ export async function sendCallback(
   data: Record<string, unknown> = {},
 ): Promise<void> {
   try {
-    await fetch(`${BACKEND_API}/stream/callback`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        taskId,
-        eventType,
-        message: data.message ?? `Event: ${eventType}`,
-        details: serializeField(data.details),
-        errorMessage: data.errorMessage,
-        codeSnippet: data.codeSnippet,
-        filePath: data.filePath,
-        pullRequestId: data.pullRequestId,
-        pullRequestUrl: data.pullRequestUrl,
-        toolName: data.toolName,
-        toolInput: serializeField(data.toolInput),
-        toolOutput: serializeField(data.toolOutput),
-        fileChanges: serializeField(data.fileChanges),
-        copilotSessionId: data.copilotSessionId,
-      }),
+    await taskService.processAgentCallback({
+      taskId,
+      eventType,
+      message: (data.message as string) ?? `Event: ${eventType}`,
+      details: serializeField(data.details),
+      errorMessage: data.errorMessage as string | undefined,
+      codeSnippet: data.codeSnippet as string | undefined,
+      filePath: data.filePath as string | undefined,
+      pullRequestId: data.pullRequestId as number | undefined,
+      pullRequestUrl: data.pullRequestUrl as string | undefined,
+      toolName: data.toolName as string | undefined,
+      toolInput: serializeField(data.toolInput),
+      toolOutput: serializeField(data.toolOutput),
+      fileChanges: serializeField(data.fileChanges),
+      copilotSessionId: data.copilotSessionId as string | undefined,
     });
   } catch (err) {
     console.error(
@@ -45,47 +45,37 @@ export async function sendCallback(
 }
 
 export async function fetchTask(taskId: string): Promise<TaskData> {
-  const res = await fetch(`${BACKEND_API}/tasks/${taskId}`);
-  if (!res.ok) throw new Error(`Failed to fetch task: ${res.statusText}`);
-  return res.json();
+  const task = await taskService.getTask(taskId);
+  return task as unknown as TaskData;
 }
 
 export async function createWorkspace(taskId: string): Promise<string> {
-  const res = await fetch(`${BACKEND_API}/workspaces/${taskId}`, {
-    method: "POST",
-  });
-  if (!res.ok) {
-    console.warn(`[Orchestrator] Workspace API not available, using temp path`);
+  try {
+    const task = await taskService.getTask(taskId);
+    if (task.workspaceType === "LOCAL" && task.workspacePath) {
+      return workspaceService.createLocalWorkspace(task.workspacePath);
+    }
+    return workspaceService.createWorkspace(taskId);
+  } catch {
+    console.warn(`[Orchestrator] Workspace creation failed, using temp path`);
     return `/tmp/promptdev-workspaces/${taskId}`;
   }
-  const data = await res.json();
-  return data.path;
 }
 
-export async function cloneRepository(
+export function cloneRepository(
   taskId: string,
   projectKey: string,
   repoSlug: string,
   sourceBranch: string,
-): Promise<string> {
-  const res = await fetch(`${BACKEND_API}/workspaces/${taskId}/clone`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ projectKey, repoSlug, sourceBranch }),
-  });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(
-      `Failed to clone repository: ${errorData.message || res.statusText}`,
-    );
-  }
-  const data = await res.json();
-  return data.path;
+): string {
+  const { username, token } = getBitbucketConfig();
+  const cloneUrl = getCloneUrl(projectKey, repoSlug);
+  return workspaceService.cloneRepository(taskId, cloneUrl, username, token, sourceBranch);
 }
 
-export async function cleanupWorkspace(taskId: string): Promise<void> {
+export function cleanupWorkspace(taskId: string): void {
   try {
-    await fetch(`${BACKEND_API}/workspaces/${taskId}`, { method: "DELETE" });
+    workspaceService.cleanupWorkspace(taskId);
   } catch {
     console.warn(
       `[Orchestrator] Failed to cleanup workspace for task ${taskId}`,

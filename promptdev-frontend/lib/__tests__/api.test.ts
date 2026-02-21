@@ -9,6 +9,7 @@ import {
   cloneTask,
   startTask,
   resumeTask,
+  updateTask,
   getRepositories,
   getBranches,
   getDefaultBranch,
@@ -23,7 +24,7 @@ import {
   ApiError,
 } from '@/lib/api'
 
-const API_BASE = 'http://localhost:8080/api'
+const API_BASE = '/api'
 
 const mockFetch = vi.fn()
 globalThis.fetch = mockFetch
@@ -181,6 +182,40 @@ describe('API Client', () => {
       expect(mockFetch.mock.calls[0][0]).toBe(`${API_BASE}/tasks/task-1/clone`)
       expect(mockFetch.mock.calls[0][1].method).toBe('POST')
       expect(result).toEqual(cloned)
+    })
+  })
+
+  describe('updateTask', () => {
+    it('should PATCH /tasks/:id with update fields', async () => {
+      const updated = { id: 'task-1', title: 'Refined Title', prompt: 'Refined prompt', status: 'PENDING' }
+      mockFetch.mockResolvedValue(jsonResponse(updated))
+
+      const result = await updateTask('task-1', {
+        title: 'Refined Title',
+        prompt: 'Refined prompt',
+        modelId: 'claude-sonnet-4.5',
+      })
+
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      const [url, opts] = mockFetch.mock.calls[0]
+      expect(url).toBe(`${API_BASE}/tasks/task-1`)
+      expect(opts.method).toBe('PATCH')
+      const body = JSON.parse(opts.body)
+      expect(body.title).toBe('Refined Title')
+      expect(body.prompt).toBe('Refined prompt')
+      expect(body.modelId).toBe('claude-sonnet-4.5')
+      expect(result).toEqual(updated)
+    })
+
+    it('should send only provided fields', async () => {
+      mockFetch.mockResolvedValue(jsonResponse({ id: 'task-1' }))
+
+      await updateTask('task-1', { prompt: 'Only prompt updated' })
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+      expect(body.prompt).toBe('Only prompt updated')
+      expect(body.title).toBeUndefined()
+      expect(body.modelId).toBeUndefined()
     })
   })
 

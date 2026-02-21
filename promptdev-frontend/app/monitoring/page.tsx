@@ -36,7 +36,7 @@ import {
   ReviewsTab,
   formatNumber,
   formatTokens,
-} from './_components'
+} from '@/components/monitoring'
 
 export default function MonitoringPage() {
   const router = useRouter()

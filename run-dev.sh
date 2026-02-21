@@ -6,16 +6,14 @@
 # This file is gitignored — safe to customize with your own env values.
 #
 # Prerequisites:
-#   - Java 21+      (backend)
 #   - Node.js 25+   (frontend, bot)
 #   - pnpm           (frontend, bot)
 #   - Docker/Podman  (PostgreSQL only)
 #
 # Usage:
-#   ./run-dev.sh              Start all services (db + backend + frontend)
+#   ./run-dev.sh              Start all services (db + frontend)
 #   ./run-dev.sh stop         Stop everything
 #   ./run-dev.sh db           Start only PostgreSQL
-#   ./run-dev.sh backend      Start only backend (assumes db is running)
 #   ./run-dev.sh frontend     Start only frontend
 #   ./run-dev.sh bot          Start only Slack bot
 # =============================================================================
@@ -48,6 +46,12 @@ if [[ -f "$ROOT/.env" ]]; then
     export ENCRYPTION_KEY="$(openssl rand -hex 32)"
     info "Generated new ENCRYPTION_KEY"
   fi
+
+  # Set DATABASE_URL if not set
+  if [[ -z "${DATABASE_URL:-}" ]]; then
+    export DATABASE_URL="postgresql://promptdev:promptdev@localhost:5432/promptdev"
+    info "Using default DATABASE_URL (localhost)"
+  fi
 else
   err "No .env file found at $ROOT/.env"
   err "Create one from .env.example: cp .env.example .env"
@@ -68,7 +72,7 @@ start_db() {
       return 0
     fi
   else
-    info "No `pg_isready`/`nc` available — will try containerized PostgreSQL"
+    info "No \`pg_isready\`/\`nc\` available — will try containerized PostgreSQL"
   fi
 
   info "Starting PostgreSQL container..."
@@ -104,14 +108,6 @@ start_db() {
   success "PostgreSQL running on localhost:5432"
 }
 
-start_backend() {
-    info "Starting backend (Spring Boot)..."
-    cd "$ROOT/promptdev-backend"
-    ./mvnw clean spring-boot:run &
-    BACKEND_PID=$!
-    success "Backend starting on http://localhost:8080 (PID: $BACKEND_PID)"
-}
-
 start_frontend() {
     info "Starting frontend (Next.js)..."
     cd "$ROOT/promptdev-frontend"
@@ -131,8 +127,7 @@ start_bot() {
 stop_all() {
     info "Stopping services..."
 
-    # Kill any running Spring Boot / Next.js / bot processes
-    pkill -f "spring-boot:run" 2>/dev/null || true
+    # Kill any running Next.js / bot processes
     pkill -f "next-router-worker" 2>/dev/null || true
     pkill -f "promptdev-bot" 2>/dev/null || true
 
@@ -156,10 +151,6 @@ case "$CMD" in
     db)
         start_db
         ;;
-    backend)
-        start_backend
-        wait
-        ;;
     frontend)
         start_frontend
         wait
@@ -170,13 +161,11 @@ case "$CMD" in
         ;;
     all)
         start_db
-        start_backend
         start_frontend
 
         echo ""
         success "All services running!"
         info "  Frontend:  http://localhost:3000"
-        info "  Backend:   http://localhost:8080/api"
         info "  Database:  localhost:5432"
         echo ""
         info "Press Ctrl+C to stop all services"
@@ -186,7 +175,7 @@ case "$CMD" in
         wait
         ;;
     *)
-        echo "Usage: ./run-dev.sh [all|stop|db|backend|frontend|bot]"
+        echo "Usage: ./run-dev.sh [all|stop|db|frontend|bot]"
         exit 1
         ;;
 esac

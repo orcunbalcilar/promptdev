@@ -25,7 +25,7 @@ interface StartOptions {
   envFile?: string
 }
 
-type ServiceName = 'db' | 'backend' | 'frontend'
+type ServiceName = 'db' | 'frontend'
 
 async function startDatabase(): Promise<boolean> {
   const spinner = ora('Starting PostgreSQL...').start()
@@ -77,39 +77,6 @@ async function startDatabase(): Promise<boolean> {
   return false
 }
 
-async function startBackend(projectDir: string, detach: boolean): Promise<boolean> {
-  const spinner = ora('Starting backend...').start()
-  const backendDir = join(projectDir, 'promptdev-backend')
-
-  if (!existsSync(backendDir)) {
-    spinner.fail('Backend directory not found')
-    return false
-  }
-
-  if (isPortInUse(8080)) {
-    spinner.succeed('Backend already running on port 8080')
-    return true
-  }
-
-  const mvnCmd = process.platform === 'win32' ? 'mvnw.cmd' : './mvnw'
-
-  if (detach) {
-    const logFile = join(projectDir, '.promptdev', 'backend.log')
-    spawnDetached(mvnCmd, ['spring-boot:run'], backendDir, logFile)
-    spinner.succeed('Backend starting in background (port 8080)')
-  } else {
-    try {
-      exec(`${mvnCmd} spring-boot:run -q &`, backendDir)
-      spinner.succeed('Backend started on port 8080')
-    } catch {
-      spinner.fail('Failed to start backend')
-      return false
-    }
-  }
-
-  return true
-}
-
 async function startFrontend(projectDir: string, detach: boolean): Promise<boolean> {
   const spinner = ora('Starting frontend...').start()
   const frontendDir = join(projectDir, 'promptdev-frontend')
@@ -143,7 +110,6 @@ async function startFrontend(projectDir: string, detach: boolean): Promise<boole
 
 const SERVICE_STARTERS: Record<ServiceName, (dir: string, detach: boolean) => Promise<boolean>> = {
   db: () => startDatabase(),
-  backend: startBackend,
   frontend: startFrontend,
 }
 
@@ -157,7 +123,10 @@ async function ensureRequiredEnv(projectDir: string, envFile?: string): Promise<
 
   applyEnvToProcess(fileEnv)
 
-  const mergedEnv = { ...fileEnv, ...process.env }
+  const mergedEnv: Record<string, string> = {}
+  for (const [k, v] of Object.entries({ ...fileEnv, ...process.env })) {
+    if (v !== undefined) mergedEnv[k] = v
+  }
   const missing = getMissingEnvKeys(REQUIRED_ENV_KEYS, mergedEnv)
   if (missing.length === 0) {
     return
@@ -197,7 +166,7 @@ export async function startCommand(options: StartOptions): Promise<void> {
   if (options.service) {
     const svc = options.service as ServiceName
     if (!(svc in SERVICE_STARTERS)) {
-      console.error(chalk.red(`Unknown service: ${svc}. Valid: db, backend, frontend`))
+      console.error(chalk.red(`Unknown service: ${svc}. Valid: db, frontend`))
       process.exit(1)
     }
     await SERVICE_STARTERS[svc](projectDir, options.detach)
@@ -206,12 +175,10 @@ export async function startCommand(options: StartOptions): Promise<void> {
     await startDatabase()
     // Wait a bit for DB to be ready
     await new Promise(resolve => setTimeout(resolve, 2000))
-    await startBackend(projectDir, options.detach)
     await startFrontend(projectDir, options.detach)
   }
 
-  console.log(chalk.green('\n✅ Services started\n'))
-  console.log(`  Backend:  ${chalk.cyan('http://localhost:8080')}`)
+  console.log(chalk.green('\n\u2705 Services started\n'))
   console.log(`  Frontend: ${chalk.cyan('http://localhost:3000')}`)
   console.log()
 }

@@ -1,9 +1,9 @@
 /**
  * PromptDev API client for the Slack bot.
- * Communicates with Spring Boot backend for tasks and monitoring.
+ * Communicates with the Next.js frontend API for tasks and monitoring.
  */
 
-const API_BASE = process.env.PROMPTDEV_API_URL ?? 'http://localhost:8080/api'
+const API_BASE = process.env.PROMPTDEV_API_URL ?? 'http://localhost:3000/api'
 const MONITORING_SOURCE = process.env.MONITORING_SOURCE ?? 'slack'
 
 interface CreateTaskPayload {

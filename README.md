@@ -34,20 +34,27 @@ PromptDev is a development platform that turns natural language prompts into wor
 ## Architecture
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Next.js 16    │────▶│  Spring Boot 4   │────▶│   Bitbucket     │
-│   Frontend      │◀────│    Backend       │     │   Server        │
-│   :3000         │ SSE │    :8080         │     │   :7990         │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-        │                       │  │
-        │                       │  └─────▶┌─────────────────┐
-        │                       │        │   Jira Server   │
-        │                       ▼        │   :55000        │
-        │               ┌──────────────────┐└─────────────────┘
-        │               │   PostgreSQL 18  │
-        │               │   :5432          │
-        │               └──────────────────┘
-        ▼
+┌──────────────────────────────────────┐     ┌─────────────────┐
+│          Next.js 16                  │────▶│   Bitbucket     │
+│  (Full-stack: UI + API + Services)   │     │   Server        │
+│             :3000                    │     │   :7990         │
+│                                      │     └─────────────────┘
+│  ┌─────────┐  ┌──────────────────┐   │
+│  │  React  │  │   API Routes     │   │────▶┌─────────────────┐
+│  │   UI    │  │  (49 endpoints)  │   │     │   Jira Server   │
+│  └─────────┘  └──────────────────┘   │     │   :55000        │
+│                    │                 │     └─────────────────┘
+│            ┌───────▼────────┐        │
+│            │  Service Layer │        │
+│            │  (Drizzle ORM) │        │
+│            └───────┬────────┘        │
+└────────────────────┼─────────────────┘
+                     │
+              ┌──────▼─────────┐
+              │  PostgreSQL 18 │
+              │     :5432      │
+              └────────────────┘
+
 ┌─────────────────┐     ┌──────────────────┐
 │  Copilot SDK    │     │  Slack Bot       │
 │  (AI Sessions)  │     │  :3001 (Socket)  │
@@ -56,9 +63,9 @@ PromptDev is a development platform that turns natural language prompts into wor
 
 | Component | Technology                                    | Port |
 | --------- | --------------------------------------------- | ---- |
-| Frontend  | Next.js 16, React 19, Tailwind CSS, shadcn/ui | 3000 |
-| Backend   | Spring Boot 4, Java 21, PostgreSQL            | 8080 |
+| App       | Next.js 16, React 19, Tailwind CSS, shadcn/ui | 3000 |
 | Database  | PostgreSQL 18                                 | 5432 |
+| ORM       | Drizzle ORM                                   | —    |
 | Slack Bot | @slack/bolt (Socket Mode)                     | 3001 |
 | AI Engine | GitHub Copilot SDK                            | —    |
 | VCS       | Bitbucket Server or Local filesystem          | 7990 |
@@ -78,11 +85,10 @@ PromptDev is a development platform that turns natural language prompts into wor
 
 For local development (without Docker):
 
-| Tool    | Version | Check              | Required?     |
-| ------- | ------- | ------------------ | ------------- |
-| Java    | 21+     | `java --version`   | Backend only  |
-| Node.js | 25+     | `node --version`   | Frontend/Bot  |
-| pnpm    | Latest  | `pnpm --version`   | Frontend/Bot  |
+| Tool    | Version | Check              | Required?              |
+| ------- | ------- | ------------------ | ---------------------- |
+| Node.js | 25+     | `node --version`   | Frontend/Bot           |
+| pnpm    | Latest  | `pnpm --version`   | Frontend/Bot           |
 
 ### Deploy (One Command)
 
@@ -152,19 +158,16 @@ podman-compose down -v
 # Or: docker compose down -v
 ```
 
-The compose file defines four services: `db`, `backend`, `frontend`, and `bot` (Slack bot, opt-in via the `slack` profile). All images are built locally. All services have health checks; dependents wait for healthy upstreams.
+The compose file defines three services: `db`, `frontend`, and `bot` (Slack bot, opt-in via the `slack` profile). All images are built locally. All services have health checks; dependents wait for healthy upstreams.
 
 #### Container Architecture
 
 | Service  | Base Image             | Runtime                    | Size (approx.) |
 | -------- | ---------------------- | -------------------------- | -------------- |
-| Backend  | `debian:bookworm-slim` | GraalVM native executable  | ~90 MB         |
 | Frontend | `node:25-alpine`       | Next.js standalone         | ~150 MB        |
 | Bot      | `node:25-alpine`       | Node.js                    | ~80 MB         |
 | Database | `postgres:18-alpine`   | PostgreSQL                 | ~80 MB         |
 
-> **Note:** The first backend build compiles a GraalVM native image (~15 min, needs ~8 GB RAM). Subsequent builds are cached and much faster.
->
 > **Container Runtime:** Podman is preferred for its open-source, daemonless architecture. Docker is also fully supported as an alternative.
 
 #### Persistent Volumes
@@ -173,7 +176,7 @@ The compose file defines four services: `db`, `backend`, `frontend`, and `bot` (
 | --- | --- | --- |
 | `pgdata` | `/var/lib/postgresql/data` | PostgreSQL database files |
 | `nextjs-cache` | `/app/.next/cache` | Next.js ISR / component cache (survives restarts) |
-| `workspace-data` | `/data/workspaces` | Backend workspace files (task repos, generated code) |
+| `workspace-data` | `/data/workspaces` | Workspace files (task repos, generated code) |
 
 ### Podman
 
@@ -195,7 +198,7 @@ podman run -d \
   -e POSTGRES_USER=promptdev \
   -e POSTGRES_PASSWORD=promptdev \
   -p 5432:5432 \
-  postgres:17-alpine
+  postgres:18-alpine
 
 # Or with Docker:
 # docker run -d \
@@ -204,36 +207,24 @@ podman run -d \
 #   -e POSTGRES_USER=promptdev \
 #   -e POSTGRES_PASSWORD=promptdev \
 #   -p 5432:5432 \
-#   postgres:17-alpine
+#   postgres:18-alpine
 ```
 
-#### 2. Start Backend
-
-```bash
-cd promptdev-backend
-
-export DB_URL="jdbc:postgresql://localhost:5432/promptdev"
-export DB_USERNAME="promptdev"
-export DB_PASSWORD="promptdev"
-export JPA_DDL_AUTO="update"
-export ENCRYPTION_KEY="$(openssl rand -hex 32)"
-
-./mvnw spring-boot:run
-```
-
-The API will be available at `http://localhost:8080/api`.
-
-#### 3. Start Frontend
+#### 2. Start Frontend
 
 ```bash
 cd promptdev-frontend
+
+export DATABASE_URL="postgresql://promptdev:promptdev@localhost:5432/promptdev"
+export ENCRYPTION_KEY="$(openssl rand -hex 32)"
+
 pnpm install
 pnpm dev
 ```
 
-The UI will be available at `http://localhost:3000`.
+The application will be available at `http://localhost:3000`.
 
-#### 4. Start Slack Bot (optional)
+#### 3. Start Slack Bot (optional)
 
 ```bash
 cd promptdev-bot
@@ -282,38 +273,30 @@ promptdev start --env-file ./production.env
 
 If no `--env-file` is specified, both tools default to `.env` in the project root directory.
 
-#### Backend (required)
+#### Application (required)
 
 | Variable         | Description                        | Development value (injected by deploy.sh)             |
 | ---------------- | ---------------------------------- | ----------------------------------------------------- |
-| `DB_URL`         | JDBC connection string             | `jdbc:postgresql://localhost:5432/promptdev`      |
-| `DB_USERNAME`    | PostgreSQL username                | `promptdev`                                           |
-| `DB_PASSWORD`    | PostgreSQL password                | `promptdev`                                           |
-| `JPA_DDL_AUTO`   | Hibernate DDL strategy             | `update` (production should use `validate` or `none`) |
+| `DATABASE_URL`   | PostgreSQL connection string       | `postgresql://promptdev:promptdev@localhost:5432/promptdev` |
 | `ENCRYPTION_KEY` | AES-256 key for encrypting secrets | Auto-generated by deploy.sh                           |
 
-#### Backend (optional)
+#### Application (optional)
 
 | Variable                | Description                     |
 | ----------------------- | ------------------------------- |
-| `LOG_LEVEL`             | Application log level           |
-| `SERVER_PORT`           | Server port (default: `8080`)   |
 | `BITBUCKET_URL`         | Bitbucket Server URL            |
 | `BITBUCKET_USERNAME`    | Bitbucket username              |
 | `BITBUCKET_TOKEN`       | Bitbucket personal access token |
-
-| Variable                | Description                     |
-| ----------------------- | ------------------------------- |
 | `JIRA_URL`              | Jira Server URL                 |
 | `JIRA_USERNAME`         | Jira username                   |
 | `JIRA_TOKEN`            | Jira personal access token      |
+| `WORKSPACE_BASE_PATH`   | Base path for workspace files   |
 
-#### Frontend (`promptdev-frontend/.env.local`)
+#### Authentication (`promptdev-frontend/.env.local`)
 
 | Variable              | Description                                 |
 | --------------------- | ------------------------------------------- |
-| `NEXTAUTH_URL`        | Public URL (e.g., `http://localhost:3000`) |
-| `NEXT_PUBLIC_API_URL` | Backend API URL                             |
+| `NEXTAUTH_URL`        | Public URL (e.g., `http://localhost:3000`)   |
 | `AUTH_SECRET`         | NextAuth.js session secret                  |
 | `AUTH_GITHUB_ID`      | GitHub OAuth client ID                      |
 | `AUTH_GITHUB_SECRET`  | GitHub OAuth client secret                  |
@@ -328,7 +311,7 @@ If no `--env-file` is specified, both tools default to `.env` in the project roo
 | `SLACK_BOT_TOKEN`      | Bot User OAuth Token (`xoxb-...`)         |
 | `SLACK_APP_TOKEN`      | App-Level Token (`xapp-...`, Socket Mode) |
 | `SLACK_SIGNING_SECRET` | Signing Secret (from Basic Information)   |
-| `PROMPTDEV_API_URL`    | Backend API URL                           |
+| `PROMPTDEV_API_URL`    | API URL (`http://localhost:3000/api`)     |
 
 ### Authentication
 
@@ -538,35 +521,39 @@ If `--env-file` is not specified, the CLI looks for `.env` in the repository roo
 
 ## Project Structure
 
-```
+```text
 promptdev/                          ← monorepo root
 ├── docker-compose.yml              # Full-stack container orchestration
 ├── deploy.sh                       # One-command deploy (curl | bash)
+├── run-dev.sh                      # Local development runner
 ├── .env.example                    # Environment variable template
 ├── README.md
 ├── PROJECT_SNAPSHOT.md
 │
-├── promptdev-backend/              # Spring Boot 4 API server
-│   ├── Dockerfile                  # GraalVM native image
-│   ├── pom.xml
-│   └── src/main/java/com/promptdev/
-│       ├── config/                 # Security, SSE, Bitbucket, Jira, Scheduler
-│       ├── controller/             # REST controllers
-│       ├── dto/                    # Request/Response DTOs
-│       ├── entity/                 # JPA entities
-│       ├── mapper/                 # Entity-to-DTO mappers
-│       ├── repository/             # Spring Data JPA repositories
-│       ├── service/                # Business logic
-│       └── util/                   # EncryptionUtil (AES-256-GCM)
-│
-├── promptdev-frontend/             # Next.js 16 web application
+├── promptdev-frontend/             # Next.js 16 full-stack application
 │   ├── Dockerfile
 │   ├── auth.ts                     # NextAuth.js v5 configuration
 │   ├── proxy.ts                    # Route protection
-│   ├── app/                        # Pages
+│   ├── app/                        # Pages + API route handlers
+│   │   └── api/                    # 49 REST endpoints
 │   ├── components/                 # React components
 │   ├── hooks/                      # Custom React hooks
-│   └── lib/                        # API client, Copilot integration
+│   └── lib/                        # Services, API clients, Copilot integration
+│       ├── db/                     # Drizzle ORM schema + connection
+│       │   ├── index.ts            # Lazy-initialized DB pool
+│       │   └── schema.ts           # 7 tables with relations
+│       ├── services/               # 9 TypeScript service modules
+│       │   ├── encryption.ts       # AES-256-GCM (node:crypto)
+│       │   ├── sse-service.ts      # EventEmitter-based SSE
+│       │   ├── bitbucket-service.ts # Bitbucket REST API
+│       │   ├── jira-service.ts     # Jira REST API
+│       │   ├── workspace-service.ts # Git/filesystem operations
+│       │   ├── user-service.ts     # User CRUD + encrypted tokens
+│       │   ├── task-service.ts     # Task lifecycle + events
+│       │   ├── monitoring-service.ts # Sessions + operations
+│       │   ├── scheduled-job-service.ts # Cron jobs
+│       │   └── jira-opt-out-service.ts  # Opt-out CRUD
+│       └── copilot/                # Copilot SDK orchestrator
 │
 ├── promptdev-bot/                  # Slack bot (Socket Mode)
 │   ├── Dockerfile
@@ -580,28 +567,13 @@ promptdev/                          ← monorepo root
 
 ## Development
 
-### Backend
-
-```bash
-cd promptdev-backend
-
-# Run with dev environment (requires DB_URL, DB_USERNAME, DB_PASSWORD)
-./mvnw spring-boot:run
-
-# Run tests (uses in-memory H2, no external database needed)
-./mvnw test
-
-# Compile only
-./mvnw clean compile
-```
-
-### Frontend
+### Application
 
 ```bash
 cd promptdev-frontend
 pnpm dev             # Development server with hot reload
 pnpm build           # Production build
-pnpm test            # Unit tests (Vitest)
+pnpm test            # Unit tests (Vitest — 42 files, 581 tests)
 pnpm test:e2e        # E2E tests (Playwright — run pnpm exec playwright install once)
 pnpm lint            # ESLint
 ```
@@ -617,15 +589,9 @@ pnpm start           # Production start
 
 ### Database
 
-PostgreSQL is the only supported database. Tables are managed by Spring JPA with the DDL strategy controlled by the `JPA_DDL_AUTO` environment variable:
+PostgreSQL is the only supported database. Schema is defined in TypeScript via Drizzle ORM (`lib/db/schema.ts`) — 7 tables with relations. Database migrations are managed by Drizzle Kit.
 
-| Value      | Use case                                                  |
-| ---------- | --------------------------------------------------------- |
-| `update`   | Development — auto-creates and migrates tables on startup |
-| `validate` | Production — validates schema but never modifies it       |
-| `none`     | Production — disables all DDL management                  |
-
-The `docker-compose.yml` sets `JPA_DDL_AUTO=update` for development. The application default (without any script) is `validate`.
+The `docker-compose.yml` creates the database automatically. The application uses a lazy-initialized connection pool that defers until the first request (to avoid build-time failures).
 
 To reset the development database:
 
@@ -641,7 +607,7 @@ docker stop promptdev-db && docker rm promptdev-db
 ### macOS
 
 ```bash
-brew install openjdk@21 docker
+brew install node docker
 # Start Docker Desktop from Applications
 git clone https://github.com/orcunbalcilar/promptdev.git
 cd promptdev
@@ -652,7 +618,7 @@ cd promptdev
 
 ```powershell
 # Install with winget (Windows 11+)
-winget install EclipseAdoptium.Temurin.21.JDK
+winget install OpenJS.NodeJS
 winget install Git.Git
 winget install Docker.DockerDesktop
 
@@ -666,10 +632,10 @@ cd promptdev
 
 ```bash
 # Debian/Ubuntu
-sudo apt-get install openjdk-21-jdk docker.io git
+sudo apt-get install nodejs docker.io git
 
 # Fedora/RHEL
-sudo dnf install java-21-openjdk docker git
+sudo dnf install nodejs docker git
 
 git clone https://github.com/orcunbalcilar/promptdev.git
 cd promptdev
@@ -682,15 +648,14 @@ cd promptdev
 
 | Layer            | Technology           | Version |
 | ---------------- | -------------------- | ------- |
-| Frontend         | Next.js              | 16.1.6  |
+| Full-stack       | Next.js              | 16.1.6  |
 | UI Framework     | React                | 19.2.4  |
 | Styling          | Tailwind CSS         | 4.x     |
 | UI Components    | shadcn/ui            | Latest  |
 | State Management | TanStack React Query | 5.x     |
 | Authentication   | NextAuth.js          | v5 beta |
-| Backend          | Spring Boot          | 4.0.2   |
-| Language         | Java                 | 21      |
-| Native Runtime   | GraalVM Native Image | 21      |
+| ORM              | Drizzle ORM          | 0.45.1  |
+| DB Driver        | postgres (node)      | 3.4.8   |
 | Database         | PostgreSQL           | 18      |
 | Encryption       | AES-256-GCM          | —       |
 | AI SDK           | GitHub Copilot SDK   | 0.1.24  |

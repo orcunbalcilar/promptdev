@@ -5,7 +5,7 @@ import { getScheduledJobs, type ScheduledJob } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CalendarClock, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { CreateJobDialog, JobCard } from "./_components";
+import { CreateJobDialog, JobCard } from "@/components/scheduled-jobs";
 
 export default function ScheduledJobsPage() {
   const router = useRouter();

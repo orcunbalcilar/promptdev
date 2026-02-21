@@ -51,12 +51,12 @@ vi.mock('sonner', () => ({
 }))
 
 // Mock heavy child components to keep tests focused
-vi.mock('@/components/agent-activity-stream', () => ({
+vi.mock('@/components/tasks/activity-stream', () => ({
   AgentActivityStream: () => <div data-testid="activity-stream" />,
   ChangedFilesTree: () => <div data-testid="changed-files" />,
 }))
 
-vi.mock('@/components/task-changes-summary', () => ({
+vi.mock('@/components/tasks/task-changes-summary', () => ({
   TaskChangesSummary: () => <div data-testid="changes-summary" />,
 }))
 

@@ -1,4 +1,5 @@
-<rules>
+# Rules
+
 - always use official docs, use context7
 - always prefer the practices of any library or framework, no manual workaround just to develop or solve anything.
 - always cover all changes by tests and validate them all by running. Nothing is worse than slop code.
@@ -9,6 +10,5 @@
 - always use claude-opus-4.6 subagents to be fast and efficient.
 - always be responsible for the project and its code quality. "None of these are caused by my changes." is not an acceptable answer. If you see any issues, fix them.
 - always learn from your mistakes. And update the rules under lessons section. This is as important as implementing the features.
-</rules>
-<lessons>
-</lessons>
+
+## Lessons

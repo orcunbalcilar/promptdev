@@ -152,7 +152,7 @@ detect_runtime() {
 
 # ── Clone repo if needed ────────────────────────────────────────────────────
 ensure_repo() {
-    if [ -f "docker-compose.yml" ] && [ -d "promptdev-backend" ]; then
+    if [ -f "docker-compose.yml" ] && [ -d "promptdev-frontend" ]; then
         PROJECT_DIR="$(pwd)"
         return
     fi
@@ -420,8 +420,6 @@ main() {
     header "Writing Configuration"
 
     NEXTAUTH_URL="${NEXTAUTH_URL:-http://localhost:3000}"
-    NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-http://localhost:8080/api}"
-    LOG_LEVEL="${LOG_LEVEL:-INFO}"
 
     mkdir -p "$(dirname "$ENV_FILE")"
 
@@ -442,7 +440,6 @@ AUTH_GITHUB_ID=${AUTH_GITHUB_ID}
 AUTH_GITHUB_SECRET=${AUTH_GITHUB_SECRET}
 AUTH_GOOGLE_ID=${AUTH_GOOGLE_ID}
 AUTH_GOOGLE_SECRET=${AUTH_GOOGLE_SECRET}
-NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 # ── GitHub / Copilot SDK ────────────────────────────────────────────────────
 GITHUB_TOKEN=${GITHUB_TOKEN}
@@ -461,9 +458,6 @@ SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
 JIRA_URL=${JIRA_URL}
 JIRA_USERNAME=${JIRA_USERNAME}
 JIRA_TOKEN=${JIRA_TOKEN}
-
-# ── Logging ─────────────────────────────────────────────────────────────────
-LOG_LEVEL=${LOG_LEVEL}
 ENVEOF
 
     chmod 600 "$ENV_FILE"
@@ -492,7 +486,6 @@ ENVEOF
 
     info "Services:"
     info "  Frontend:  http://localhost:3000"
-    info "  Backend:   http://localhost:8080/api"
     info "  Database:  localhost:5432"
     if $DEPLOY_SLACK; then
         info "  Slack Bot: Running (Socket Mode)"

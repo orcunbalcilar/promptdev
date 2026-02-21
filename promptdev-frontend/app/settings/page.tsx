@@ -25,7 +25,7 @@ import {
   ProfileCard,
   SecurityNoteCard,
   SystemPromptCard,
-} from "./_components";
+} from "@/components/settings";
 
 export default function SettingsPage() {
   const router = useRouter();

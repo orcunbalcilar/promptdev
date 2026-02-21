@@ -2,7 +2,7 @@
 
 import {
   ChangedFilesTree,
-} from "@/components/agent-activity-stream";
+} from "@/components/tasks/activity-stream";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,15 +39,16 @@ import {
   TaskHeaderActions,
   TaskSidebar,
   ResumeForm,
-} from "../_components";
+  TaskRefineForm,
+} from "@/components/tasks";
 
 // Lazy-load heaviest components
 const AgentActivityStream = dynamic(
-  () => import("@/components/agent-activity-stream").then((m) => ({ default: m.AgentActivityStream })),
+  () => import("@/components/tasks/activity-stream").then((m) => ({ default: m.AgentActivityStream })),
   { ssr: false, loading: () => <div className="flex items-center justify-center h-32"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> },
 );
 const TaskChangesSummary = dynamic(
-  () => import("@/components/task-changes-summary").then((m) => ({ default: m.TaskChangesSummary })),
+  () => import("@/components/tasks/task-changes-summary").then((m) => ({ default: m.TaskChangesSummary })),
   { ssr: false, loading: () => <div className="flex items-center justify-center h-32"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> },
 );
 
@@ -317,6 +318,14 @@ export default function TaskDetailPage() {
           </div>
         </div>
       </header>
+
+      {/* Jira Task Refinement Form */}
+      {task.status === "PENDING" && task.jiraIssueKey && (
+        <TaskRefineForm
+          task={task}
+          onStarted={() => queryClient.refetchQueries({ queryKey: ["task", id] })}
+        />
+      )}
 
       {/* Resume Form */}
       {showResumeForm && (

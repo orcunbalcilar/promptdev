@@ -1,8 +1,8 @@
 # =============================================================================
 # PromptDev — Podman / Docker Compose
 # =============================================================================
-# Runs the full stack: PostgreSQL, Backend (GraalVM native), Frontend, and
-# optionally Slack Bot.
+# Runs the full stack: PostgreSQL, Frontend (Next.js with integrated backend),
+# and optionally Slack Bot.
 #
 # Quick deploy:   curl -fsSL <raw-url>/deploy.sh | bash
 #
@@ -20,7 +20,7 @@
 # Volumes (persistent data):
 #   pgdata         – PostgreSQL database files
 #   nextjs-cache   – Next.js ISR / component cache (survives restarts)
-#   workspace-data – Backend workspace files (task repos, generated code)
+#   workspace-data – Workspace files (task repos, generated code)
 # =============================================================================
 
 services:
@@ -43,45 +43,7 @@ services:
       timeout: 3s
       retries: 10
 
-  # ── Spring Boot Backend (GraalVM native image) ────────────────────────────
-  # First build compiles a native executable (~15 min, needs ~8 GB RAM).
-  # Subsequent builds are cached and much faster.
-  # BuildKit is enabled for persistent Maven cache across builds.
-  backend:
-    build:
-      context: ./promptdev-backend
-      dockerfile: Dockerfile
-    container_name: promptdev-backend
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      DB_URL: jdbc:postgresql://db:5432/promptdev
-      DB_USERNAME: promptdev
-      DB_PASSWORD: promptdev
-      JPA_DDL_AUTO: update
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
-      BITBUCKET_URL: ${BITBUCKET_URL:-}
-      BITBUCKET_USERNAME: ${BITBUCKET_USERNAME:-}
-      BITBUCKET_TOKEN: ${BITBUCKET_TOKEN:-}
-      JIRA_URL: ${JIRA_URL:-}
-      JIRA_USERNAME: ${JIRA_USERNAME:-}
-      JIRA_TOKEN: ${JIRA_TOKEN:-}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      WORKSPACE_BASE_PATH: /data/workspaces
-    ports:
-      - "8080:8080"
-    volumes:
-      - workspace-data:/data/workspaces
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8080/api/actuator/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-  # ── Next.js Frontend ──────────────────────────────────────────────────────
+  # ── Next.js Frontend (with integrated backend) ────────────────────────────
   frontend:
     build:
       context: ./promptdev-frontend
@@ -89,21 +51,30 @@ services:
     container_name: promptdev-frontend
     restart: unless-stopped
     depends_on:
-      backend:
+      db:
         condition: service_healthy
     environment:
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api}
+      DATABASE_URL: postgresql://promptdev:promptdev@db:5432/promptdev
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       AUTH_SECRET: ${AUTH_SECRET:-}
       AUTH_GITHUB_ID: ${AUTH_GITHUB_ID:-}
       AUTH_GITHUB_SECRET: ${AUTH_GITHUB_SECRET:-}
       AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
       AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      BITBUCKET_URL: ${BITBUCKET_URL:-}
+      BITBUCKET_USERNAME: ${BITBUCKET_USERNAME:-}
+      BITBUCKET_TOKEN: ${BITBUCKET_TOKEN:-}
+      JIRA_URL: ${JIRA_URL:-}
+      JIRA_USERNAME: ${JIRA_USERNAME:-}
+      JIRA_TOKEN: ${JIRA_TOKEN:-}
+      WORKSPACE_BASE_PATH: /data/workspaces
     ports:
       - "3000:3000"
     volumes:
       - nextjs-cache:/app/.next/cache
+      - workspace-data:/data/workspaces
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/ || exit 1"]
       interval: 10s
@@ -121,13 +92,13 @@ services:
     profiles:
       - slack
     depends_on:
-      backend:
+      frontend:
         condition: service_healthy
     environment:
       SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
       SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
       SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET}
-      PROMPTDEV_API_URL: http://backend:8080/api
+      PROMPTDEV_API_URL: http://frontend:3000/api
       PROMPTDEV_FRONTEND_URL: http://frontend:3000
 
 volumes:

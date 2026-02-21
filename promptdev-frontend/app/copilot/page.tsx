@@ -40,13 +40,13 @@ import { useCopilotSession } from "@/hooks/useCopilotSession";
 import { DEFAULT_MODEL_ID } from "@/lib/copilot/models";
 import { cn } from "@/lib/utils";
 
-import { stateColors } from "./_components/constants";
+import { stateColors } from "@/components/copilot/constants";
 import {
   CopilotMessageDisplay,
   StreamingAssistantMessage,
-} from "./_components/copilot-messages";
-import { SettingsDialog } from "./_components/settings-dialog";
-import { StartSessionDialog } from "./_components/start-session-dialog";
+} from "@/components/copilot/copilot-messages";
+import { SettingsDialog } from "@/components/copilot/settings-dialog";
+import { StartSessionDialog } from "@/components/copilot/start-session-dialog";
 
 /**
  * Copilot Agent Page
