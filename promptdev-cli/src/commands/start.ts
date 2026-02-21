@@ -91,6 +91,12 @@ async function startFrontend(projectDir: string, detach: boolean): Promise<boole
     return true
   }
 
+  // Ensure node:sqlite is available for the Copilot SDK CLI process
+  const [major] = process.versions.node.split('.').map(Number)
+  if (major < 25 && !process.env.NODE_OPTIONS?.includes('--experimental-sqlite')) {
+    process.env.NODE_OPTIONS = `${process.env.NODE_OPTIONS ?? ''} --experimental-sqlite`.trim()
+  }
+
   if (detach) {
     const logFile = join(projectDir, '.promptdev', 'frontend.log')
     spawnDetached('pnpm', ['dev'], frontendDir, logFile)

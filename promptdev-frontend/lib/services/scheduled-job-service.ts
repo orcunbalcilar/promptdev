@@ -1,7 +1,7 @@
 /**
  * Scheduled job service — CRUD and cron-based execution timing.
  */
-import { db } from "../db";
+import { getDb } from "../db";
 import { scheduledJobs, tasks } from "../db/schema";
 import { eq, and, lte, desc } from "drizzle-orm";
 import CronExpressionParser from "cron-parser";
@@ -78,8 +78,9 @@ function computeNextRun(cronExpression: string): Date {
 
 export async function createJob(req: CreateScheduledJobRequest): Promise<ScheduledJobResponse> {
   const nextRun = computeNextRun(req.cronExpression);
+  const now = new Date();
 
-  const [job] = await db
+  const [job] = await getDb()
     .insert(scheduledJobs)
     .values({
       name: req.name,
@@ -96,6 +97,8 @@ export async function createJob(req: CreateScheduledJobRequest): Promise<Schedul
       maxIterations: req.maxIterations ?? 10,
       enabled: true,
       nextRunAt: nextRun,
+      createdAt: now,
+      updatedAt: now,
     })
     .returning();
 
@@ -103,13 +106,13 @@ export async function createJob(req: CreateScheduledJobRequest): Promise<Schedul
 }
 
 export async function getJob(id: string): Promise<ScheduledJobResponse> {
-  const [job] = await db.select().from(scheduledJobs).where(eq(scheduledJobs.id, id)).limit(1);
+  const [job] = await getDb().select().from(scheduledJobs).where(eq(scheduledJobs.id, id)).limit(1);
   if (!job) throw new Error(`Scheduled job not found: ${id}`);
   return toResponse(job);
 }
 
 export async function getAllJobs(): Promise<ScheduledJobResponse[]> {
-  const result = await db
+  const result = await getDb()
     .select()
     .from(scheduledJobs)
     .orderBy(desc(scheduledJobs.createdAt));
@@ -117,17 +120,17 @@ export async function getAllJobs(): Promise<ScheduledJobResponse[]> {
 }
 
 export async function deleteJob(id: string): Promise<void> {
-  await db.delete(scheduledJobs).where(eq(scheduledJobs.id, id));
+  await getDb().delete(scheduledJobs).where(eq(scheduledJobs.id, id));
 }
 
 export async function toggleJob(id: string): Promise<ScheduledJobResponse> {
-  const [job] = await db.select().from(scheduledJobs).where(eq(scheduledJobs.id, id)).limit(1);
+  const [job] = await getDb().select().from(scheduledJobs).where(eq(scheduledJobs.id, id)).limit(1);
   if (!job) throw new Error(`Scheduled job not found: ${id}`);
 
   const newEnabled = !job.enabled;
   const nextRun = newEnabled ? computeNextRun(job.cronExpression) : null;
 
-  const [updated] = await db
+  const [updated] = await getDb()
     .update(scheduledJobs)
     .set({ enabled: newEnabled, nextRunAt: nextRun })
     .where(eq(scheduledJobs.id, id))
@@ -140,7 +143,7 @@ export async function toggleJob(id: string): Promise<ScheduledJobResponse> {
 
 export async function getDueJobs(): Promise<ScheduledJobResponse[]> {
   const now = new Date();
-  const result = await db
+  const result = await getDb()
     .select()
     .from(scheduledJobs)
     .where(
@@ -156,12 +159,12 @@ export async function markJobRun(
   jobId: string,
   taskId: string,
 ): Promise<ScheduledJobResponse> {
-  const [job] = await db.select().from(scheduledJobs).where(eq(scheduledJobs.id, jobId)).limit(1);
+  const [job] = await getDb().select().from(scheduledJobs).where(eq(scheduledJobs.id, jobId)).limit(1);
   if (!job) throw new Error(`Scheduled job not found: ${jobId}`);
 
   const nextRun = computeNextRun(job.cronExpression);
 
-  const [updated] = await db
+  const [updated] = await getDb()
     .update(scheduledJobs)
     .set({
       lastRunAt: new Date(),
@@ -175,7 +178,7 @@ export async function markJobRun(
 }
 
 export async function getJobHistory(jobId: string) {
-  const result = await db
+  const result = await getDb()
     .select()
     .from(tasks)
     .where(eq(tasks.scheduledJobId, jobId))

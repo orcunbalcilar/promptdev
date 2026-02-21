@@ -242,7 +242,8 @@ vi.mock('@/lib/copilot/models', () => ({
 // Import components under test AFTER mocks
 // ============================================================================
 
-import { AgentActivityStream, ChangedFilesTree } from '@/components/tasks/activity-stream'
+import { AgentActivityStream } from '@/components/tasks/activity-stream/stream'
+import { ChangedFilesTree } from '@/components/tasks/activity-stream/file-tree'
 
 // jsdom doesn't implement scrollIntoView
 beforeEach(() => {

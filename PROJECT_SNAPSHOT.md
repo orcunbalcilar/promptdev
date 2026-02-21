@@ -57,6 +57,8 @@ Build an AI-powered development platform where users describe features via promp
 | AI Engine        | Copilot SDK          | 0.1.24  |
 | VCS              | Bitbucket / Local    | —       |
 | Issues           | Jira Server          | —       |
+| Schema Validation| Zod                  | 4.3.6   |
+| Theming          | next-themes          | 0.4.6   |
 | Testing          | Vitest + Playwright  | 4.0.18  |
 | Package Manager  | pnpm                 | Latest  |
 | React Compiler   | babel-plugin         | Latest  |
@@ -99,12 +101,14 @@ Build an AI-powered development platform where users describe features via promp
 - Encrypted secrets (AES-256-GCM via node:crypto for all tokens)
 - Direct PostgreSQL access via Drizzle ORM (no Java backend)
 - 49 API route handlers covering all endpoints
+- Copilot SDK deep integration: defineTool with zod schemas, session hooks (5 types), infinite sessions with compaction, user input requests
+- Code review as fix & validate paradigm (not read-only suggestions)
 - 9 TypeScript service modules with 135 unit tests
 
 ### Frontend UI
 
 - Kanban dashboard with task cards (refined UI with colored column borders, gradient header, Glass effect)
-- Create task dialog (repo dropdown, branch selectors, model picker, iterative toggle)
+- Create task dialog (repo dropdown, branch selectors, model picker, iterative toggle, SDLC template picker with category filters)
 - Agent Skills powered by skills.sh ecosystem (12 curated skills from vercel-labs/agent-skills, anthropics/skills, etc. installed via `npx skills add`, click-to-select UI with install counts, deduped install commands in boot script)
 - Task detail page with real-time event log (optimistic SSE updates, no redundant polling)
 - Jira task refinement form (edit title, prompt, model, etc. before starting Jira-originated tasks)
@@ -116,7 +120,14 @@ Build an AI-powered development platform where users describe features via promp
 - Route protection (proxy.ts)
 - Per-user Copilot tokens for session isolation
 - Copilot slash commands (/model, /review, /fleet, /clear, /help)
+- Dark mode / light mode / system theme toggle (next-themes)
+- Snow particle effect toggle (with localStorage persistence)
+- Custom SVG favicon (code brackets icon)
+- Bounded-height scrollable Kanban board (no endless vertical growth)
+- Auto-expanding file change details with larger diff views
+- Model selector graceful empty state handling
 - React Compiler (automatic memoization)
+- 46 test files with 602 unit tests
 - E2E tests (Playwright)
 
 ### Slack Bot
@@ -254,6 +265,6 @@ Tasks have three distinct start behaviors based on their origin:
 
 > Continue building the PromptDev project. Read PROJECT_SNAPSHOT.md and README.md for full context.
 >
-> Completed: Full-stack Next.js app with all server-side logic (tasks with PATCH update, scheduled jobs, workspace types, model selection with 14+ models and dynamic discovery, iterative sessions, user management with encrypted secrets, BYOK provider support, Jira integration with opt-out mechanism for cancelled tasks) using Drizzle ORM for direct PostgreSQL access — no separate backend. Frontend UI (dashboard, task dialog with selectors and local project creation, task detail with Jira refinement form, scheduled jobs page, copilot chat with slash commands, authentication with NextAuth.js v5, settings page with BYOK and Jira config, login page, React Compiler), CLI, Slack bot (with /model, /review, /fleet commands and auto-start on create), Docker Compose, Podman support, monorepo structure, one-command deploy, Playwright E2E tests.
+> Completed: Full-stack Next.js app with all server-side logic (tasks with PATCH update, scheduled jobs, workspace types, model selection with 14+ models and dynamic discovery, iterative sessions, user management with encrypted secrets, BYOK provider support, Jira integration with opt-out mechanism for cancelled tasks) using Drizzle ORM for direct PostgreSQL access — no separate backend. Frontend UI (dashboard with bounded-height scrollable Kanban columns, task dialog with SDLC template picker and selectors, task detail with auto-expanded code diffs, scheduled jobs page, copilot chat with slash commands, dark mode with next-themes, snow toggle effect, custom favicon, authentication with NextAuth.js v5, settings page with BYOK/Ollama config and Jira, login page, React Compiler), CLI, Slack bot (with /model, /review, /fleet commands and auto-start on create), Docker Compose, Podman support, monorepo structure, one-command deploy, Playwright E2E tests.
 >
-> Proxy.ts handles route protection (Next.js 16 pattern). All Dockerfiles updated to Node 25. Per-user Copilot tokens and BYOK providers supported for session isolation. Application ships with zero development defaults — all env-specific config injected by deploy.sh or docker-compose.yml. All Node.js subprojects use pnpm. Bitbucket and Jira use token-only auth (no passwords). 9 service modules with 135 unit tests + 42 total test files with 581 tests.
+> Copilot SDK heavily integrated: session hooks (onPreToolUse/onPostToolUse/onSessionStart/onSessionEnd/onErrorOccurred), custom tools via defineTool with zod (get_task_info, report_progress), infinite sessions with compaction (0.8/0.95 thresholds), user input requests (ask_user), BYOK providers (OpenAI/Azure/Anthropic/Ollama). Code review transformed to fix & validate paradigm (runs once after all iterations). SSE evaluated — necessary as transport layer from server-side SDK events to browser. Model selector handles empty models gracefully. 46 test files with 602 tests passing.

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as taskService from "@/lib/services/task-service";
+import { requireAuth, requireTaskOwnership } from "@/lib/auth-guard";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ taskId: string }> },
 ) {
+  const { error } = await requireAuth();
+  if (error) return error;
+
   const { taskId } = await params;
   try {
     const task = await taskService.getTask(taskId);
@@ -18,7 +22,12 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ taskId: string }> },
 ) {
+  const { session, error } = await requireAuth();
+  if (error) return error;
+
   const { taskId } = await params;
+  const ownershipError = await requireTaskOwnership(session, taskId);
+  if (ownershipError) return ownershipError;
   const body = await request.json();
   try {
     const task = await taskService.updateTask(taskId, body);

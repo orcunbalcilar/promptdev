@@ -3,7 +3,7 @@
  * Retries up to 3 times to handle push propagation delays.
  */
 
-import { sendCallback } from "./backend";
+import { sendCallback } from "./service-bridge";
 import type { TaskData } from "./types";
 import * as taskService from "../../services/task-service";
 

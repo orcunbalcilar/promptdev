@@ -1,7 +1,8 @@
 /**
- * Drizzle ORM schema — mirrors the JPA entities from the Spring Boot backend.
+ * Drizzle ORM schema for the PostgreSQL database.
  * Table names, column names, and types match the existing PostgreSQL schema.
  */
+import { randomUUID } from "node:crypto";
 import {
   pgTable,
   uuid,
@@ -19,7 +20,7 @@ import { relations } from "drizzle-orm";
 // ── Users ──────────────────────────────────────────────────────
 
 export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: uuid("id").primaryKey().$defaultFn(() => randomUUID()),
   provider: varchar("provider", { length: 255 }).notNull(),
   providerAccountId: varchar("provider_account_id", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).notNull(),
@@ -66,7 +67,7 @@ export const users = pgTable("users", {
 // ── Tasks ──────────────────────────────────────────────────────
 
 export const tasks = pgTable("tasks", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: uuid("id").primaryKey().$defaultFn(() => randomUUID()),
   title: varchar("title", { length: 255 }).notNull(),
   prompt: text("prompt"),
   repositorySlug: varchar("repository_slug", { length: 255 }).notNull(),
@@ -125,7 +126,7 @@ export const tasks = pgTable("tasks", {
 // ── Task Events ────────────────────────────────────────────────
 
 export const taskEvents = pgTable("task_events", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: uuid("id").primaryKey().$defaultFn(() => randomUUID()),
   taskId: uuid("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
   eventType: varchar("event_type", { length: 50 }).notNull(),
   message: text("message"),
@@ -137,13 +138,13 @@ export const taskEvents = pgTable("task_events", {
   toolName: varchar("tool_name", { length: 255 }),
   toolInput: text("tool_input"),
   toolOutput: text("tool_output"),
-  timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
+  timestamp: timestamp("timestamp", { withTimezone: true }).notNull().$defaultFn(() => new Date()),
 });
 
 // ── Scheduled Jobs ─────────────────────────────────────────────
 
 export const scheduledJobs = pgTable("scheduled_jobs", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: uuid("id").primaryKey().$defaultFn(() => randomUUID()),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   cronExpression: varchar("cron_expression", { length: 255 }).notNull(),
@@ -167,7 +168,7 @@ export const scheduledJobs = pgTable("scheduled_jobs", {
 // ── Copilot Sessions (Monitoring) ──────────────────────────────
 
 export const copilotSessions = pgTable("copilot_sessions", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: uuid("id").primaryKey().$defaultFn(() => randomUUID()),
   sdkSessionId: varchar("sdk_session_id", { length: 255 }).notNull().unique(),
   model: varchar("model", { length: 255 }).notNull(),
   reasoningEffort: varchar("reasoning_effort", { length: 50 }),
@@ -188,7 +189,7 @@ export const copilotSessions = pgTable("copilot_sessions", {
 export const copilotOperations = pgTable(
   "copilot_operations",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: uuid("id").primaryKey().$defaultFn(() => randomUUID()),
     sessionId: uuid("session_id").references(() => copilotSessions.id),
     taskId: uuid("task_id").references(() => tasks.id),
     operationType: varchar("operation_type", { length: 50 }).notNull(),
@@ -203,7 +204,7 @@ export const copilotOperations = pgTable(
     errorMessage: text("error_message"),
     source: varchar("source", { length: 50 }).default("web"),
     clientInfo: varchar("client_info", { length: 255 }),
-    timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
+    timestamp: timestamp("timestamp", { withTimezone: true }).notNull().$defaultFn(() => new Date()),
   },
   (table) => [
     index("idx_operations_session").on(table.sessionId),
@@ -217,7 +218,7 @@ export const copilotOperations = pgTable(
 export const jiraIssueOptOuts = pgTable(
   "jira_issue_opt_outs",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: uuid("id").primaryKey().$defaultFn(() => randomUUID()),
     userId: uuid("user_id").notNull().references(() => users.id),
     jiraIssueKey: varchar("jira_issue_key", { length: 255 }).notNull(),
     reason: varchar("reason", { length: 500 }),

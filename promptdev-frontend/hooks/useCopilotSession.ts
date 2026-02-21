@@ -204,7 +204,8 @@ export function useCopilotSession(
         break
       }
 
-      case 'tool.execution_end': {
+      case 'tool.execution_end':
+      case 'tool.execution_complete': {
         const data = event.data as { 
           toolId: string
           output?: unknown
@@ -234,6 +235,15 @@ export function useCopilotSession(
           errorMessage: data.error,
           source: 'web',
         })
+        break
+      }
+
+      case 'tool.execution_progress': {
+        // Tool is still running but reporting progress
+        const data = event.data as { toolId: string; progress?: number; message?: string }
+        setTools(prev => prev.map(tool =>
+          tool.id === data.toolId ? { ...tool, state: 'running' } : tool
+        ))
         break
       }
 
@@ -279,20 +289,86 @@ export function useCopilotSession(
         })
         break
       }
+
+      // Subagent events
+      case 'subagent.started': {
+        const data = event.data as { agentName: string }
+        setState('processing')
+        queueOperation({
+          sessionId: event.sessionId,
+          operationType: 'SUBAGENT_STARTED',
+          message: `Sub-agent started: ${data.agentName}`,
+          source: 'web',
+        })
+        break
+      }
+
+      case 'subagent.completed':
+      case 'subagent.failed': {
+        setState('idle')
+        break
+      }
+
+      // Session metadata changes
+      case 'session.title_changed': {
+        const data = event.data as { title: string }
+        setSession(prev => prev ? { ...prev, title: data.title } : prev)
+        break
+      }
+
+      case 'session.compaction_start': {
+        setState('processing')
+        break
+      }
+
+      case 'session.compaction_complete': {
+        setState('idle')
+        break
+      }
+
+      // Assistant usage for token tracking
+      case 'assistant.usage': {
+        const data = event.data as { inputTokens?: number; outputTokens?: number }
+        queueOperation({
+          sessionId: event.sessionId,
+          operationType: 'USAGE_TRACKED',
+          message: `Tokens: ${data.inputTokens ?? 0} in, ${data.outputTokens ?? 0} out`,
+          source: 'web',
+        })
+        break
+      }
     }
   }, [onEvent, streamingReasoning, tools])
 
   /**
-   * Connect to SSE stream
+   * Connect to SSE stream with exponential backoff reconnection
    */
+  const reconnectDelayRef = useRef(1000)
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const sessionIdRef = useRef<string | null>(null)
+
   const connectToStream = useCallback((sessionId: string) => {
     // Close existing connection
     if (eventSourceRef.current) {
       eventSourceRef.current.close()
     }
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current)
+      reconnectTimeoutRef.current = null
+    }
+
+    sessionIdRef.current = sessionId
 
     const eventSource = new EventSource(`/api/copilot/sessions/${sessionId}/stream`)
     eventSourceRef.current = eventSource
+
+    eventSource.onopen = () => {
+      // Reset backoff on successful connection
+      reconnectDelayRef.current = 1000
+      if (state === 'disconnected') {
+        setState('idle')
+      }
+    }
 
     eventSource.onmessage = (e) => {
       try {
@@ -306,12 +382,25 @@ export function useCopilotSession(
     eventSource.onerror = () => {
       setState('disconnected')
       eventSource.close()
+
+      // Exponential backoff reconnection: 1s → 2s → 4s → 8s → max 30s
+      const delay = reconnectDelayRef.current
+      reconnectDelayRef.current = Math.min(delay * 2, 30_000)
+      reconnectTimeoutRef.current = setTimeout(() => {
+        if (sessionIdRef.current === sessionId) {
+          connectToStream(sessionId)
+        }
+      }, delay)
     }
 
     return () => {
       eventSource.close()
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+        reconnectTimeoutRef.current = null
+      }
     }
-  }, [handleEvent])
+  }, [handleEvent, state])
 
   /**
    * Create a new session
@@ -472,6 +561,9 @@ export function useCopilotSession(
     return () => {
       if (eventSourceRef.current) {
         eventSourceRef.current.close()
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
       }
     }
   }, [])

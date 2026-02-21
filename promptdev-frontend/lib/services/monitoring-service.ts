@@ -1,7 +1,7 @@
 /**
  * Monitoring service — session and operation tracking for Copilot agent monitoring.
  */
-import { db } from "../db";
+import { getDb } from "../db";
 import { copilotSessions, copilotOperations } from "../db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 
@@ -118,7 +118,7 @@ function toOperationResponse(o: typeof copilotOperations.$inferSelect): Operatio
 // ── Sessions ────────────────────────────────────────────────────
 
 export async function createSession(req: CreateSessionRequest): Promise<SessionResponse> {
-  const [session] = await db
+  const [session] = await getDb()
     .insert(copilotSessions)
     .values({
       sdkSessionId: req.sdkSessionId,
@@ -127,6 +127,7 @@ export async function createSession(req: CreateSessionRequest): Promise<SessionR
       reasoningEffort: req.reasoningEffort,
       status: "ACTIVE",
       source: req.source ?? "web",
+      createdAt: new Date(),
     })
     .returning();
   return toSessionResponse(session);
@@ -136,7 +137,7 @@ export async function endSession(
   sdkSessionId: string,
   errorMessage?: string,
 ): Promise<SessionResponse> {
-  const [session] = await db
+  const [session] = await getDb()
     .select()
     .from(copilotSessions)
     .where(eq(copilotSessions.sdkSessionId, sdkSessionId))
@@ -150,7 +151,7 @@ export async function endSession(
     updates.errorCount = (session.errorCount ?? 0) + 1;
   }
 
-  const [updated] = await db
+  const [updated] = await getDb()
     .update(copilotSessions)
     .set(updates)
     .where(eq(copilotSessions.id, session.id))
@@ -162,13 +163,13 @@ export async function endSession(
 export async function getSessions(page = 0, size = 20) {
   const offset = page * size;
   const [result, countResult] = await Promise.all([
-    db
+    getDb()
       .select()
       .from(copilotSessions)
       .orderBy(desc(copilotSessions.createdAt))
       .limit(size)
       .offset(offset),
-    db.select({ count: sql<number>`count(*)` }).from(copilotSessions),
+    getDb().select({ count: sql<number>`count(*)` }).from(copilotSessions),
   ]);
 
   return {
@@ -181,7 +182,7 @@ export async function getSessions(page = 0, size = 20) {
 }
 
 export async function getSessionDetails(sdkSessionId: string): Promise<SessionResponse> {
-  const [session] = await db
+  const [session] = await getDb()
     .select()
     .from(copilotSessions)
     .where(eq(copilotSessions.sdkSessionId, sdkSessionId))
@@ -191,7 +192,7 @@ export async function getSessionDetails(sdkSessionId: string): Promise<SessionRe
 }
 
 export async function getSessionOperations(sessionId: string): Promise<OperationResponse[]> {
-  const ops = await db
+  const ops = await getDb()
     .select()
     .from(copilotOperations)
     .where(eq(copilotOperations.sessionId, sessionId))
@@ -200,21 +201,21 @@ export async function getSessionOperations(sessionId: string): Promise<Operation
 }
 
 export async function deleteSession(sdkSessionId: string): Promise<void> {
-  const [session] = await db
+  const [session] = await getDb()
     .select()
     .from(copilotSessions)
     .where(eq(copilotSessions.sdkSessionId, sdkSessionId))
     .limit(1);
   if (session) {
-    await db.delete(copilotOperations).where(eq(copilotOperations.sessionId, session.id));
-    await db.delete(copilotSessions).where(eq(copilotSessions.id, session.id));
+    await getDb().delete(copilotOperations).where(eq(copilotOperations.sessionId, session.id));
+    await getDb().delete(copilotSessions).where(eq(copilotSessions.id, session.id));
   }
 }
 
 // ── Operations ──────────────────────────────────────────────────
 
 export async function createOperation(req: CreateOperationRequest): Promise<OperationResponse> {
-  const [op] = await db
+  const [op] = await getDb()
     .insert(copilotOperations)
     .values({
       sessionId: req.sessionId,
@@ -231,6 +232,7 @@ export async function createOperation(req: CreateOperationRequest): Promise<Oper
       errorMessage: req.errorMessage,
       source: req.source ?? "web",
       clientInfo: req.clientInfo,
+      timestamp: new Date(),
     })
     .returning();
 
@@ -247,7 +249,8 @@ export async function batchCreateOperations(
 ): Promise<OperationResponse[]> {
   if (operations.length === 0) return [];
 
-  const ops = await db
+  const now = new Date();
+  const ops = await getDb()
     .insert(copilotOperations)
     .values(
       operations.map((req) => ({
@@ -265,6 +268,7 @@ export async function batchCreateOperations(
         errorMessage: req.errorMessage,
         source: req.source ?? "web",
         clientInfo: req.clientInfo,
+        timestamp: now,
       })),
     )
     .returning();
@@ -277,7 +281,7 @@ export async function batchCreateOperations(
 }
 
 async function updateSessionAggregates(sessionId: string): Promise<void> {
-  const [agg] = await db
+  const [agg] = await getDb()
     .select({
       totalOps: sql<number>`count(*)`,
       totalInput: sql<number>`coalesce(sum(${copilotOperations.inputTokens}), 0)`,
@@ -290,7 +294,7 @@ async function updateSessionAggregates(sessionId: string): Promise<void> {
     .from(copilotOperations)
     .where(eq(copilotOperations.sessionId, sessionId));
 
-  await db
+  await getDb()
     .update(copilotSessions)
     .set({
       totalInputTokens: Number(agg.totalInput),
@@ -305,13 +309,13 @@ async function updateSessionAggregates(sessionId: string): Promise<void> {
 export async function getOperations(page = 0, size = 20) {
   const offset = page * size;
   const [result, countResult] = await Promise.all([
-    db
+    getDb()
       .select()
       .from(copilotOperations)
       .orderBy(desc(copilotOperations.timestamp))
       .limit(size)
       .offset(offset),
-    db.select({ count: sql<number>`count(*)` }).from(copilotOperations),
+    getDb().select({ count: sql<number>`count(*)` }).from(copilotOperations),
   ]);
 
   return {
@@ -328,13 +332,13 @@ export async function getOperations(page = 0, size = 20) {
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   const [totalSessionsResult, activeSessionsResult, totalOpsResult, recentSessions] =
     await Promise.all([
-      db.select({ count: sql<number>`count(*)` }).from(copilotSessions),
-      db
+      getDb().select({ count: sql<number>`count(*)` }).from(copilotSessions),
+      getDb()
         .select({ count: sql<number>`count(*)` })
         .from(copilotSessions)
         .where(eq(copilotSessions.status, "ACTIVE")),
-      db.select({ count: sql<number>`count(*)` }).from(copilotOperations),
-      db
+      getDb().select({ count: sql<number>`count(*)` }).from(copilotOperations),
+      getDb()
         .select()
         .from(copilotSessions)
         .orderBy(desc(copilotSessions.createdAt))

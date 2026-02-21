@@ -81,7 +81,7 @@ function getDiffLineClass(line: string): string {
 export function DiffView({ diff }: Readonly<{ diff: string }>) {
   const lines = diff.split('\n')
   return (
-    <div className="rounded-md border bg-zinc-950 text-zinc-100 overflow-auto max-h-64 font-mono text-xs">
+    <div className="rounded-md border bg-zinc-950 text-zinc-100 overflow-auto max-h-96 font-mono text-xs">
       <div className="p-3">
         {lines.map((line) => (
           <div
@@ -134,8 +134,8 @@ export function FileChangeBadge({
 export function FileChangeDetail({
   file,
 }: Readonly<{ file: FileChangeInfo }>) {
-  const [expanded, setExpanded] = useState(false)
-  const hasContent = file.codeSnippet || file.diff
+  const hasContent = file.codeSnippet || file.diff;
+  const [expanded, setExpanded] = useState(hasContent ?? false)
   const lang =
     (file.language as BundledLanguage) || inferLanguage(file.filePath)
 

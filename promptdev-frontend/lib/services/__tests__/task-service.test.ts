@@ -8,7 +8,7 @@ const mockDb = vi.hoisted(() => ({
   delete: vi.fn(),
 }));
 
-vi.mock("@/lib/db", () => ({ db: mockDb }));
+vi.mock("@/lib/db", () => ({ db: mockDb, getDb: () => mockDb }));
 vi.mock("@/lib/db/schema", () => ({
   tasks: {},
   taskEvents: {},

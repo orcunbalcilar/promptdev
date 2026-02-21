@@ -7,6 +7,7 @@
 import { getSession, subscribeToSession } from "@/lib/copilot/client";
 import type { TypedCopilotEvent } from "@/lib/copilot/types";
 import { NextRequest } from "next/server";
+import { requireAuth } from "@/lib/auth-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +20,9 @@ interface RouteParams {
  * SSE stream for session events
  */
 export async function GET(_request: NextRequest, { params }: RouteParams) {
+  const { error } = await requireAuth();
+  if (error) return error;
+
   const { sessionId } = await params;
 
   // Validate session exists

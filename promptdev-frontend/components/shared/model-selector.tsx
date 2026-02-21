@@ -26,20 +26,34 @@ export function ModelSelector({
   models,
   modelsLoading = false,
 }: Readonly<ModelSelectorProps>) {
+  // Auto-select first model if selectedModel is empty or not in the list
+  const effectiveModel = selectedModel && models.some((m) => m.id === selectedModel)
+    ? selectedModel
+    : models[0]?.id ?? "";
+
+  // Sync with parent if auto-selected
+  if (effectiveModel && effectiveModel !== selectedModel && models.length > 0) {
+    // Use setTimeout to avoid setState during render
+    setTimeout(() => setSelectedModel(effectiveModel), 0);
+  }
+
+  let placeholder = "Select model";
+  if (modelsLoading) {
+    placeholder = "Loading models...";
+  } else if (models.length === 0) {
+    placeholder = "No models available";
+  }
+
   return (
     <div className="grid gap-2">
       <Label>AI Model</Label>
       <Select
-        value={selectedModel}
+        value={effectiveModel}
         onValueChange={setSelectedModel}
-        disabled={modelsLoading}
+        disabled={modelsLoading || models.length === 0}
       >
         <SelectTrigger>
-          <SelectValue
-            placeholder={
-              modelsLoading ? "Loading models..." : "Select model"
-            }
-          />
+          <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
           {models.map((m) => (

@@ -7,6 +7,7 @@
 
 import { abortSession, destroySession, getSession } from "@/lib/copilot/client";
 import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,6 +21,9 @@ interface RouteParams {
  */
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
+    const { error } = await requireAuth();
+    if (error) return error;
+
     const { sessionId } = await params;
     const session = getSession(sessionId);
 
@@ -43,6 +47,9 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
  */
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
+    const { error } = await requireAuth();
+    if (error) return error;
+
     const { sessionId } = await params;
     await destroySession(sessionId);
 
@@ -62,6 +69,9 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
+    const { error } = await requireAuth();
+    if (error) return error;
+
     const { sessionId } = await params;
     const body = (await request.json()) as { action?: string };
 

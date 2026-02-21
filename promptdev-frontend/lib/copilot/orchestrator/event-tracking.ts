@@ -1,13 +1,13 @@
 /**
  * Event tracking for the orchestrator.
  * Subscribes to Copilot SDK session events and routes them
- * to backend monitoring + lifecycle handlers.
+ * to monitoring + lifecycle handlers.
  */
 
 import { trackOperation } from "../../monitoring";
 import { subscribeToSession } from "../client";
 import type { TypedCopilotEvent } from "../types";
-import { sendCallback, serializeField } from "./backend";
+import { sendCallback, serializeField } from "./service-bridge";
 import {
   extractFilePath,
   getFileEventLabel,

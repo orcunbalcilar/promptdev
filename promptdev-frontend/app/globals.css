@@ -129,6 +129,21 @@
 .kanban-column {
   @apply rounded-xl border border-border/60 p-3;
   background: linear-gradient(180deg, oklch(0.98 0 0 / 60%) 0%, oklch(0.96 0 0 / 40%) 100%);
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.7 0.02 260 / 50%) transparent;
+}
+.kanban-column::-webkit-scrollbar {
+  width: 5px;
+}
+.kanban-column::-webkit-scrollbar-track {
+  background: transparent;
+}
+.kanban-column::-webkit-scrollbar-thumb {
+  background: oklch(0.7 0.02 260 / 40%);
+  border-radius: 3px;
+}
+.dark .kanban-column::-webkit-scrollbar-thumb {
+  background: oklch(0.4 0.01 260 / 50%);
 }
 .dark .kanban-column {
   background: linear-gradient(180deg, oklch(0.18 0.005 286 / 50%) 0%, oklch(0.16 0.004 286 / 40%) 100%);
@@ -140,7 +155,7 @@
 .kanban-column-stopped { border-top: 3px solid oklch(0.6 0.2 25); }
 
 .task-card-hover {
-  @apply transition-all duration-200;
+  @apply transition-[transform,box-shadow] duration-200;
 }
 .task-card-hover:hover {
   transform: translateY(-2px);
@@ -162,7 +177,7 @@
 
 /* Skill card styling */
 .skill-card {
-  @apply relative overflow-hidden rounded-lg border p-3 cursor-pointer transition-all duration-200;
+  @apply relative overflow-hidden rounded-lg border p-3 cursor-pointer transition-[transform,box-shadow,border-color,background-color] duration-200;
   background: oklch(0.99 0 0);
 }
 .skill-card:hover {

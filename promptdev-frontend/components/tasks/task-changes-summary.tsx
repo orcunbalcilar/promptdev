@@ -62,13 +62,17 @@ import {
   fileStatusToType,
   buildFolderStructure,
   getSuiteStatus,
+} from './task-changes/types'
+import {
   processFileEvent,
   processGitCommitEvent,
   processTestEvent,
+} from './task-changes/event-processors'
+import {
   SectionHeader,
   FileChangeDetail,
   getFileTypeIcon,
-} from './task-changes'
+} from './task-changes/sub-components'
 
 export interface TaskChangesSummaryProps {
   events: TaskEvent[]

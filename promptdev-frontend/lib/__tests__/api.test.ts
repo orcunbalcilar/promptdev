@@ -237,7 +237,7 @@ describe('API Client', () => {
 
       const result = await resumeTask('task-1', 'Fix the tests')
 
-      // resumeTask makes 2 fetch calls: one to backend resume, one to execute route
+      // resumeTask makes 2 fetch calls: one to resume API, one to execute route
       expect(mockFetch).toHaveBeenCalledTimes(2)
       const [url, opts] = mockFetch.mock.calls[0]
       expect(url).toBe(`${API_BASE}/tasks/task-1/resume`)

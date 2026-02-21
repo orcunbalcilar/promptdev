@@ -16,17 +16,17 @@ import { Plus } from "lucide-react";
 import React, { useState } from "react";
 
 import {
-  AdvancedOptionsSection,
-  BranchSection,
-  IterativeSection,
-  JiraSection,
-  ModelSection,
-  ReviewSection,
   TaskFormProvider,
-  TitlePromptSection,
   useTaskForm,
-  WorkspaceSection,
-} from "./create-task";
+} from "./create-task/_form-context";
+import { TemplatePicker } from "./create-task/template-picker";
+import { TitlePromptSection } from "./create-task/title-prompt-section";
+import { WorkspaceSection } from "./create-task/workspace-section";
+import { BranchSection } from "./create-task/branch-section";
+import { ModelSection } from "./create-task/model-section";
+import { IterativeSection, ReviewSection } from "./create-task/iterative-review-section";
+import { JiraSection } from "./create-task/jira-section";
+import { AdvancedOptionsSection } from "./create-task/advanced-options-section";
 
 export function CreateTaskDialog() {
   const [open, setOpen] = useState(false);
@@ -105,6 +105,7 @@ function TaskForm({ onClose }: Readonly<{ onClose: () => void }>) {
         </DialogDescription>
       </DialogHeader>
       <div className="grid gap-4 py-4">
+        <TemplatePicker />
         <TitlePromptSection />
         <WorkspaceSection />
         <BranchSection />

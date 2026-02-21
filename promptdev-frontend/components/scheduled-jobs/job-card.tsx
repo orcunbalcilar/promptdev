@@ -27,6 +27,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { showErrorToast } from "@/lib/errors";
 import { JOB_TYPE_CONFIG, STATUS_VARIANT } from "./constants";
 
 export function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
@@ -44,7 +45,7 @@ export function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
         `Job "${job.name}" ${job.enabled ? "disabled" : "enabled"} successfully`,
       );
     },
-    onError: () => toast.error(`Failed to toggle job "${job.name}"`),
+    onError: (error) => showErrorToast(error, `toggle job "${job.name}"`),
   });
 
   const deleteMutation = useMutation({
@@ -53,7 +54,7 @@ export function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
       queryClient.invalidateQueries({ queryKey: ["scheduled-jobs"] });
       toast.success(`Job "${job.name}" deleted`);
     },
-    onError: () => toast.error(`Failed to delete job "${job.name}"`),
+    onError: (error) => showErrorToast(error, `delete job "${job.name}"`),
   });
 
   const runNowMutation = useMutation({
@@ -62,7 +63,7 @@ export function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
       queryClient.invalidateQueries({ queryKey: ["scheduled-jobs"] });
       toast.success(`Job "${job.name}" triggered successfully`);
     },
-    onError: () => toast.error(`Failed to trigger job "${job.name}"`),
+    onError: (error) => showErrorToast(error, `trigger job "${job.name}"`),
   });
 
   const { data: history = [] } = useQuery<Task[]>({
@@ -74,7 +75,7 @@ export function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
   const recentHistory = history.slice(0, 3);
 
   return (
-    <Card className={cn("transition-all", !job.enabled && "opacity-60")}>
+    <Card className={cn("transition-opacity", !job.enabled && "opacity-60")}>
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">

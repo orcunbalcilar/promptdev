@@ -51,7 +51,7 @@ export function KanbanBoard({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 h-full">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 h-[calc(100vh-220px)]">
       {columns.map((column) => {
         const columnTasks = getTasksForColumn(column);
         return (
@@ -66,7 +66,7 @@ export function KanbanBoard({
             </div>
 
             <div
-              className={`kanban-column ${column.columnClass} flex flex-col gap-2.5 h-full min-h-48`}
+              className={`kanban-column ${column.columnClass} flex flex-col gap-2.5 flex-1 min-h-48 overflow-y-auto`}
             >
               {columnTasks.length === 0 ? (
                 <div className="flex items-center justify-center h-24 text-xs text-muted-foreground/60 border border-dashed border-border/40 rounded-lg">

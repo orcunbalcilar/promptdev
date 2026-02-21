@@ -1,6 +1,6 @@
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
-import { syncUser, type UserProfile } from "@/lib/user";
+import { syncUser, getUserProfile, type UserProfile } from "@/lib/user";
 
 /**
  * Hook to sync NextAuth OAuth session with backend database user.
@@ -18,8 +18,23 @@ export function useBackendUser() {
   const { data: backendUser, isLoading, error } = useQuery<UserProfile>({
     queryKey: ["backendUser", session?.user?.id],
     queryFn: async () => {
-      if (!session?.user) {
+      if (!session?.user?.id) {
         throw new Error("No session available");
+      }
+
+      // If the session ID is already a UUID, it means NextAuth has already synced 
+      // with the DB (via auth.ts callbacks). We can just fetch the profile.
+      // GitHub IDs are integers, Google IDs are numeric strings. UUIDs are distinct.
+      const userId = session.user.id || "";
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+      
+      if (isUuid) {
+        try {
+          return await getUserProfile(session.user.id);
+        } catch (e) {
+          // If profile fetch fails (e.g. user deleted), try syncing again as fallback
+          console.warn("User profile fetch failed, falling back to sync", e);
+        }
       }
 
       // Extract OAuth provider info from session

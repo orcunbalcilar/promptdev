@@ -177,7 +177,7 @@ describe("Dashboard", () => {
       expect(screen.getByText("Failed to load tasks")).toBeInTheDocument();
     });
     expect(
-      screen.getByText("Please check if the backend is running."),
+      screen.getByText("Please check if the server is running."),
     ).toBeInTheDocument();
     expect(screen.getByText("Retry")).toBeInTheDocument();
   });
@@ -395,5 +395,63 @@ describe("Dashboard", () => {
         "/api/stream/tasks",
       );
     });
+  });
+
+  it("reconnects SSE with exponential backoff on error", async () => {
+    mockGetTasks.mockResolvedValue(successResponse);
+    renderWithProviders(<Dashboard />);
+
+    // Wait for initial SSE connection
+    await waitFor(() => {
+      expect(mockEventSourceConstructor).toHaveBeenCalledTimes(1);
+    });
+
+    // Get the EventSource instance and trigger an error
+    const esMock = globalThis.EventSource as unknown as ReturnType<typeof vi.fn>;
+    const firstInstance = esMock.mock.results[0].value;
+    firstInstance.onerror?.();
+
+    // First reconnect after ~1s (initial delay)
+    await waitFor(() => {
+      expect(mockEventSourceConstructor).toHaveBeenCalledTimes(2);
+    }, { timeout: 3000 });
+
+    // Trigger another error
+    const secondInstance = esMock.mock.results[1].value;
+    secondInstance.onerror?.();
+
+    // Second reconnect takes ~2s (doubled delay)
+    await waitFor(() => {
+      expect(mockEventSourceConstructor).toHaveBeenCalledTimes(3);
+    }, { timeout: 5000 });
+  });
+
+  it("resets SSE backoff delay on successful connection", async () => {
+    mockGetTasks.mockResolvedValue(successResponse);
+    renderWithProviders(<Dashboard />);
+
+    await waitFor(() => {
+      expect(mockEventSourceConstructor).toHaveBeenCalledTimes(1);
+    });
+
+    // First error
+    const esMock = globalThis.EventSource as unknown as ReturnType<typeof vi.fn>;
+    const firstInstance = esMock.mock.results[0].value;
+    firstInstance.onerror?.();
+
+    await waitFor(() => {
+      expect(mockEventSourceConstructor).toHaveBeenCalledTimes(2);
+    }, { timeout: 3000 });
+
+    // Simulate successful connection (onopen) — resets delay to 1s
+    const secondInstance = esMock.mock.results[1].value;
+    secondInstance.onopen?.();
+
+    // Another error — delay should be reset to 1s (not 2s)
+    secondInstance.onerror?.();
+
+    await waitFor(() => {
+      expect(mockEventSourceConstructor).toHaveBeenCalledTimes(3);
+    }, { timeout: 3000 });
   });
 });

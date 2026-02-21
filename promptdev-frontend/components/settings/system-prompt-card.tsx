@@ -14,6 +14,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Cog } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { showErrorToast } from "@/lib/errors";
 import { SaveButton } from "./save-button";
 import type { SettingsCardProps } from "./types";
 
@@ -32,7 +33,7 @@ export function SystemPromptCard({ userId, profile }: SettingsCardProps) {
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
       toast.success("System prompt saved");
     },
-    onError: () => toast.error("Failed to save system prompt"),
+    onError: (error) => showErrorToast(error, "save system prompt"),
   });
 
   return (

@@ -12,6 +12,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Key } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { showErrorToast } from "@/lib/errors";
 import { SaveButton } from "./save-button";
 import { TokenInput } from "./token-input";
 import type { SettingsCardProps } from "./types";
@@ -30,7 +31,7 @@ export function CopilotTokenCard({ userId, profile }: SettingsCardProps) {
       setToken("");
       toast.success("Copilot token saved");
     },
-    onError: () => toast.error("Failed to save Copilot token"),
+    onError: (error) => showErrorToast(error, "save Copilot token"),
   });
 
   return (

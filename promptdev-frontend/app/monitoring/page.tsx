@@ -23,20 +23,13 @@ import {
   type MonitoringSession,
   type PaginatedResponse,
 } from '@/lib/monitoring'
-import {
-  MetricCard,
-  DailyOperationsChart,
-  OperationsByTypeChart,
-  TopToolsChart,
-  SessionsByModelChart,
-  RecentErrorsSection,
-  PaginationControls,
-  SessionsTable,
-  SessionDetail,
-  ReviewsTab,
-  formatNumber,
-  formatTokens,
-} from '@/components/monitoring'
+import { MetricCard } from '@/components/monitoring/metric-card'
+import { DailyOperationsChart, OperationsByTypeChart, TopToolsChart, SessionsByModelChart } from '@/components/monitoring/charts'
+import { RecentErrorsSection, PaginationControls, SessionsTable } from '@/components/monitoring/sessions-table'
+import { SessionDetail } from '@/components/monitoring/session-detail'
+import { ReviewsTab } from '@/components/monitoring/reviews-tab'
+import { formatNumber, formatTokens } from '@/components/monitoring/constants'
+import { standardQueryOptions } from '@/lib/query-policies'
 
 export default function MonitoringPage() {
   const router = useRouter()
@@ -48,12 +41,16 @@ export default function MonitoringPage() {
   const { data: dashboard, isLoading: dashboardLoading, refetch: refetchDashboard } = useQuery<MonitoringDashboard>({
     queryKey: ['monitoring-dashboard', days],
     queryFn: () => getMonitoringDashboard(days),
+    staleTime: standardQueryOptions.staleTime,
+    gcTime: standardQueryOptions.gcTime,
     refetchInterval: 15000,
   })
 
   const { data: sessions, isLoading: sessionsLoading, refetch: refetchSessions } = useQuery<PaginatedResponse<MonitoringSession>>({
     queryKey: ['monitoring-sessions', sessionsPage],
     queryFn: () => getMonitoringSessions(sessionsPage, 15),
+    staleTime: standardQueryOptions.staleTime,
+    gcTime: standardQueryOptions.gcTime,
     refetchInterval: 15000,
   })
 

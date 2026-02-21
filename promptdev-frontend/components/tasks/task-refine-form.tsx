@@ -18,6 +18,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Edit3, Loader2, Play, Save } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { showErrorToast } from "@/lib/errors";
 
 export function TaskRefineForm({
   task,
@@ -52,8 +53,8 @@ export function TaskRefineForm({
       setIsEditing(false);
       toast.success("Task updated");
     },
-    onError: () => {
-      toast.error("Failed to update task");
+    onError: (error) => {
+      showErrorToast(error, "update task");
     },
   });
 
@@ -64,8 +65,8 @@ export function TaskRefineForm({
       toast.success("Task started");
       onStarted();
     },
-    onError: () => {
-      toast.error("Failed to start task");
+    onError: (error) => {
+      showErrorToast(error, "start task");
     },
   });
 

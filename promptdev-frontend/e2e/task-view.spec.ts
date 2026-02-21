@@ -10,22 +10,27 @@ import { test, expect, type Page } from "@playwright/test";
  * 6. Code review completes (not stuck in REVIEWING)
  */
 
-// Helper: authenticate as test user
+// Helper: authenticate as test user (no-op if already authenticated via setup project)
 async function authenticate(page: Page) {
-  await page.goto("/login");
-  const devLoginButton = page.getByRole("button", {
-    name: "Sign in as Test User",
-  });
-  await expect(devLoginButton).toBeVisible({ timeout: 10000 });
-  await devLoginButton.click();
-  await page.waitForURL("/", { timeout: 15000 });
+  await page.goto("/");
+  // If already authenticated (from Playwright setup), we'll land on home page
+  // If not, we'll be redirected to login
+  const url = page.url();
+  if (url.includes("/login")) {
+    const devLoginButton = page.getByRole("button", {
+      name: "Sign in as Test User",
+    });
+    await expect(devLoginButton).toBeVisible({ timeout: 10000 });
+    await devLoginButton.click();
+    await page.waitForURL("/", { timeout: 15000 });
+  }
 }
 
 // Helper: navigate to a task detail page
 async function navigateToTask(page: Page, taskId: string) {
   await page.goto(`/tasks/${taskId}`);
   // Wait for the task detail page to load
-  await expect(page.getByText("Back")).toBeVisible({ timeout: 10000 });
+  await expect(page.getByRole("button", { name: "Back" })).toBeVisible({ timeout: 10000 });
 }
 
 // Helper: get first available task ID from the API

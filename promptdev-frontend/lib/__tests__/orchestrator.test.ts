@@ -40,7 +40,7 @@ vi.mock('@/lib/monitoring', () => ({
   flushOperations: vi.fn().mockResolvedValue(undefined),
 }))
 
-// Mock service modules used by orchestrator/backend.ts
+// Mock service modules used by orchestrator/service-bridge.ts
 vi.mock('@/lib/services/task-service', () => ({
   getTask: vi.fn(),
   handleCallback: vi.fn(),

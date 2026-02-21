@@ -2,7 +2,7 @@
 
 import {
   ChangedFilesTree,
-} from "@/components/tasks/activity-stream";
+} from "@/components/tasks/activity-stream/file-tree";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,17 +34,19 @@ import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { showErrorToast } from "@/lib/errors";
+import { stableQueryOptions } from "@/lib/query-policies";
 import {
   statusColors,
-  TaskHeaderActions,
-  TaskSidebar,
-  ResumeForm,
-  TaskRefineForm,
-} from "@/components/tasks";
+} from "@/components/tasks/task-helpers";
+import { TaskHeaderActions } from "@/components/tasks/task-header-actions";
+import { TaskSidebar } from "@/components/tasks/task-sidebar";
+import { ResumeForm } from "@/components/tasks/resume-form";
+import { TaskRefineForm } from "@/components/tasks/task-refine-form";
 
 // Lazy-load heaviest components
 const AgentActivityStream = dynamic(
-  () => import("@/components/tasks/activity-stream").then((m) => ({ default: m.AgentActivityStream })),
+  () => import("@/components/tasks/activity-stream/stream").then((m) => ({ default: m.AgentActivityStream })),
   { ssr: false, loading: () => <div className="flex items-center justify-center h-32"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> },
 );
 const TaskChangesSummary = dynamic(
@@ -101,6 +103,8 @@ export default function TaskDetailPage() {
       return data.models || [];
     },
     initialData: [],
+    staleTime: stableQueryOptions.staleTime,
+    gcTime: stableQueryOptions.gcTime,
   });
 
   // Fetch task details — only poll when SSE is not connected
@@ -209,7 +213,7 @@ export default function TaskDetailPage() {
       toast.success("Task cancelled");
     } catch (e) {
       console.error("Failed to cancel task:", e);
-      toast.error("Failed to cancel task");
+      showErrorToast(e, "cancel task");
     }
   };
 
@@ -221,7 +225,7 @@ export default function TaskDetailPage() {
       toast.success("Task started");
     } catch (e) {
       console.error("Failed to start task:", e);
-      toast.error("Failed to start task");
+      showErrorToast(e, "start task");
     }
   };
 
@@ -235,7 +239,7 @@ export default function TaskDetailPage() {
       router.push(`/tasks/${cloned.id}`);
     } catch (e) {
       console.error("Failed to retry task:", e);
-      toast.error("Failed to retry task");
+      showErrorToast(e, "retry task");
     }
   };
 
@@ -250,7 +254,7 @@ export default function TaskDetailPage() {
       setRealtimeEvents([]);
     } catch (e) {
       console.error("Failed to resume task:", e);
-      toast.error("Failed to resume task");
+      showErrorToast(e, "resume task");
     } finally {
       setIsResuming(false);
     }

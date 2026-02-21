@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as optOutService from "@/lib/services/jira-opt-out-service";
+import { requireAuth } from "@/lib/auth-guard";
 
 export async function GET(request: NextRequest) {
+  const { error } = await requireAuth();
+  if (error) return error;
+
   const userId = request.nextUrl.searchParams.get("userId");
   if (!userId) return NextResponse.json({ error: "userId required" }, { status: 400 });
 
@@ -17,6 +21,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const { error } = await requireAuth();
+  if (error) return error;
+
   const body = await request.json();
   const optOut = await optOutService.createOptOut(
     body.userId,
@@ -27,6 +34,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const { error } = await requireAuth();
+  if (error) return error;
+
   const userId = request.nextUrl.searchParams.get("userId") ?? "";
   const issueKey = request.nextUrl.searchParams.get("issueKey") ?? "";
   await optOutService.deleteOptOut(userId, issueKey);

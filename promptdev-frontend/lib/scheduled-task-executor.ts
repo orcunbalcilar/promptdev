@@ -4,7 +4,7 @@
  * Server-side poller that detects QUEUED tasks and triggers
  * execution via the Copilot SDK orchestrator.
  *
- * Uses Drizzle ORM directly (no HTTP calls to external backend).
+ * Uses Drizzle ORM directly for database access.
  */
 
 import { executeTask, isTaskRunning } from "./copilot/orchestrator";

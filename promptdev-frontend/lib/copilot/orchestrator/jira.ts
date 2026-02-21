@@ -1,6 +1,6 @@
 /**
  * Jira integration helpers for the orchestrator.
- * Calls jira-service directly (no HTTP to external backend).
+ * Calls jira-service directly within the Next.js process.
  */
 
 import * as jiraService from "../../services/jira-service";

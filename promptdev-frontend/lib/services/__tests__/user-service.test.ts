@@ -7,7 +7,10 @@ const mockDb = vi.hoisted(() => ({
   update: vi.fn(),
 }));
 
-vi.mock("@/lib/db", () => ({ db: mockDb }));
+vi.mock("@/lib/db", () => ({ 
+  db: mockDb,
+  getDb: () => mockDb,
+}));
 vi.mock("@/lib/db/schema", () => ({
   users: {},
 }));
@@ -95,6 +98,25 @@ describe("user-service", () => {
 
       expect(result.id).toBe("user-new");
       expect(mockDb.insert).toHaveBeenCalled();
+    });
+
+    it("should include createdAt and updatedAt on insert", async () => {
+      const newUser = makeUser({ id: "user-new" });
+      mockDb.select.mockReturnValueOnce(chainResult([]));
+
+      // Mock the chain manually to spy on values
+      const returningSpy = vi.fn().mockResolvedValue([newUser]);
+      const valuesSpy = vi.fn().mockReturnValue({ returning: returningSpy });
+      mockDb.insert.mockReturnValue({ values: valuesSpy });
+
+      await findOrCreateUser("github", "acc-456", "new@example.com", "New User");
+
+      expect(valuesSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        }),
+      );
     });
   });
 

@@ -1,6 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 
+// Mock auth guard
+vi.mock('@/lib/auth-guard', () => ({
+  requireAuth: vi.fn().mockResolvedValue({
+    session: { user: { id: 'user-1', email: 'test@example.com' } },
+  }),
+  requireTaskOwnership: vi.fn().mockResolvedValue(null),
+}))
+
 // Mock the orchestrator module
 vi.mock('@/lib/copilot/orchestrator', () => ({
   executeTask: vi.fn(),

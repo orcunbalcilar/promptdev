@@ -1,5 +1,6 @@
 "use client";
 
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,31 +10,53 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { API_BASE_URL, getTasks, type PagedResponse, type Task, type TaskStatus } from "@/lib/api";
-import { toast } from "sonner";
+import {
+  API_BASE_URL,
+  getTasks,
+  type PagedResponse,
+  type Task,
+} from "@/lib/api";
+import { realtimeQueryOptions } from "@/lib/query-policies";
+import { createSseSubscription } from "@/lib/sse-client";
+import { STATUS_GROUPS } from "@/lib/task-statuses";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, Bot, CalendarClock, Loader2, RefreshCw, Search, Settings, Sparkles, X, Zap } from "lucide-react";
+import {
+  Activity,
+  Bot,
+  CalendarClock,
+  Loader2,
+  RefreshCw,
+  Search,
+  Settings,
+  X,
+} from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 // bundle-dynamic-imports: Lazy-load heavy components to reduce initial JS bundle
 const CreateTaskDialog = dynamic(
-  () => import("@/components/tasks/create-task-dialog").then((m) => ({ default: m.CreateTaskDialog })),
+  () =>
+    import("@/components/tasks/create-task-dialog").then((m) => ({
+      default: m.CreateTaskDialog,
+    })),
   { ssr: false },
 );
 const KanbanBoard = dynamic(
-  () => import("@/components/dashboard/kanban-board").then((m) => ({ default: m.KanbanBoard })),
-  { ssr: false, loading: () => <div className="h-64 flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div> },
+  () =>
+    import("@/components/dashboard/kanban-board").then((m) => ({
+      default: m.KanbanBoard,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-64 flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    ),
+  },
 );
-
-const STATUS_GROUPS: { label: string; statuses: TaskStatus[] }[] = [
-  { label: "Pending", statuses: ["PENDING", "QUEUED", "TRIAGING"] },
-  { label: "In Progress", statuses: ["IN_PROGRESS", "VALIDATING", "ITERATION_PENDING"] },
-  { label: "Review", statuses: ["REVIEWING", "CODE_GENERATED", "COMMITTING", "PUSHING", "CREATING_PR"] },
-  { label: "Completed", statuses: ["COMPLETED"] },
-  { label: "Failed", statuses: ["FAILED", "CANCELLED"] },
-];
 
 export default function Dashboard() {
   const router = useRouter();
@@ -46,73 +69,68 @@ export default function Dashboard() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["tasks"],
     queryFn: () => getTasks(0, 100),
+    staleTime: realtimeQueryOptions.staleTime,
+    gcTime: realtimeQueryOptions.gcTime,
+    refetchOnWindowFocus: realtimeQueryOptions.refetchOnWindowFocus,
     refetchInterval: 30_000, // 30s fallback polling
   });
 
-  // SSE subscription for real-time task updates with reconnect
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // SSE subscription for real-time task updates using unified client
+  useEffect(() => {
+    const cleanup = createSseSubscription({
+      url: `${API_BASE_URL}/stream/tasks`,
+      eventNames: ["task-update"],
+      onMessage: (event) => {
+        try {
+          const updatedTask = JSON.parse(event.data) as Partial<Task> & {
+            taskId?: string;
+          };
+          const taskId = updatedTask.id ?? updatedTask.taskId;
 
-  const connectSSE = useCallback(() => {
-    // Clean up any existing connection
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-    }
+          if (taskId) {
+            // Optimistic cache update: merge fields instead of refetching
+            const current = queryClient.getQueryData<PagedResponse<Task>>([
+              "tasks",
+            ]);
+            const existingIdx =
+              current?.content.findIndex((t) => t.id === taskId) ?? -1;
 
-    const eventSource = new EventSource(`${API_BASE_URL}/stream/tasks`);
-    eventSourceRef.current = eventSource;
-
-    eventSource.addEventListener("task-update", (event) => {
-      try {
-        const updatedTask = JSON.parse(event.data) as Partial<Task> & { taskId?: string };
-        const taskId = updatedTask.id ?? updatedTask.taskId;
-
-        if (taskId) {
-          // Optimistic cache update: merge fields instead of refetching
-          const current = queryClient.getQueryData<PagedResponse<Task>>(["tasks"]);
-          const existingIdx = current?.content.findIndex((t) => t.id === taskId) ?? -1;
-
-          if (existingIdx >= 0 && current) {
-            const newContent = [...current.content];
-            newContent[existingIdx] = { ...newContent[existingIdx], ...updatedTask } as Task;
-            queryClient.setQueryData(["tasks"], { ...current, content: newContent });
+            if (existingIdx >= 0 && current) {
+              const newContent = [...current.content];
+              newContent[existingIdx] = {
+                ...newContent[existingIdx],
+                ...updatedTask,
+              } as Task;
+              queryClient.setQueryData(["tasks"], {
+                ...current,
+                content: newContent,
+              });
+            } else {
+              // New task not yet in cache — do a full refetch
+              queryClient.invalidateQueries({ queryKey: ["tasks"] });
+            }
           } else {
-            // New task not yet in cache — do a full refetch
             queryClient.invalidateQueries({ queryKey: ["tasks"] });
           }
-        } else {
+
+          // Toast notifications for terminal statuses
+          const title = updatedTask.title ?? "Task";
+          const navId = updatedTask.id ?? updatedTask.taskId;
+          const action = navId
+            ? { label: "View", onClick: () => router.push(`/tasks/${navId}`) }
+            : undefined;
+          if (updatedTask.status === "COMPLETED")
+            toast.success(`Task completed: ${title}`, { action });
+          if (updatedTask.status === "FAILED")
+            toast.error(`Task failed: ${title}`, { action });
+        } catch {
           queryClient.invalidateQueries({ queryKey: ["tasks"] });
         }
-
-        // Toast notifications for terminal statuses
-        const title = updatedTask.title ?? "Task";
-        const navId = updatedTask.id ?? updatedTask.taskId;
-        const action = navId ? { label: "View", onClick: () => router.push(`/tasks/${navId}`) } : undefined;
-        if (updatedTask.status === "COMPLETED") toast.success(`Task completed: ${title}`, { action });
-        if (updatedTask.status === "FAILED") toast.error(`Task failed: ${title}`, { action });
-      } catch {
-        queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      }
+      },
     });
 
-    eventSource.onerror = () => {
-      eventSource.close();
-      // Auto-reconnect after 3 seconds
-      reconnectTimeoutRef.current = setTimeout(() => {
-        connectSSE();
-      }, 3000);
-    };
+    return cleanup;
   }, [queryClient, router]);
-
-  useEffect(() => {
-    connectSSE();
-    return () => {
-      eventSourceRef.current?.close();
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
-    };
-  }, [connectSSE]);
 
   const tasks = useMemo(() => data?.content ?? [], [data?.content]);
 
@@ -152,9 +170,13 @@ export default function Dashboard() {
 
   // Counts for status overview
   const statusCounts = useMemo(() => {
-    const active = tasks.filter((t) => ["IN_PROGRESS", "VALIDATING", "ITERATION_PENDING"].includes(t.status)).length;
+    const active = tasks.filter((t) =>
+      ["IN_PROGRESS", "VALIDATING", "ITERATION_PENDING"].includes(t.status),
+    ).length;
     const completed = tasks.filter((t) => t.status === "COMPLETED").length;
-    const failed = tasks.filter((t) => ["FAILED", "CANCELLED"].includes(t.status)).length;
+    const failed = tasks.filter((t) =>
+      ["FAILED", "CANCELLED"].includes(t.status),
+    ).length;
     return { total: tasks.length, active, completed, failed };
   }, [tasks]);
 
@@ -166,7 +188,7 @@ export default function Dashboard() {
             Failed to load tasks
           </h2>
           <p className="text-muted-foreground">
-            Please check if the backend is running.
+            Please check if the server is running.
           </p>
           <Button onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -184,12 +206,46 @@ export default function Dashboard() {
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="bg-linear-to-br from-primary/20 to-primary/5 p-2 rounded-lg">
-                <Sparkles className="h-5 w-5 text-primary" />
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 32 32"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 12l4-4 4 4M16 12l4-4 4 4"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-primary"
+                  />
+                  <path
+                    d="M10 16h12"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    className="text-primary/60"
+                  />
+                  <path
+                    d="M8 20l4 4 4-4M16 20l4 4 4-4"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-primary"
+                  />
+                </svg>
               </div>
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight leading-none">PromptDev</h1>
-              <p className="text-[11px] text-muted-foreground leading-none mt-0.5">AI Development Platform</p>
+              <h1 className="text-lg font-bold tracking-tight leading-none">
+                PromptDev
+              </h1>
+              <p className="text-[11px] text-muted-foreground leading-none mt-0.5">
+                AI Development Platform
+              </p>
             </div>
           </div>
           <nav className="flex items-center gap-1">
@@ -230,6 +286,7 @@ export default function Dashboard() {
               Settings
             </Button>
             <div className="w-px h-5 bg-border mx-1" />
+            <ThemeToggle />
             <Button
               variant="ghost"
               size="icon"
@@ -261,7 +318,35 @@ export default function Dashboard() {
             return (
               <div className="text-center py-24 space-y-4">
                 <div className="bg-linear-to-br from-primary/10 to-primary/5 p-8 rounded-2xl w-fit mx-auto">
-                  <Sparkles className="h-12 w-12 text-primary/60" />
+                  <svg
+                    width="48"
+                    height="48"
+                    viewBox="0 0 32 32"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-primary/60"
+                  >
+                    <path
+                      d="M8 12l4-4 4 4M16 12l4-4 4 4"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M10 16h12"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M8 20l4 4 4-4M16 20l4 4 4-4"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </div>
                 <h2 className="text-2xl font-semibold tracking-tight">
                   No tasks yet
@@ -282,7 +367,9 @@ export default function Dashboard() {
               {/* Stats bar */}
               <div className="flex items-center gap-6 mb-5">
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground text-sm">{statusCounts.total} tasks</span>
+                  <span className="font-medium text-foreground text-sm">
+                    {statusCounts.total} tasks
+                  </span>
                   {statusCounts.active > 0 && (
                     <span className="flex items-center gap-1.5">
                       <span className="live-dot" />
@@ -291,7 +378,9 @@ export default function Dashboard() {
                   )}
                   <span>{statusCounts.completed} completed</span>
                   {statusCounts.failed > 0 && (
-                    <span className="text-destructive">{statusCounts.failed} failed</span>
+                    <span className="text-destructive">
+                      {statusCounts.failed} failed
+                    </span>
                   )}
                 </div>
               </div>
@@ -320,7 +409,10 @@ export default function Dashboard() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={workspaceFilter} onValueChange={setWorkspaceFilter}>
+                <Select
+                  value={workspaceFilter}
+                  onValueChange={setWorkspaceFilter}
+                >
                   <SelectTrigger className="w-37.5 h-9 text-sm">
                     <SelectValue placeholder="Workspace" />
                   </SelectTrigger>
@@ -330,7 +422,9 @@ export default function Dashboard() {
                     <SelectItem value="LOCAL">Local</SelectItem>
                   </SelectContent>
                 </Select>
-                {(searchQuery || statusFilter !== "all" || workspaceFilter !== "all") && (
+                {(searchQuery ||
+                  statusFilter !== "all" ||
+                  workspaceFilter !== "all") && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -347,7 +441,10 @@ export default function Dashboard() {
                 )}
               </div>
 
-              <KanbanBoard tasks={filteredTasks} onTaskClick={handleTaskClick} />
+              <KanbanBoard
+                tasks={filteredTasks}
+                onTaskClick={handleTaskClick}
+              />
             </>
           );
         })()}

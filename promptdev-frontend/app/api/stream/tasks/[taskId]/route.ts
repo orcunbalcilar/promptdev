@@ -1,10 +1,14 @@
 import { NextRequest } from "next/server";
 import { subscribe } from "@/lib/services/sse-service";
+import { requireAuth } from "@/lib/auth-guard";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ taskId: string }> },
 ) {
+  const { error } = await requireAuth();
+  if (error) return error;
+
   const { taskId } = await params;
 
   const encoder = new TextEncoder();

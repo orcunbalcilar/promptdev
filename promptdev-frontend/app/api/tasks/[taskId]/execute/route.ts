@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { executeTask, cancelTaskSession, isTaskRunning, getTaskSessionId } from '@/lib/copilot/orchestrator'
 import type { BYOKProvider } from '@/lib/copilot/types'
+import { requireAuth, requireTaskOwnership } from '@/lib/auth-guard'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -19,14 +20,19 @@ interface RouteParams {
 
 /**
  * Start executing a task through the Copilot SDK orchestrator.
- * This connects a backend task to the AI agent pipeline.
+ * This connects a server-side task to the AI agent pipeline.
  */
 export async function POST(
   request: NextRequest,
   { params }: RouteParams,
 ) {
   try {
+    const { session, error } = await requireAuth();
+    if (error) return error;
+
     const { taskId } = await params
+    const ownershipError = await requireTaskOwnership(session, taskId);
+    if (ownershipError) return ownershipError;
 
     // Check if already running
     if (isTaskRunning(taskId)) {
@@ -78,7 +84,12 @@ export async function DELETE(
   { params }: RouteParams,
 ) {
   try {
+    const { session, error } = await requireAuth();
+    if (error) return error;
+
     const { taskId } = await params
+    const ownershipError = await requireTaskOwnership(session, taskId);
+    if (ownershipError) return ownershipError;
 
     if (!isTaskRunning(taskId)) {
       return NextResponse.json(
@@ -105,6 +116,9 @@ export async function GET(
   { params }: RouteParams,
 ) {
   try {
+    const { error } = await requireAuth();
+    if (error) return error;
+
     const { taskId } = await params
 
     const running = isTaskRunning(taskId)

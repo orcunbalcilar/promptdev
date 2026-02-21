@@ -32,8 +32,8 @@ import {
   getProgressLabel,
   getProgressWidth,
   getAgentStatusStyle,
-  SessionMetricsCard,
-} from "./index";
+} from "./task-helpers";
+import { SessionMetricsCard } from "./session-metrics-card";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -350,7 +350,7 @@ function IterativeSessionCard({
         <div className="w-full bg-muted rounded-full h-1.5">
           <div
             className={cn(
-              "bg-primary rounded-full h-1.5 transition-all",
+              "bg-primary rounded-full h-1.5 transition-[width]",
               getProgressWidth(
                 task.currentIteration ?? 0,
                 task.maxIterations ?? 10,

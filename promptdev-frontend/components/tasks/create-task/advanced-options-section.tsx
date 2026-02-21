@@ -322,7 +322,7 @@ function SkillCategoryGroup({
                 type="button"
                 key={skill.id}
                 onClick={() => onToggle(skill.id)}
-                className={`group relative flex items-start gap-3 rounded-lg border p-3 text-left transition-all ${
+                className={`group relative flex items-start gap-3 rounded-lg border p-3 text-left transition-[border-color,background-color,box-shadow] ${
                   selected
                     ? `bg-linear-to-br ${colors} shadow-sm`
                     : "bg-card/20 border-border/50 hover:bg-muted/30 hover:border-border"

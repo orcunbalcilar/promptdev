@@ -2,7 +2,7 @@
  * User management service.
  * Port of Java UserService with encryption support.
  */
-import { db } from "../db";
+import { getDb } from "../db";
 import { users } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 import { encrypt, decrypt, getEncryptionKey } from "./encryption";
@@ -70,7 +70,7 @@ export async function findOrCreateUser(
   name?: string,
   avatarUrl?: string,
 ) {
-  const existing = await db
+  const existing = await getDb()
     .select()
     .from(users)
     .where(and(eq(users.provider, provider), eq(users.providerAccountId, providerAccountId)))
@@ -78,7 +78,7 @@ export async function findOrCreateUser(
 
   if (existing.length > 0) {
     const user = existing[0];
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(users)
       .set({ name: name ?? user.name, avatarUrl: avatarUrl ?? user.avatarUrl, email })
       .where(eq(users.id, user.id))
@@ -86,15 +86,24 @@ export async function findOrCreateUser(
     return updated;
   }
 
-  const [newUser] = await db
+  const now = new Date();
+  const [newUser] = await getDb()
     .insert(users)
-    .values({ provider, providerAccountId, email, name, avatarUrl })
+    .values({
+      provider,
+      providerAccountId,
+      email,
+      name,
+      avatarUrl,
+      createdAt: now,
+      updatedAt: now,
+    })
     .returning();
   return newUser;
 }
 
 export async function getUserProfile(userId: string): Promise<UserProfileDto> {
-  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  const [user] = await getDb().select().from(users).where(eq(users.id, userId)).limit(1);
   if (!user) throw new Error(`User not found: ${userId}`);
 
   return {
@@ -132,7 +141,7 @@ export async function updateSettings(
   userId: string,
   request: UpdateUserSettingsRequest,
 ): Promise<UserProfileDto> {
-  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  const [user] = await getDb().select().from(users).where(eq(users.id, userId)).limit(1);
   if (!user) throw new Error(`User not found: ${userId}`);
 
   const key = getEncryptionKey();
@@ -184,30 +193,30 @@ export async function updateSettings(
   }
 
   if (Object.keys(updates).length > 0) {
-    await db.update(users).set(updates).where(eq(users.id, userId));
+    await getDb().update(users).set(updates).where(eq(users.id, userId));
   }
 
   return getUserProfile(userId);
 }
 
 export async function getDecryptedCopilotToken(userId: string): Promise<string | null> {
-  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  if (!user || !user.copilotTokenEncrypted) return null;
+  const [user] = await getDb().select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!user?.copilotTokenEncrypted) return null;
   return decrypt(user.copilotTokenEncrypted, getEncryptionKey());
 }
 
 export async function getDecryptedBitbucketToken(userId: string): Promise<string | null> {
-  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  if (!user || !user.bitbucketTokenEncrypted) return null;
+  const [user] = await getDb().select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!user?.bitbucketTokenEncrypted) return null;
   return decrypt(user.bitbucketTokenEncrypted, getEncryptionKey());
 }
 
 export async function getDecryptedByokApiKey(userId: string): Promise<string | null> {
-  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  if (!user || !user.byokApiKeyEncrypted) return null;
+  const [user] = await getDb().select().from(users).where(eq(users.id, userId)).limit(1);
+  if (!user?.byokApiKeyEncrypted) return null;
   return decrypt(user.byokApiKeyEncrypted, getEncryptionKey());
 }
 
 export async function getUsersWithJiraAutoTask() {
-  return db.select().from(users).where(eq(users.jiraAutoTaskEnabled, true));
+  return getDb().select().from(users).where(eq(users.jiraAutoTaskEnabled, true));
 }
