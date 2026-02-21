@@ -51,8 +51,11 @@ vi.mock('sonner', () => ({
 }))
 
 // Mock heavy child components to keep tests focused
-vi.mock('@/components/tasks/activity-stream', () => ({
+vi.mock('@/components/tasks/activity-stream/stream', () => ({
   AgentActivityStream: () => <div data-testid="activity-stream" />,
+}))
+
+vi.mock('@/components/tasks/activity-stream/file-tree', () => ({
   ChangedFilesTree: () => <div data-testid="changed-files" />,
 }))
 
@@ -98,6 +101,7 @@ async function getTaskDetailPage() {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  Element.prototype.scrollIntoView = vi.fn()
   mockGetTask.mockResolvedValue(createTask())
   mockGetTaskEvents.mockResolvedValue([])
   mockSubscribeToTaskEvents.mockReturnValue(() => {})

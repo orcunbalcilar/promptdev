@@ -17,6 +17,16 @@ export const STATUS_GROUPS: StatusGroup[] = [
   { label: "Failed", statuses: ["FAILED", "CANCELLED"] },
 ];
 
+/** CSS class for each Kanban column's colored top border.
+ * Note: "Failed" maps to "kanban-column-stopped" for backward compatibility with existing CSS. */
+export const STATUS_GROUP_STYLES: Record<string, string> = {
+  "Pending": "kanban-column-pending",
+  "In Progress": "kanban-column-progress",
+  "Review": "kanban-column-review",
+  "Completed": "kanban-column-completed",
+  "Failed": "kanban-column-stopped",
+};
+
 /**
  * Find the group label for a given task status.
  * Returns "Other" for unknown statuses so tasks are never silently dropped.

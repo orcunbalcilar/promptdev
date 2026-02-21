@@ -222,9 +222,9 @@ export function DashboardView({ initialTasks }: DashboardViewProps) {
   }
 
   return (
-    <div className="container mx-auto px-6 py-6 lg:h-full flex flex-col lg:min-h-0">
+    <div className="container mx-auto px-6 py-6 lg:h-full flex flex-col lg:min-h-0 page-enter">
       {/* Stats bar */}
-      <div className="flex items-center gap-6 mb-5 shrink-0">
+      <div className="flex items-center gap-6 mb-5 shrink-0 glass-panel px-4 py-2.5 rounded-xl">
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="font-medium text-foreground text-sm">
             {statusCounts.total} tasks

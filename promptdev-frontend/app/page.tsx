@@ -2,45 +2,10 @@ import { Header } from "@/components/layout/header";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import * as taskService from "@/lib/services/task-service";
 import { STATUS_GROUPS } from "@/lib/task-statuses";
-import type { Task } from "@/lib/api";
+import { adaptTask } from "@/lib/task-adapter";
 
 // Force dynamic rendering since we read search params and DB
 export const dynamic = 'force-dynamic';
-
-function adaptTask(t: taskService.TaskResponse): Task {
-  return {
-    ...t,
-    prompt: t.prompt ?? "",
-    sourceBranch: t.sourceBranch ?? "",
-    targetBranch: t.targetBranch ?? "",
-    updatedAt: t.updatedAt ?? new Date().toISOString(),
-    projectKey: t.projectKey ?? undefined,
-    workspacePath: t.workspacePath ?? undefined,
-    modelId: t.modelId ?? undefined,
-    copilotSessionId: t.copilotSessionId ?? undefined,
-    pullRequestId: t.pullRequestId ?? undefined,
-    pullRequestUrl: t.pullRequestUrl ?? undefined,
-    errorMessage: t.errorMessage ?? undefined,
-    iterative: t.iterative ?? undefined,
-    maxIterations: t.maxIterations ?? undefined,
-    currentIteration: t.currentIteration ?? undefined,
-    currentStepIndex: t.currentStepIndex ?? undefined,
-    completionCriteria: t.completionCriteria ?? undefined,
-    steps: t.steps ?? undefined,
-    scheduledJobId: t.scheduledJobId ?? undefined,
-    jiraIssueKey: t.jiraIssueKey ?? undefined,
-    reviewEnabled: t.reviewEnabled ?? undefined,
-    reviewModelId: t.reviewModelId ?? undefined,
-    resumePrompt: t.resumePrompt ?? undefined,
-    resumeCount: t.resumeCount ?? undefined,
-    commitMessagePattern: t.commitMessagePattern ?? undefined,
-    bootScript: t.bootScript ?? undefined,
-    skills: t.skills ?? undefined,
-    additionalRepositories: t.additionalRepositories ?? undefined,
-    systemPrompt: t.systemPrompt ?? undefined,
-    completedAt: t.completedAt ?? undefined,
-  } as Task;
-}
 
 export default async function Page({
   searchParams,
