@@ -142,7 +142,7 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
   return (
     <Card
       className={cn(
-        "task-card-hover cursor-pointer border-l-4 bg-card/80 backdrop-blur-sm",
+        "task-card-hover cursor-pointer border-l-4 bg-card/70 backdrop-blur-md",
         STATUS_BORDER[task.status] ?? "border-l-transparent",
       )}
       onClick={onClick}
