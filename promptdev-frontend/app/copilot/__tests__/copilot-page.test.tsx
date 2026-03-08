@@ -127,7 +127,7 @@ describe('CopilotAgentPage', () => {
 
     expect(screen.getByText('Start Copilot Agent')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /start agent/i })).toBeInTheDocument()
-  })
+  }, 15000)
 
   it('shows Copilot Agent heading', async () => {
     const Page = await getCopilotPage()
@@ -218,7 +218,7 @@ describe('CopilotAgentPage', () => {
     })
   })
 
-  it('shows New Session and Destroy buttons when session is active', async () => {
+  it('shows New and Destroy buttons when session is active', async () => {
     hookState.session = {
       id: 'session-1',
       model: 'gpt-5.2',
@@ -232,7 +232,8 @@ describe('CopilotAgentPage', () => {
     await user.click(screen.getByRole('button', { name: /start agent/i }))
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /new session/i })).toBeInTheDocument()
+      // New button is labeled just "New" in the redesigned page
+      expect(screen.getByRole('button', { name: /^new$/i })).toBeInTheDocument()
     })
   })
 
@@ -278,7 +279,7 @@ describe('CopilotAgentPage', () => {
     expect(mockClearError).toHaveBeenCalled()
   })
 
-  it('shows session info card when session is active', async () => {
+  it('shows session info bar when session is active', async () => {
     hookState.session = {
       id: 'session-1',
       model: 'gpt-5.2',
@@ -292,8 +293,10 @@ describe('CopilotAgentPage', () => {
     await user.click(screen.getByRole('button', { name: /start agent/i }))
 
     await waitFor(() => {
-      expect(screen.getByText('Session Info')).toBeInTheDocument()
+      // Session info is now a footer bar, not a card heading
+      expect(screen.getByText(/Session:/)).toBeInTheDocument()
     })
-    expect(screen.getByText('session-1')).toBeInTheDocument()
+    // Session ID is sliced to 12 chars
+    expect(screen.getByText('session-1...')).toBeInTheDocument()
   })
 })

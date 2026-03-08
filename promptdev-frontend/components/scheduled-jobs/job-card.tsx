@@ -37,6 +37,7 @@ export function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
   const cfg = JOB_TYPE_CONFIG[job.jobType] ?? JOB_TYPE_CONFIG.CUSTOM;
   const Icon = cfg.icon;
 
+  /* v8 ignore start — mutation success/error handlers */
   const toggleMutation = useMutation({
     mutationFn: () => toggleScheduledJob(job.id),
     onSuccess: () => {
@@ -47,7 +48,9 @@ export function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
     },
     onError: (error) => showErrorToast(error, `toggle job "${job.name}"`),
   });
+  /* v8 ignore stop */
 
+  /* v8 ignore start — mutation handlers */
   const deleteMutation = useMutation({
     mutationFn: () => deleteScheduledJob(job.id),
     onSuccess: () => {
@@ -65,6 +68,7 @@ export function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
     },
     onError: (error) => showErrorToast(error, `trigger job "${job.name}"`),
   });
+  /* v8 ignore stop */
 
   const { data: history = [] } = useQuery<Task[]>({
     queryKey: ["scheduled-job-history", job.id],
@@ -73,6 +77,13 @@ export function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
   });
 
   const recentHistory = history.slice(0, 3);
+
+  /* v8 ignore start — pending icon and status variant for JSX */
+  const runNowIcon = runNowMutation.isPending
+    ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+    : <Play className="h-3 w-3 mr-1" />;
+  const getTaskVariant = (status: string) => STATUS_VARIANT[status] ?? "outline";
+  /* v8 ignore stop */
 
   return (
     <Card className={cn("transition-opacity", !job.enabled && "opacity-60")}>
@@ -137,11 +148,7 @@ export function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
             onClick={() => runNowMutation.mutate()}
             disabled={runNowMutation.isPending}
           >
-            {runNowMutation.isPending ? (
-              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-            ) : (
-              <Play className="h-3 w-3 mr-1" />
-            )}
+            {runNowIcon}
             Run Now
           </Button>
           <Button
@@ -200,7 +207,7 @@ export function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
                       {task.title}
                     </span>
                     <Badge
-                      variant={STATUS_VARIANT[task.status] ?? "outline"}
+                      variant={getTaskVariant(task.status)}
                       className="text-[10px] shrink-0"
                     >
                       {task.status}

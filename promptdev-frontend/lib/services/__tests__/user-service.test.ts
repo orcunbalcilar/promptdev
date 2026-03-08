@@ -220,4 +220,169 @@ describe("user-service", () => {
       expect(result).toHaveLength(2);
     });
   });
+
+  // ── Branch coverage: optional chaining, nullish coalescing in getUserProfile ──
+
+  describe("branch coverage – getUserProfile null fields", () => {
+    it("handles user with all encrypted fields null", async () => {
+      const user = makeUser({
+        bitbucketTokenEncrypted: null,
+        copilotTokenEncrypted: null,
+        byokApiKeyEncrypted: null,
+        jiraTokenEncrypted: null,
+        jiraAutoTaskEnabled: null,
+      });
+      mockDb.select.mockReturnValueOnce(chainResult([user]));
+
+      const profile = await getUserProfile("user-1");
+
+      expect(profile.bitbucketTokenSet).toBe(false);
+      expect(profile.copilotTokenSet).toBe(false);
+      expect(profile.byokApiKeySet).toBe(false);
+      expect(profile.jiraTokenSet).toBe(false);
+      // jiraAutoTaskEnabled ?? true => true when null
+      expect(profile.jiraAutoTaskEnabled).toBe(true);
+    });
+
+    it("handles user with jiraAutoTaskEnabled explicitly false", async () => {
+      const user = makeUser({ jiraAutoTaskEnabled: false });
+      mockDb.select.mockReturnValueOnce(chainResult([user]));
+
+      const profile = await getUserProfile("user-1");
+      expect(profile.jiraAutoTaskEnabled).toBe(false);
+    });
+  });
+
+  describe("branch coverage – findOrCreateUser with missing optional params", () => {
+    it("preserves existing name when new name is undefined", async () => {
+      const existing = makeUser({ name: "Existing Name" });
+      const updated = makeUser({ name: "Existing Name" });
+      mockDb.select.mockReturnValueOnce(chainResult([existing]));
+      mockDb.update.mockReturnValue(chainResult([updated]));
+
+      const result = await findOrCreateUser("github", "acc-123", "test@example.com", undefined);
+
+      expect(result.name).toBe("Existing Name");
+    });
+
+    it("preserves existing avatarUrl when new avatarUrl is undefined", async () => {
+      const existing = makeUser({ avatarUrl: "https://old-avatar.com" });
+      const updated = makeUser({ avatarUrl: "https://old-avatar.com" });
+      mockDb.select.mockReturnValueOnce(chainResult([existing]));
+      mockDb.update.mockReturnValue(chainResult([updated]));
+
+      const result = await findOrCreateUser("github", "acc-123", "test@example.com", "Test", undefined);
+
+      expect(result.avatarUrl).toBe("https://old-avatar.com");
+    });
+  });
+
+  describe("branch coverage – updateSettings conditional fields", () => {
+    it("handles clearing all optional string fields with empty strings", async () => {
+      const user = makeUser();
+      mockDb.select
+        .mockReturnValueOnce(chainResult([user]))
+        .mockReturnValueOnce(chainResult([user]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      await updateSettings("user-1", {
+        bitbucketUrl: "",
+        bitbucketProjectKey: "",
+        bitbucketUsername: "",
+        copilotToken: "",
+        byokProviderType: "",
+        byokBaseUrl: "",
+        byokApiKey: "",
+        byokAzureApiVersion: "",
+        jiraUrl: "",
+        jiraProjectKey: "",
+        jiraUsername: "",
+        jiraToken: "",
+        jiraAutoTaskModelId: "",
+        jiraAutoTaskRepository: "",
+        jiraAutoTaskSourceBranch: "",
+        jiraAutoTaskTargetBranch: "",
+        jiraAutoTaskPrompt: "",
+        customSystemPrompt: "  ",
+      });
+
+      expect(mockDb.update).toHaveBeenCalled();
+    });
+
+    it("handles setting boolean and number jira auto-task fields", async () => {
+      const user = makeUser();
+      mockDb.select
+        .mockReturnValueOnce(chainResult([user]))
+        .mockReturnValueOnce(chainResult([user]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      await updateSettings("user-1", {
+        jiraAutoTaskEnabled: false,
+        jiraAutoTaskIterative: true,
+        jiraAutoTaskMaxIterations: 5,
+        jiraAutoTaskReviewEnabled: true,
+      });
+
+      expect(mockDb.update).toHaveBeenCalled();
+    });
+
+    it("skips db update when request has no fields", async () => {
+      const user = makeUser();
+      mockDb.select
+        .mockReturnValueOnce(chainResult([user]))
+        .mockReturnValueOnce(chainResult([user]));
+
+      await updateSettings("user-1", {});
+
+      // update should NOT be called since no updates were made
+      expect(mockDb.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("branch coverage – getDecryptedBitbucketToken", () => {
+    it("returns null when user not found", async () => {
+      mockDb.select.mockReturnValueOnce(chainResult([]));
+
+      const { getDecryptedBitbucketToken } = await import("../user-service");
+      const token = await getDecryptedBitbucketToken("nonexistent");
+      expect(token).toBeNull();
+    });
+
+    it("returns null when bitbucketTokenEncrypted is null", async () => {
+      const user = makeUser({ bitbucketTokenEncrypted: null });
+      mockDb.select.mockReturnValueOnce(chainResult([user]));
+
+      const { getDecryptedBitbucketToken } = await import("../user-service");
+      const token = await getDecryptedBitbucketToken("user-1");
+      expect(token).toBeNull();
+    });
+  });
+
+  describe("branch coverage – getDecryptedByokApiKey", () => {
+    it("returns null when user not found", async () => {
+      mockDb.select.mockReturnValueOnce(chainResult([]));
+
+      const { getDecryptedByokApiKey } = await import("../user-service");
+      const token = await getDecryptedByokApiKey("nonexistent");
+      expect(token).toBeNull();
+    });
+
+    it("returns null when byokApiKeyEncrypted is null", async () => {
+      const user = makeUser({ byokApiKeyEncrypted: null });
+      mockDb.select.mockReturnValueOnce(chainResult([user]));
+
+      const { getDecryptedByokApiKey } = await import("../user-service");
+      const token = await getDecryptedByokApiKey("user-1");
+      expect(token).toBeNull();
+    });
+
+    it("returns decrypted key when byokApiKeyEncrypted is set", async () => {
+      const user = makeUser({ byokApiKeyEncrypted: "enc:my-api-key" });
+      mockDb.select.mockReturnValueOnce(chainResult([user]));
+
+      const { getDecryptedByokApiKey } = await import("../user-service");
+      const token = await getDecryptedByokApiKey("user-1");
+      expect(token).toBe("my-api-key");
+    });
+  });
 });

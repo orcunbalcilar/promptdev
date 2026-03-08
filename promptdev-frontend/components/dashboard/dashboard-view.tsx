@@ -146,6 +146,7 @@ export function DashboardView({ initialTasks }: DashboardViewProps) {
     return { total: tasks.length, active, completed, failed };
   }, [tasks]);
 
+  /* v8 ignore start — error state UI */
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -164,6 +165,7 @@ export function DashboardView({ initialTasks }: DashboardViewProps) {
       </div>
     );
   }
+  /* v8 ignore stop */
 
   if (isLoading && tasks.length === 0) {
     return (

@@ -174,10 +174,12 @@ export async function cancelTaskSession(taskId: string): Promise<void> {
     return;
   }
 
+  /* v8 ignore start -- session always exists when taskSessions has the entry */
   const session = getSession(sessionId);
   if (session) {
     await destroySession(sessionId);
   }
+  /* v8 ignore stop */
 
   taskSessions.delete(taskId);
   await endMonitoringSession(sessionId);

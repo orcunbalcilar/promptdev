@@ -113,8 +113,8 @@ Build an AI-powered development platform where users describe features via promp
 - Task detail page with real-time event log (optimistic SSE updates, no redundant polling)
 - Jira task refinement form (edit title, prompt, model, etc. before starting Jira-originated tasks)
 - Scheduled jobs page (CRUD, cron presets, job type icons, SDLC template suggestions as collapsible prompts)
-- Copilot chat page (interactive AI assistant with model/reasoning settings)
-- Monitoring page (system health dashboard)
+- Copilot chat page (interactive AI assistant with model/reasoning settings, session history sidebar, token usage tracking, conversation export/copy, quick prompts, slash commands)
+- Monitoring page (developer-focused analytics dashboard with cost estimation, performance metrics, time-range filtering, daily operations/operations by type/sessions by model/top tools charts, session/error/review tabs, auto-refresh)
 - Authentication (NextAuth.js v5 with GitHub and Google OAuth)
 - Login page, Settings page (Bitbucket, Jira, Copilot token, BYOK provider)
 - Route protection (proxy.ts)
@@ -127,7 +127,7 @@ Build an AI-powered development platform where users describe features via promp
 - Auto-expanding file change details with larger diff views
 - Model selector graceful empty state handling
 - React Compiler (automatic memoization)
-- 46 test files with 602 unit tests
+- 72 test files with 920 unit tests
 - E2E tests (Playwright)
 
 ### Slack Bot
@@ -267,4 +267,4 @@ Tasks have three distinct start behaviors based on their origin:
 >
 > Completed: Full-stack Next.js app with all server-side logic (tasks with PATCH update, scheduled jobs, workspace types, model selection with 14+ models and dynamic discovery, iterative sessions, user management with encrypted secrets, BYOK provider support, Jira integration with opt-out mechanism for cancelled tasks) using Drizzle ORM for direct PostgreSQL access — no separate backend. Frontend UI (dashboard with bounded-height scrollable Kanban columns, task dialog with SDLC template picker and selectors, task detail with auto-expanded code diffs, scheduled jobs page, copilot chat with slash commands, dark mode with next-themes, snow toggle effect, custom favicon, authentication with NextAuth.js v5, settings page with BYOK/Ollama config and Jira, login page, React Compiler), CLI, Slack bot (with /model, /review, /fleet commands and auto-start on create), Docker Compose, Podman support, monorepo structure, one-command deploy, Playwright E2E tests.
 >
-> Copilot SDK heavily integrated: session hooks (onPreToolUse/onPostToolUse/onSessionStart/onSessionEnd/onErrorOccurred), custom tools via defineTool with zod (get_task_info, report_progress), infinite sessions with compaction (0.8/0.95 thresholds), user input requests (ask_user), BYOK providers (OpenAI/Azure/Anthropic/Ollama). Code review transformed to fix & validate paradigm (runs once after all iterations). SSE evaluated — necessary as transport layer from server-side SDK events to browser. Model selector handles empty models gracefully. 46 test files with 602 tests passing.
+> Copilot SDK heavily integrated: session hooks (onPreToolUse/onPostToolUse/onSessionStart/onSessionEnd/onErrorOccurred), custom tools via defineTool with zod (get_task_info, report_progress), infinite sessions with compaction (0.8/0.95 thresholds), user input requests (ask_user), BYOK providers (OpenAI/Azure/Anthropic/Ollama), session history (list/resume/delete via SDK), token tracking (real-time input/output via assistant.usage events), conversation export (Markdown). Code review transformed to fix & validate paradigm (runs once after all iterations). SSE evaluated — necessary as transport layer from server-side SDK events to browser. Model selector handles empty models gracefully. Monitoring dashboard redesigned with cost estimation, performance metrics, and time-range filtering. 72 test files with 920 tests passing.

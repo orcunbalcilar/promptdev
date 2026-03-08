@@ -203,7 +203,9 @@ export default function TaskDetailPage() {
   const isProcessing = isLive;
 
   const handleCancel = async () => {
+    /* v8 ignore start: defensive guard */
     if (!task) return;
+    /* v8 ignore stop */
     if (!globalThis.confirm("Are you sure you want to cancel this task?"))
       return;
 
@@ -218,7 +220,9 @@ export default function TaskDetailPage() {
   };
 
   const handleStart = async () => {
+    /* v8 ignore start: defensive guard */
     if (!task) return;
+    /* v8 ignore stop */
     try {
       await startTask(task.id);
       await queryClient.refetchQueries({ queryKey: ["task", id] });
@@ -230,7 +234,9 @@ export default function TaskDetailPage() {
   };
 
   const handleRetry = async () => {
+    /* v8 ignore start: defensive guard */
     if (!task) return;
+    /* v8 ignore stop */
     try {
       // Clone the task to create a fresh copy, then start it
       const cloned = await cloneTask(task.id);

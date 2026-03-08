@@ -235,19 +235,143 @@ describe("monitoring-service", () => {
   });
 
   describe("getDashboardMetrics", () => {
-    it("should return aggregated metrics", async () => {
+    it("should return aggregated metrics with all analytics", async () => {
       mockDb.select
-        .mockReturnValueOnce(chainResult([{ count: 10 }]))  // total sessions
-        .mockReturnValueOnce(chainResult([{ count: 3 }]))   // active sessions
-        .mockReturnValueOnce(chainResult([{ count: 50 }]))  // total operations
-        .mockReturnValueOnce(chainResult([makeSession()]));  // recent sessions
+        .mockReturnValueOnce(chainResult([{ count: 10 }]))   // total sessions
+        .mockReturnValueOnce(chainResult([{ count: 3 }]))    // active sessions
+        .mockReturnValueOnce(chainResult([{ count: 50 }]))   // total operations
+        .mockReturnValueOnce(chainResult([makeSession()]))   // recent sessions
+        .mockReturnValueOnce(chainResult([{ totalInput: 5000, totalOutput: 2000 }])) // tokens
+        .mockReturnValueOnce(chainResult([{ count: 2 }]))    // errors
+        .mockReturnValueOnce(chainResult([{ type: "SEND_MESSAGE", count: 30 }, { type: "TOOL_EXECUTION", count: 20 }])) // ops by type
+        .mockReturnValueOnce(chainResult([{ model: "gpt-5.2", count: 8 }, { model: "claude-4", count: 2 }])) // sessions by model
+        .mockReturnValueOnce(chainResult([{ source: "web", count: 9 }, { source: "api", count: 1 }])) // sessions by source
+        .mockReturnValueOnce(chainResult([{ toolName: "readFile", executionCount: 15, avgDurationMs: 120 }])) // top tools
+        .mockReturnValueOnce(chainResult([{ date: "2025-01-15", count: 10 }])) // daily ops
+        .mockReturnValueOnce(chainResult([makeOp({ success: false, errorMessage: "Timeout" })])); // recent errors
 
-      const result = await getDashboardMetrics();
+      const result = await getDashboardMetrics(7);
 
       expect(result.totalSessions).toBe(10);
       expect(result.activeSessions).toBe(3);
       expect(result.totalOperations).toBe(50);
+      expect(result.totalErrors).toBe(2);
+      expect(result.totalInputTokens).toBe(5000);
+      expect(result.totalOutputTokens).toBe(2000);
       expect(result.recentSessions).toHaveLength(1);
+      expect(result.operationsByType).toEqual({ SEND_MESSAGE: 30, TOOL_EXECUTION: 20 });
+      expect(result.sessionsByModel).toEqual({ "gpt-5.2": 8, "claude-4": 2 });
+      expect(result.sessionsBySource).toEqual({ web: 9, api: 1 });
+      expect(result.topTools).toHaveLength(1);
+      expect(result.topTools[0].toolName).toBe("readFile");
+      expect(result.dailyOperations).toHaveLength(1);
+      expect(result.recentErrors).toHaveLength(1);
+    });
+
+    it("should use default days parameter", async () => {
+      mockDb.select
+        .mockReturnValueOnce(chainResult([{ count: 0 }]))   // total sessions
+        .mockReturnValueOnce(chainResult([{ count: 0 }]))   // active sessions
+        .mockReturnValueOnce(chainResult([{ count: 0 }]))   // total operations
+        .mockReturnValueOnce(chainResult([]))                // recent sessions
+        .mockReturnValueOnce(chainResult([{ totalInput: 0, totalOutput: 0 }])) // tokens
+        .mockReturnValueOnce(chainResult([{ count: 0 }]))   // errors
+        .mockReturnValueOnce(chainResult([]))                // ops by type
+        .mockReturnValueOnce(chainResult([]))                // sessions by model
+        .mockReturnValueOnce(chainResult([]))                // sessions by source
+        .mockReturnValueOnce(chainResult([]))                // top tools
+        .mockReturnValueOnce(chainResult([]))                // daily ops
+        .mockReturnValueOnce(chainResult([]));               // recent errors
+
+      const result = await getDashboardMetrics();
+
+      expect(result.totalSessions).toBe(0);
+      expect(result.totalErrors).toBe(0);
+      expect(result.operationsByType).toEqual({});
+      expect(result.topTools).toEqual([]);
+      expect(result.dailyOperations).toEqual([]);
+      expect(result.recentErrors).toEqual([]);
+    });
+  });
+
+  // ── Branch coverage: null/undefined optional fields ──
+
+  describe("branch coverage – toSessionResponse with null endedAt", () => {
+    it("returns null endedAt when session.endedAt is null", async () => {
+      const session = makeSession({ endedAt: null });
+      mockDb.insert.mockReturnValue(chainResult([session]));
+
+      const result = await createSession({
+        sdkSessionId: "sdk-s",
+        model: "gpt-5.2",
+      });
+
+      expect(result.endedAt).toBeNull();
+    });
+
+    it("returns ISO string endedAt when session.endedAt is set", async () => {
+      const endDate = new Date("2025-01-15T12:00:00Z");
+      const session = makeSession({ endedAt: endDate });
+      mockDb.insert.mockReturnValue(chainResult([session]));
+
+      const result = await createSession({
+        sdkSessionId: "sdk-s",
+        model: "gpt-5.2",
+      });
+
+      expect(result.endedAt).toBe(endDate.toISOString());
+    });
+  });
+
+  describe("branch coverage – endSession with and without error", () => {
+    it("increments errorCount when errorMessage is provided", async () => {
+      const session = makeSession({ errorCount: 2 });
+      const ended = makeSession({ status: "FAILED", errorCount: 3, endedAt: NOW });
+      mockDb.select.mockReturnValueOnce(chainResult([session]));
+      mockDb.update.mockReturnValue(chainResult([ended]));
+
+      const result = await endSession("sdk-sess-1", "Error occurred");
+
+      expect(result.status).toBe("FAILED");
+      expect(result.errorCount).toBe(3);
+    });
+
+    it("handles null errorCount when incrementing", async () => {
+      const session = makeSession({ errorCount: null });
+      const ended = makeSession({ status: "FAILED", errorCount: 1, endedAt: NOW });
+      mockDb.select.mockReturnValueOnce(chainResult([session]));
+      mockDb.update.mockReturnValue(chainResult([ended]));
+
+      const result = await endSession("sdk-sess-1", "Error");
+
+      expect(result.status).toBe("FAILED");
+    });
+  });
+
+  describe("branch coverage – createSession with optional fields", () => {
+    it("uses default source 'web' when source is not provided", async () => {
+      const session = makeSession({ source: "web" });
+      mockDb.insert.mockReturnValue(chainResult([session]));
+
+      const result = await createSession({
+        sdkSessionId: "sdk-s",
+        model: "gpt-5.2",
+      });
+
+      expect(result.source).toBe("web");
+    });
+
+    it("uses provided source when specified", async () => {
+      const session = makeSession({ source: "api" });
+      mockDb.insert.mockReturnValue(chainResult([session]));
+
+      const result = await createSession({
+        sdkSessionId: "sdk-s",
+        model: "gpt-5.2",
+        source: "api",
+      });
+
+      expect(result.source).toBe("api");
     });
   });
 });

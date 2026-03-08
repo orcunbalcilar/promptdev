@@ -40,7 +40,9 @@ export function stopScheduledTaskExecutor(): void {
 }
 
 async function pollAndExecute(): Promise<void> {
+  /* v8 ignore start -- guard against concurrent poll invocations */
   if (isPolling) return;
+  /* v8 ignore stop */
   isPolling = true;
 
   try {

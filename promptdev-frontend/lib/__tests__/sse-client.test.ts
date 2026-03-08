@@ -258,4 +258,50 @@ describe("createSseSubscription", () => {
     MockEventSource.instances[0].simulateError();
     expect(onError).toHaveBeenCalledTimes(1);
   });
+
+  // ── Branch coverage: disposed guard after cleanup ──────────────
+
+  it("does not reconnect when disposed during retry timeout", () => {
+    const onMessage = vi.fn();
+    const cleanup = createSseSubscription({
+      url: "/api/stream",
+      onMessage,
+      maxRetries: 5,
+      baseDelay: 100,
+    });
+
+    // Trigger error -> schedules retry
+    MockEventSource.instances[0].simulateError();
+
+    // Dispose before retry fires
+    cleanup();
+
+    // Advance past retry delay
+    vi.advanceTimersByTime(1000);
+
+    // No new EventSource should have been created after the initial one
+    expect(MockEventSource.instances).toHaveLength(1);
+  });
+
+  it("does not connect when disposed before first connect completes", () => {
+    const onMessage = vi.fn();
+    const onStatusChange = vi.fn();
+    const cleanup = createSseSubscription({
+      url: "/api/stream",
+      onMessage,
+      onStatusChange,
+      maxRetries: 3,
+      baseDelay: 100,
+    });
+
+    // First connection created, trigger error
+    MockEventSource.instances[0].simulateError();
+    
+    // Dispose
+    cleanup();
+    
+    // onerror guard: after dispose, should not schedule retry
+    vi.advanceTimersByTime(10000);
+    expect(MockEventSource.instances).toHaveLength(1);
+  });
 });

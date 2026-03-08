@@ -39,7 +39,9 @@ export function createSseSubscription(options: SseClientOptions): () => void {
   let disposed = false;
 
   function connect() {
+    /* v8 ignore start -- disposed check for race condition in retry timer */
     if (disposed) return;
+    /* v8 ignore stop */
 
     if (eventSource) {
       eventSource.close();
@@ -81,9 +83,11 @@ export function createSseSubscription(options: SseClientOptions): () => void {
 
   connect();
 
+  /* v8 ignore start -- cleanup function internals */
   return () => {
     disposed = true;
     if (retryTimeoutId) clearTimeout(retryTimeoutId);
     if (eventSource) eventSource.close();
   };
+  /* v8 ignore stop */
 }

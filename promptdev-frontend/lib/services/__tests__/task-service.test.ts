@@ -18,6 +18,8 @@ vi.mock("@/lib/db/schema", () => ({
 vi.mock("drizzle-orm", () => ({
   eq: vi.fn((...args: unknown[]) => args),
   and: vi.fn((...args: unknown[]) => args),
+  or: vi.fn((...args: unknown[]) => args),
+  ilike: vi.fn((...args: unknown[]) => args),
   desc: vi.fn((col: unknown) => col),
   inArray: vi.fn((...args: unknown[]) => args),
   gt: vi.fn((...args: unknown[]) => args),
@@ -50,6 +52,10 @@ import {
   taskExistsForJiraIssue,
   createPullRequestForTask,
   cloneTask,
+  getAllTasks,
+  getTasksByScheduledJobId,
+  getTaskEvents,
+  resumeTask,
 } from "../task-service";
 import { broadcastTaskUpdate, sendTaskEvent } from "../sse-service";
 
@@ -439,6 +445,643 @@ describe("task-service", () => {
       expect(result.id).toBe("task-cloned");
       expect(mockDb.insert).toHaveBeenCalled();
       expect(broadcastTaskUpdate).toHaveBeenCalled();
+    });
+  });
+
+  // ── Branch coverage: optional chaining, nullish coalescing, ternary operators ──
+
+  describe("branch coverage – toTaskResponse optional fields", () => {
+    it("handles updatedAt as null", async () => {
+      const task = makeTask({ updatedAt: null });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([]));
+
+      const result = await getTask("task-1");
+      expect(result.updatedAt).toBeNull();
+    });
+
+    it("handles updatedAt as a Date", async () => {
+      const task = makeTask({ updatedAt: NOW });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([]));
+
+      const result = await getTask("task-1");
+      expect(result.updatedAt).toBe(NOW.toISOString());
+    });
+
+    it("handles completedAt as null", async () => {
+      const task = makeTask({ completedAt: null });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([]));
+
+      const result = await getTask("task-1");
+      expect(result.completedAt).toBeNull();
+    });
+
+    it("handles completedAt as a Date", async () => {
+      const task = makeTask({ completedAt: NOW });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([]));
+
+      const result = await getTask("task-1");
+      expect(result.completedAt).toBe(NOW.toISOString());
+    });
+  });
+
+  describe("branch coverage – resolveCommitMessagePattern", () => {
+    it("returns undefined when jiraKey is empty/whitespace", async () => {
+      const task = makeTask({ commitMessagePattern: undefined });
+      mockDb.insert.mockReturnValue(chainResult([task]));
+
+      await createTask({
+        title: "Test",
+        repositorySlug: "repo",
+        jiraIssueKey: "  ",
+        commitMessagePattern: "custom pattern",
+      });
+
+      expect(mockDb.insert).toHaveBeenCalled();
+    });
+
+    it("generates default pattern when jiraKey exists but pattern is empty", async () => {
+      const task = makeTask();
+      mockDb.insert.mockReturnValue(chainResult([task]));
+
+      await createTask({
+        title: "Test",
+        repositorySlug: "repo",
+        jiraIssueKey: "PROJ-10",
+      });
+
+      expect(mockDb.insert).toHaveBeenCalled();
+    });
+
+    it("prepends jiraKey when pattern exists but doesn't include it", async () => {
+      const task = makeTask();
+      mockDb.insert.mockReturnValue(chainResult([task]));
+
+      await createTask({
+        title: "Test",
+        repositorySlug: "repo",
+        jiraIssueKey: "PROJ-10",
+        commitMessagePattern: "fix: {message}",
+      });
+
+      expect(mockDb.insert).toHaveBeenCalled();
+    });
+
+    it("keeps pattern when it already includes jiraKey", async () => {
+      const task = makeTask();
+      mockDb.insert.mockReturnValue(chainResult([task]));
+
+      await createTask({
+        title: "Test",
+        repositorySlug: "repo",
+        jiraIssueKey: "PROJ-10",
+        commitMessagePattern: "[PROJ-10] fix: {message}",
+      });
+
+      expect(mockDb.insert).toHaveBeenCalled();
+    });
+  });
+
+  describe("branch coverage – createTask auto-generated branch", () => {
+    it("creates BB branch for __AUTO_GENERATED__ sourceBranch", async () => {
+      const task = makeTask({ id: "task-auto", sourceBranch: "__AUTO_GENERATED__" });
+      mockDb.insert.mockReturnValue(chainResult([task]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const { createBranch } = await import("@/lib/services/bitbucket-service");
+
+      await createTask({
+        title: "Auto branch",
+        repositorySlug: "my-repo",
+        projectKey: "PROJ",
+        sourceBranch: "__AUTO_GENERATED__",
+        targetBranch: "main",
+      });
+
+      expect(createBranch).toHaveBeenCalledWith(
+        "PROJ",
+        "my-repo",
+        `promptdev/${task.id}`,
+        "main",
+      );
+    });
+  });
+
+  describe("branch coverage – processAgentCallback event types", () => {
+    it("handles CODE_GENERATED event (skips if terminal status)", async () => {
+      const task = makeTask({ status: "COMPLETED" });
+      const updated = makeTask({ status: "COMPLETED" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent({ eventType: "CODE_GENERATED" })]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "CODE_GENERATED",
+      });
+
+      // Status should NOT change because task was already COMPLETED
+      expect(result.status).toBe("COMPLETED");
+    });
+
+    it("handles REVIEWING_STARTED event", async () => {
+      const task = makeTask({ status: "IN_PROGRESS" });
+      const updated = makeTask({ status: "REVIEWING" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "REVIEWING_STARTED",
+      });
+
+      expect(result.status).toBe("REVIEWING");
+    });
+
+    it("handles REVIEWING_COMPLETED event", async () => {
+      const task = makeTask({ status: "REVIEWING" });
+      const updated = makeTask({ status: "COMMITTING" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "REVIEWING_COMPLETED",
+      });
+
+      expect(result.status).toBe("COMMITTING");
+    });
+
+    it("handles REVIEWING_FAILED event", async () => {
+      const task = makeTask({ status: "REVIEWING" });
+      const updated = makeTask({ status: "FAILED" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "REVIEWING_FAILED",
+        message: "Review check failed",
+      });
+
+      expect(result.status).toBe("FAILED");
+    });
+
+    it("handles TRIAGING_STARTED event", async () => {
+      const task = makeTask({ status: "IN_PROGRESS" });
+      const updated = makeTask({ status: "TRIAGING" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "TRIAGING_STARTED",
+      });
+
+      expect(result.status).toBe("TRIAGING");
+    });
+
+    it("handles TRIAGING_COMPLETED event", async () => {
+      const task = makeTask({ status: "TRIAGING" });
+      const updated = makeTask({ status: "IN_PROGRESS" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "TRIAGING_COMPLETED",
+      });
+
+      expect(result.status).toBe("IN_PROGRESS");
+    });
+
+    it("handles GIT_COMMIT event", async () => {
+      const task = makeTask({ status: "IN_PROGRESS" });
+      const updated = makeTask({ status: "COMMITTING" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "GIT_COMMIT",
+      });
+
+      expect(result.status).toBe("COMMITTING");
+    });
+
+    it("handles GIT_PUSH event", async () => {
+      const task = makeTask({ status: "COMMITTING" });
+      const updated = makeTask({ status: "PUSHING" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "GIT_PUSH",
+      });
+
+      expect(result.status).toBe("PUSHING");
+    });
+
+    it("handles PR_CREATED event with pullRequestId and url", async () => {
+      const task = makeTask({ status: "PUSHING" });
+      const updated = makeTask({ status: "CREATING_PR", pullRequestId: 99, pullRequestUrl: "https://bb/pr/99" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "PR_CREATED",
+        pullRequestId: 99,
+        pullRequestUrl: "https://bb/pr/99",
+      });
+
+      expect(result.status).toBe("CREATING_PR");
+    });
+
+    it("handles TASK_FAILED event", async () => {
+      const task = makeTask({ status: "IN_PROGRESS" });
+      const updated = makeTask({ status: "FAILED", errorMessage: "Crash" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "TASK_FAILED",
+        errorMessage: "Crash",
+      });
+
+      expect(result.status).toBe("FAILED");
+    });
+
+    it("handles RETRY_SCHEDULED event", async () => {
+      const task = makeTask({ status: "FAILED" });
+      const updated = makeTask({ status: "PENDING" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "RETRY_SCHEDULED",
+      });
+
+      expect(result.status).toBe("PENDING");
+    });
+
+    it("handles ITERATION_STARTED with currentIteration in details", async () => {
+      const task = makeTask({ status: "IN_PROGRESS" });
+      const updated = makeTask({ status: "ITERATION_PENDING", currentIteration: 3 });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "ITERATION_STARTED",
+        details: JSON.stringify({ currentIteration: 3 }),
+      });
+
+      expect(result.status).toBe("ITERATION_PENDING");
+    });
+
+    it("handles ITERATION_COMPLETED event", async () => {
+      const task = makeTask({ status: "ITERATION_PENDING" });
+      const updated = makeTask({ status: "IN_PROGRESS" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "ITERATION_COMPLETED",
+      });
+
+      expect(result.status).toBe("IN_PROGRESS");
+    });
+
+    it("handles ITERATION_STARTED with unparseable details (ignores error)", async () => {
+      const task = makeTask({ status: "IN_PROGRESS" });
+      const updated = makeTask({ status: "ITERATION_PENDING" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "ITERATION_STARTED",
+        details: "not-json",
+      });
+
+      expect(result.status).toBe("ITERATION_PENDING");
+    });
+
+    it("handles ITERATION_STARTED skipped when task is in terminal status", async () => {
+      const task = makeTask({ status: "COMPLETED" });
+      const updated = makeTask({ status: "COMPLETED" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+      mockDb.update.mockReturnValue(chainResult([]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "ITERATION_STARTED",
+      });
+
+      expect(result.status).toBe("COMPLETED");
+    });
+
+    it("handles unknown event type (default case, no updates)", async () => {
+      const task = makeTask({ status: "IN_PROGRESS" });
+      const updated = makeTask({ status: "IN_PROGRESS" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "PROGRESS",
+      });
+
+      expect(result.status).toBe("IN_PROGRESS");
+    });
+  });
+
+  describe("branch coverage – cancelTask jira opt-out branches", () => {
+    it("skips jira opt-out when no jiraIssueKey", async () => {
+      const task = makeTask({ status: "IN_PROGRESS", jiraIssueKey: null, userId: "user-1" });
+      const cancelled = makeTask({ status: "CANCELLED" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([cancelled]));
+      mockDb.update.mockReturnValue(chainResult([]));
+      mockDb.insert.mockReturnValue(chainResult([]));
+
+      await cancelTask("task-1");
+
+      // Only 1 insert (cancel event), no opt-out insert
+      expect(mockDb.insert).toHaveBeenCalledTimes(1);
+    });
+
+    it("skips jira opt-out when jiraIssueKey is whitespace", async () => {
+      const task = makeTask({ status: "IN_PROGRESS", jiraIssueKey: "  ", userId: "user-1" });
+      const cancelled = makeTask({ status: "CANCELLED" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([cancelled]));
+      mockDb.update.mockReturnValue(chainResult([]));
+      mockDb.insert.mockReturnValue(chainResult([]));
+
+      await cancelTask("task-1");
+
+      expect(mockDb.insert).toHaveBeenCalledTimes(1);
+    });
+
+    it("skips jira opt-out when userId is null", async () => {
+      const task = makeTask({ status: "IN_PROGRESS", jiraIssueKey: "PROJ-10", userId: null });
+      const cancelled = makeTask({ status: "CANCELLED" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([cancelled]));
+      mockDb.update.mockReturnValue(chainResult([]));
+      mockDb.insert.mockReturnValue(chainResult([]));
+
+      await cancelTask("task-1");
+
+      expect(mockDb.insert).toHaveBeenCalledTimes(1);
+    });
+
+    it("skips opt-out insert when opt-out already exists", async () => {
+      const task = makeTask({ status: "IN_PROGRESS", jiraIssueKey: "PROJ-10", userId: "user-1" });
+      const cancelled = makeTask({ status: "CANCELLED" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([{ id: "existing" }])) // existing opt-out
+        .mockReturnValueOnce(chainResult([cancelled]));
+      mockDb.update.mockReturnValue(chainResult([]));
+      mockDb.insert.mockReturnValue(chainResult([]));
+
+      await cancelTask("task-1");
+
+      // Only 1 insert (cancel event), skip opt-out since already exists
+      expect(mockDb.insert).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("branch coverage – retryTask nullish coalescing", () => {
+    it("handles null currentAttempt as 0", async () => {
+      const task = makeTask({ status: "FAILED", currentAttempt: null, maxAttempts: 3 });
+      const retried = makeTask({ status: "PENDING" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([retried]));
+      mockDb.update.mockReturnValue(chainResult([]));
+      mockDb.insert.mockReturnValue(chainResult([]));
+
+      const result = await retryTask("task-1");
+
+      expect(result.status).toBe("PENDING");
+    });
+
+    it("handles null maxAttempts as 3", async () => {
+      const task = makeTask({ status: "FAILED", currentAttempt: 2, maxAttempts: null });
+      const retried = makeTask({ status: "PENDING" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([retried]));
+      mockDb.update.mockReturnValue(chainResult([]));
+      mockDb.insert.mockReturnValue(chainResult([]));
+
+      const result = await retryTask("task-1");
+
+      expect(result.status).toBe("PENDING");
+    });
+  });
+
+  describe("branch coverage – resumeTask", () => {
+    it("resumes a completed task", async () => {
+      const task = makeTask({ status: "COMPLETED", resumeCount: 2 });
+      const updated = makeTask({ status: "PENDING", resumeCount: 3 });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.update.mockReturnValue(chainResult([]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+
+      const result = await resumeTask("task-1", "Try again");
+
+      expect(result.status).toBe("PENDING");
+    });
+
+    it("handles null resumeCount as 0", async () => {
+      const task = makeTask({ status: "FAILED", resumeCount: null });
+      const updated = makeTask({ status: "PENDING", resumeCount: 1 });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.update.mockReturnValue(chainResult([]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+
+      const result = await resumeTask("task-1", "Retry");
+
+      expect(result.status).toBe("PENDING");
+    });
+
+    it("throws when task is in non-resumable status", async () => {
+      const task = makeTask({ status: "IN_PROGRESS" });
+      mockDb.select.mockReturnValueOnce(chainResult([task]));
+
+      await expect(resumeTask("task-1", "Retry")).rejects.toThrow("Can only resume");
+    });
+  });
+
+  describe("branch coverage – getAllTasks filters", () => {
+    it("fetches tasks with search filter", async () => {
+      mockDb.select
+        .mockReturnValueOnce(chainResult([]))
+        .mockReturnValueOnce(chainResult([{ count: 0 }]));
+
+      const result = await getAllTasks(0, 20, { search: "login" });
+
+      expect(result.content).toHaveLength(0);
+    });
+
+    it("fetches tasks with status filter", async () => {
+      mockDb.select
+        .mockReturnValueOnce(chainResult([]))
+        .mockReturnValueOnce(chainResult([{ count: 0 }]));
+
+      const result = await getAllTasks(0, 20, { statuses: ["PENDING", "QUEUED"] });
+
+      expect(result.content).toHaveLength(0);
+    });
+
+    it("fetches tasks with workspaceType filter", async () => {
+      mockDb.select
+        .mockReturnValueOnce(chainResult([]))
+        .mockReturnValueOnce(chainResult([{ count: 0 }]));
+
+      const result = await getAllTasks(0, 20, { workspaceType: "BITBUCKET" });
+
+      expect(result.content).toHaveLength(0);
+    });
+
+    it("ignores workspaceType 'all'", async () => {
+      mockDb.select
+        .mockReturnValueOnce(chainResult([]))
+        .mockReturnValueOnce(chainResult([{ count: 0 }]));
+
+      const result = await getAllTasks(0, 20, { workspaceType: "all" });
+
+      expect(result.content).toHaveLength(0);
+    });
+  });
+
+  describe("branch coverage – getTasksByScheduledJobId", () => {
+    it("returns tasks for a scheduled job", async () => {
+      const jobTasks = [makeTask({ scheduledJobId: "job-1" })];
+      mockDb.select.mockReturnValueOnce(chainResult(jobTasks));
+
+      const result = await getTasksByScheduledJobId("job-1");
+
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe("branch coverage – getTaskEvents", () => {
+    it("returns events for a task", async () => {
+      const evts = [makeEvent()];
+      mockDb.select.mockReturnValueOnce(chainResult(evts));
+
+      const result = await getTaskEvents("task-1");
+
+      expect(result).toHaveLength(1);
+      expect(result[0].eventType).toBe("TASK_CREATED");
+    });
+  });
+
+  describe("branch coverage – processAgentCallback copilotSessionId", () => {
+    it("does not set copilotSessionId when task already has one", async () => {
+      const task = makeTask({ status: "IN_PROGRESS", copilotSessionId: "existing-session" });
+      const updated = makeTask({ status: "IN_PROGRESS", copilotSessionId: "existing-session" });
+      mockDb.select
+        .mockReturnValueOnce(chainResult([task]))
+        .mockReturnValueOnce(chainResult([updated]));
+      mockDb.insert.mockReturnValue(chainResult([makeEvent()]));
+
+      const result = await processAgentCallback({
+        taskId: "task-1",
+        eventType: "PROGRESS",
+        copilotSessionId: "new-session",
+      });
+
+      // copilotSessionId should remain the existing one
+      expect(result.copilotSessionId).toBe("existing-session");
+    });
+  });
+
+  describe("branch coverage – cloneTask workspace path", () => {
+    it("resolves incremented path for LOCAL workspace with custom path", async () => {
+      const original = makeTask({
+        id: "task-orig",
+        workspaceType: "LOCAL",
+        workspacePath: "/custom/path",
+        repositorySlug: "my-repo",
+      });
+      const cloned = makeTask({ id: "task-cloned" });
+      mockDb.select.mockReturnValueOnce(chainResult([original]));
+      mockDb.insert.mockReturnValue(chainResult([cloned]));
+
+      const result = await cloneTask("task-orig");
+
+      expect(result.id).toBe("task-cloned");
     });
   });
 });

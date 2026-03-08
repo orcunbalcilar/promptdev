@@ -514,4 +514,57 @@ describe('API Client', () => {
       expect(result).toBeUndefined()
     })
   })
+
+  // ── Branch coverage: startTask/resumeTask execute trigger failures ──
+
+  describe('startTask execution trigger failure', () => {
+    it('should still return task when execute trigger fails', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      // First call succeeds (apiFetch for task start), second throws (execute trigger)
+      let callCount = 0
+      mockFetch.mockImplementation(() => {
+        callCount++
+        if (callCount === 1) {
+          return Promise.resolve(jsonResponse({ id: 'task-exec', status: 'QUEUED' }))
+        }
+        return Promise.reject(new Error('Network error'))
+      })
+
+      const result = await startTask('task-exec')
+
+      expect(result.status).toBe('QUEUED')
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[API] Failed to trigger task execution'),
+        expect.any(Error),
+      )
+      consoleSpy.mockRestore()
+    })
+  })
+
+  describe('resumeTask execution trigger failure', () => {
+    it('should still return task when execute trigger fails', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      let callCount = 0
+      mockFetch.mockImplementation(() => {
+        callCount++
+        if (callCount === 1) {
+          return Promise.resolve(
+            jsonResponse({ id: 'task-resume', status: 'PENDING', resumeCount: 1 }),
+          )
+        }
+        return Promise.reject(new Error('Network error'))
+      })
+
+      const result = await resumeTask('task-resume', 'Try again')
+
+      expect(result.status).toBe('PENDING')
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[API] Failed to trigger resumed task execution'),
+        expect.any(Error),
+      )
+      consoleSpy.mockRestore()
+    })
+  })
 })

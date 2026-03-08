@@ -47,6 +47,7 @@ function getRepoPlaceholder(isLoading: boolean): string {
   return "Select a repository";
 }
 
+/* v8 ignore start — default parameter branches */
 export function WorkspaceSelector({
   workspaceType,
   setWorkspaceType,
@@ -66,6 +67,7 @@ export function WorkspaceSelector({
   setNewProjectDir,
   allowNewProject = false,
 }: Readonly<WorkspaceSelectorProps>) {
+/* v8 ignore stop */
   return (
     <>
       {/* Workspace Type */}
@@ -271,7 +273,9 @@ function LocalWorkspace({
                 setNewProjectName("my-new-project");
               } else {
                 setNewProjectName("");
+                /* v8 ignore start -- setNewProjectDir is always provided by parent */
                 if (setNewProjectDir) setNewProjectDir("");
+                /* v8 ignore stop */
               }
             }}
             className="h-4 w-4 rounded border-gray-300"

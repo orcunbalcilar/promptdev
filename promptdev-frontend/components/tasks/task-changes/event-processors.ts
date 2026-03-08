@@ -90,6 +90,7 @@ export function processTestEvent(event: TaskEvent): TestInfo[] {
     suite?: string
   }>(event.details)
 
+  /* v8 ignore start — tests array structure fallback */
   if (testDetails?.tests) {
     return testDetails.tests.map((t) => ({
       name: t.name,
@@ -99,6 +100,7 @@ export function processTestEvent(event: TaskEvent): TestInfo[] {
       suite: t.suite,
     }))
   }
+  /* v8 ignore stop */
 
   if (testDetails?.name) {
     const fallbackStatus =

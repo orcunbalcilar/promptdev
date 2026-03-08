@@ -38,7 +38,7 @@ export default function SettingsPage() {
 
   const { data: profile, isLoading, error: profileError } = useQuery({
     queryKey: ["userProfile", userId],
-    queryFn: () => getUserProfile(userId),
+    queryFn: () => getUserProfile(userId!),
     enabled: !!userId,
     staleTime: stableQueryOptions.staleTime,
     gcTime: stableQueryOptions.gcTime,

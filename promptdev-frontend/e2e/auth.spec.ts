@@ -24,7 +24,7 @@ test.describe('Authentication', () => {
     expect(sessionCookie).toBeDefined();
 
     // Also verify we are NOT redirected back to login
-    expect(page.url()).toBe('http://localhost:3000/');
+    expect(page.url()).toBe('http://localhost:3500/');
   });
 
   test('should redirect to login when unauthenticated', async ({ page }) => {
@@ -48,6 +48,6 @@ test.describe('Authentication', () => {
     
     // Should be redirected back to home (or callbackUrl default)
     await page.waitForURL('/');
-    expect(page.url()).toBe('http://localhost:3000/');
+    expect(page.url()).toBe('http://localhost:3500/');
   });
 });

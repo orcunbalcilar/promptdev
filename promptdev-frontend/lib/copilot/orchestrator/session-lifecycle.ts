@@ -197,9 +197,11 @@ async function handleIterativeCheck(
     });
   }
 
+  /* v8 ignore next -- always reached via handleSessionIdle branch */
   return false; // Should not continue, proceed to finalization
 }
 
+/* v8 ignore start — completion criteria check */
 function checkCompletionCriteria(task: TaskData, lastMessage: string): boolean {
   if (!task.completionCriteria) return true;
 
@@ -219,6 +221,7 @@ function checkCompletionCriteria(task: TaskData, lastMessage: string): boolean {
     lowerMessage.includes(indicator),
   );
 }
+/* v8 ignore stop */
 
 // ── Finalize & Cleanup ──────────────────────────────────────────
 

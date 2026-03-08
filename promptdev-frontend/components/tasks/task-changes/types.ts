@@ -54,7 +54,9 @@ export interface TestInfo {
 // ---------------------------------------------------------------------------
 
 export function inferLanguage(filePath: string): BundledLanguage {
+  /* v8 ignore start -- pop() on non-empty array always returns string */
   const ext = filePath.split('.').pop()?.toLowerCase() ?? ''
+  /* v8 ignore stop */
   const map: Record<string, BundledLanguage> = {
     ts: 'typescript',
     tsx: 'tsx',
@@ -101,7 +103,9 @@ export function formatDuration(ms: number): string {
 }
 
 export function getFileName(filePath: string): string {
+  /* v8 ignore start -- pop() on non-empty array always returns string */
   return filePath.split('/').pop() ?? filePath
+  /* v8 ignore stop */
 }
 
 export function fileStatusToType(status: string): FileChangeType {

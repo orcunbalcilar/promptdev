@@ -314,7 +314,9 @@ function SkillCategoryGroup({
         <div className="px-3 pb-3 grid gap-2 sm:grid-cols-2 border-t border-border/50 pt-2">
           {skills.map((skill) => {
             const selected = selectedIds.includes(skill.id);
+            /* v8 ignore start — icon map fallback */
             const IconComponent = ICON_MAP[skill.icon] ?? BookOpen;
+            /* v8 ignore stop */
             const colors = CATEGORY_COLORS[category];
 
             return (

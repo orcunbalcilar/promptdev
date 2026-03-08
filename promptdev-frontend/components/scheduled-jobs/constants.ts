@@ -19,10 +19,22 @@ export const JOB_TYPE_CONFIG: Record<
 > = {
   MAINTENANCE: { label: "Maintenance", icon: Wrench, color: "text-orange-500" },
   CODE_REVIEW: { label: "Code Review", icon: Search, color: "text-blue-500" },
-  TEST_COVERAGE: { label: "Test Coverage", icon: TestTube, color: "text-green-500" },
-  SECURITY_AUDIT: { label: "Security Audit", icon: Shield, color: "text-red-500" },
+  TEST_COVERAGE: {
+    label: "Test Coverage",
+    icon: TestTube,
+    color: "text-green-500",
+  },
+  SECURITY_AUDIT: {
+    label: "Security Audit",
+    icon: Shield,
+    color: "text-red-500",
+  },
   PERFORMANCE: { label: "Performance", icon: Zap, color: "text-yellow-500" },
-  DOCUMENTATION: { label: "Documentation", icon: FileText, color: "text-purple-500" },
+  DOCUMENTATION: {
+    label: "Documentation",
+    icon: FileText,
+    color: "text-purple-500",
+  },
   CUSTOM: { label: "Custom", icon: Code2, color: "text-gray-500" },
 };
 

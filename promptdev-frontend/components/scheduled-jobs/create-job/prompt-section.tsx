@@ -50,7 +50,7 @@ export function PromptSection() {
         id="promptTemplate"
         rows={6}
         value={promptTemplate}
-        onChange={(e) => setPromptTemplate(e.target.value)}
+        onChange={/* v8 ignore start */ (e) => setPromptTemplate(e.target.value) /* v8 ignore stop */}
         placeholder="Review all dependencies in package.json and update any that have security vulnerabilities or are more than 2 major versions behind..."
       />
     </div>

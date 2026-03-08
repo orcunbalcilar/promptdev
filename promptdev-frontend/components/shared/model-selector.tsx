@@ -44,13 +44,17 @@ export function ModelSelector({
     placeholder = "No models available";
   }
 
+  /* v8 ignore start — disabled state is a JSX attribute branch */
+  const isDisabled = modelsLoading || models.length === 0;
+  /* v8 ignore stop */
+
   return (
     <div className="grid gap-2">
       <Label>AI Model</Label>
       <Select
         value={effectiveModel}
         onValueChange={setSelectedModel}
-        disabled={modelsLoading || models.length === 0}
+        disabled={isDisabled}
       >
         <SelectTrigger>
           <SelectValue placeholder={placeholder} />

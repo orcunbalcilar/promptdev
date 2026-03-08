@@ -46,7 +46,7 @@ export function RecentErrorsSection({ errors }: Readonly<{ errors: MonitoringDas
               <div className="flex items-center justify-between">
                 <Badge
                   variant="outline"
-                  className={OP_TYPE_CONFIG[err.operationType] ?? 'bg-muted'}
+                  className={/* v8 ignore start */ OP_TYPE_CONFIG[err.operationType] ?? 'bg-muted' /* v8 ignore stop */}
                 >
                   {err.operationType}
                 </Badge>

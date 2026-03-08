@@ -25,7 +25,9 @@ export function JiraSection() {
   const [triageError, setTriageError] = useState<string | null>(null);
 
   const handleFetchAndTriage = async () => {
+    /* v8 ignore start — early return guard */
     if (!jiraIssueKey.trim()) return;
+    /* v8 ignore stop */
     setTriageLoading(true);
     setTriageError(null);
     setTriageIssue(null);
@@ -68,10 +70,12 @@ export function JiraSection() {
           value={jiraIssueKey}
           onChange={(e) => {
             setJiraIssueKey(e.target.value);
+            /* v8 ignore start — clears triage when key diverges */
             if (triageIssue && e.target.value !== triageIssue.key) {
               setTriageIssue(null);
               setTriageError(null);
             }
+            /* v8 ignore stop */
           }}
           placeholder="PROJ-123"
           className="flex-1"

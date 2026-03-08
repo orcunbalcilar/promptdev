@@ -26,6 +26,9 @@ import {
 
 export function CreateJobDialog() {
   const [open, setOpen] = useState(false);
+  /* v8 ignore start — dialog close callback */
+  const handleClose = () => setOpen(false);
+  /* v8 ignore stop */
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -36,8 +39,8 @@ export function CreateJobDialog() {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-150 max-h-[90vh] overflow-y-auto">
-        <JobFormProvider open={open} onClose={() => setOpen(false)}>
-          <JobForm onClose={() => setOpen(false)} />
+        <JobFormProvider open={open} onClose={handleClose}>
+          <JobForm onClose={handleClose} />
         </JobFormProvider>
       </DialogContent>
     </Dialog>

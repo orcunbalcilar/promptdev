@@ -111,4 +111,55 @@ describe("agent-scoring", () => {
       expect(ranked[0].modelId).toBe("gpt-4");
     });
   });
+
+  // ── Branch coverage: optional chaining / ternaries / nullish coalescing ──
+
+  describe("branch coverage – computeDuration edge cases", () => {
+    it("returns null duration for IN_PROGRESS tasks without completedAt", () => {
+      const tasks = [
+        makeTask({ modelId: "m1", status: "IN_PROGRESS", completedAt: undefined, updatedAt: undefined }),
+      ];
+      const score = scoreModel("m1", tasks);
+      // No durations -> avgDuration = 0 -> speedScore = 50
+      expect(score.avgDurationMs).toBe(0);
+    });
+
+    it("uses updatedAt for FAILED tasks when completedAt is missing", () => {
+      const tasks = [
+        makeTask({
+          modelId: "m1",
+          status: "FAILED",
+          completedAt: undefined,
+          updatedAt: "2024-01-15T10:30:00Z",
+          createdAt: "2024-01-15T10:00:00Z",
+        }),
+      ];
+      const score = scoreModel("m1", tasks);
+      expect(score.avgDurationMs).toBe(1800000); // 30 min
+    });
+
+    it("uses updatedAt for CANCELLED tasks when completedAt is missing", () => {
+      const tasks = [
+        makeTask({
+          modelId: "m1",
+          status: "CANCELLED",
+          completedAt: undefined,
+          updatedAt: "2024-01-15T10:15:00Z",
+          createdAt: "2024-01-15T10:00:00Z",
+        }),
+      ];
+      const score = scoreModel("m1", tasks);
+      expect(score.avgDurationMs).toBe(900000); // 15 min
+      expect(score.failureCount).toBe(1);
+    });
+
+    it("handles tasks with no currentIteration (avgIterations defaults)", () => {
+      const tasks = [
+        makeTask({ modelId: "m1", currentIteration: undefined }),
+      ];
+      const score = scoreModel("m1", tasks);
+      // No iterations -> avgIterations = 0 -> efficiencyScore = 50
+      expect(score.avgIterations).toBe(0);
+    });
+  });
 });

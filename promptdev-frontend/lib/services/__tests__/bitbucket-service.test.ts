@@ -214,4 +214,52 @@ describe("bitbucket-service", () => {
       await expect(listProjects()).rejects.toThrow("BITBUCKET_URL is not configured");
     });
   });
+
+  // ── Branch coverage: optional chaining and nullish coalescing ──
+
+  describe("branch coverage – getAuthHeaders with no token", () => {
+    it("returns empty headers when BITBUCKET_TOKEN is not set", () => {
+      delete process.env.BITBUCKET_TOKEN;
+      const config = getBitbucketConfig();
+      expect(config.token).toBeUndefined();
+    });
+  });
+
+  describe("branch coverage – empty response body", () => {
+    it("handles empty response body gracefully", async () => {
+      mockFetch.mockReturnValue(
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          text: () => Promise.resolve(""),
+        }),
+      );
+
+      const result = await getRepository("PROJ", "my-repo");
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe("branch coverage – listBranches without filter", () => {
+    it("fetches branches without filterText parameter", async () => {
+      mockFetch.mockReturnValue(mockJsonResponse({ values: [] }));
+
+      await listBranches("PROJ", "my-repo");
+
+      const calledUrl = mockFetch.mock.calls[0][0] as string;
+      expect(calledUrl).not.toContain("filterText");
+    });
+  });
+
+  describe("branch coverage – bitbucketFetch with no token", () => {
+    it("makes request without Authorization header when no token", async () => {
+      delete process.env.BITBUCKET_TOKEN;
+      mockFetch.mockReturnValue(mockJsonResponse({ values: [] }));
+
+      await listProjects();
+
+      const headers = mockFetch.mock.calls[0][1]?.headers as Record<string, string>;
+      expect(headers.Authorization).toBeUndefined();
+    });
+  });
 });

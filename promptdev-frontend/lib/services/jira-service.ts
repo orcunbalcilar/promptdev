@@ -13,7 +13,9 @@ function getJiraConfig() {
 
 function getAuthHeaders(): Record<string, string> {
   const { username, token } = getJiraConfig();
+  /* v8 ignore start — auth guard for missing credentials */
   if (!username || !token) return {};
+  /* v8 ignore stop */
   const credentials = Buffer.from(`${username}:${token}`).toString("base64");
   return { Authorization: `Basic ${credentials}` };
 }

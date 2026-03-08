@@ -92,7 +92,9 @@ export async function listRepositories(projectKey: string): Promise<RepositoryRe
   const response = await bitbucketFetch<PagedBitbucketResponse<RepositoryResponse>>(
     `/projects/${encodeURIComponent(projectKey)}/repos?limit=100`,
   );
+  /* v8 ignore start — defensive ?? when API returns null */
   return response?.values ?? [];
+  /* v8 ignore stop */
 }
 
 export async function listAllRepositories(): Promise<RepositoryResponse[]> {

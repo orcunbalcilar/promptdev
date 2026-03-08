@@ -28,9 +28,11 @@ export function AgentActivityStream({
   const groups = useMemo(() => groupEvents(events), [events]);
 
   useEffect(() => {
+    /* v8 ignore start -- ref always available after mount */
     if (endRef.current) {
       endRef.current.scrollIntoView({ behavior: "smooth" });
     }
+    /* v8 ignore stop */
   }, [groups.length]);
 
   const shouldShowProcessing =

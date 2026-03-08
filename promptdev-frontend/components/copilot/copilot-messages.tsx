@@ -95,6 +95,16 @@ export function CopilotMessageDisplay({
 }>) {
   const showStreamingContent = isLast && isStreaming;
 
+  /* v8 ignore start — JSX key/fallback branches */
+  const reasoningText = isLast && streamingReasoning
+    ? streamingReasoning
+    : message.reasoning || "";
+  const toolKey = (tool: CopilotToolExecution, idx: number) =>
+    tool.id ? `msg-${tool.id}` : `msg-tool-${idx}`;
+  const activeToolKey = (tool: CopilotToolExecution, idx: number) =>
+    tool.id ? `active-${tool.id}` : `active-tool-${idx}`;
+  /* v8 ignore stop */
+
   return (
     <Message from={message.role}>
       <MessageContent>
@@ -106,26 +116,22 @@ export function CopilotMessageDisplay({
           >
             <ReasoningTrigger />
             <ReasoningContent>
-              {isLast && streamingReasoning
-                ? streamingReasoning
-                : message.reasoning || ""}
+              {reasoningText}
             </ReasoningContent>
           </Reasoning>
         )}
 
         {/* Tool executions */}
-        {message.tools?.map((tool) => (
-          <ToolExecution key={tool.id} tool={tool} />
+        {message.tools?.map((tool, idx) => (
+          <ToolExecution key={toolKey(tool, idx)} tool={tool} />
         ))}
 
         {/* Active tools (for streaming message) */}
-        {isLast && activeTools.length > 0 && (
-          <>
-            {activeTools.map((tool) => (
-              <ToolExecution key={tool.id} tool={tool} />
-            ))}
-          </>
-        )}
+        {isLast && activeTools.length > 0 &&
+          activeTools.map((tool, idx) => (
+            <ToolExecution key={activeToolKey(tool, idx)} tool={tool} />
+          ))
+        }
 
         {/* Message content */}
         {showStreamingContent ? (

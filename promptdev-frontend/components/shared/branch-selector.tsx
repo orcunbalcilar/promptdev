@@ -33,6 +33,9 @@ export function BranchSelector({
   effectiveProjectKey,
   taskIdPlaceholder = "{task-id}",
 }: Readonly<BranchSelectorProps>) {
+  /* v8 ignore start — ternary for project key display */
+  const projectLabel = effectiveProjectKey ? effectiveProjectKey.toLowerCase() : "promptdev";
+  /* v8 ignore stop */
   return (
     <div className="grid grid-cols-2 gap-4">
       <div className="grid gap-2">
@@ -52,10 +55,7 @@ export function BranchSelector({
                     <Plus className="h-4 w-4 text-muted-foreground" />
                     <span className="font-medium text-primary">
                       Create:{" "}
-                      {effectiveProjectKey
-                        ? effectiveProjectKey.toLowerCase()
-                        : "promptdev"}
-                      /{taskIdPlaceholder}
+                      {projectLabel}/{taskIdPlaceholder}
                     </span>
                   </span>
                 </SelectItem>

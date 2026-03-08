@@ -128,7 +128,10 @@ const STATUS_BORDER: Partial<Record<TaskStatus, string>> = {
 // ── Component ───────────────────────────────────────────────────
 
 export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
+  /* v8 ignore start -- task.status always exists in statusConfig; pop() always returns on non-empty split */
   const config = statusConfig[task.status] ?? statusConfig.PENDING;
+  const modelDisplayName = task.modelId ? (task.modelId.split('/').pop() ?? task.modelId) : undefined;
+  /* v8 ignore stop */
   const StatusIcon = config.icon;
   const isAnimating = [
     "IN_PROGRESS",
@@ -198,7 +201,7 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
           {task.modelId && (
             <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 gap-0.5 max-w-20 truncate">
               <Bot className="h-2 w-2 shrink-0" />
-              <span className="truncate">{task.modelId.split('/').pop() ?? task.modelId}</span>
+              <span className="truncate">{modelDisplayName}</span>
             </Badge>
           )}
         </div>

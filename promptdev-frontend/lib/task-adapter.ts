@@ -30,5 +30,5 @@ export function adaptTask(t: TaskResponse): Task {
     result[field] = t[field] ?? undefined;
   }
 
-  return result as Task;
+  return result as unknown as Task;
 }

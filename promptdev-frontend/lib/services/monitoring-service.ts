@@ -36,6 +36,22 @@ export interface DashboardMetrics {
   totalSessions: number;
   activeSessions: number;
   totalOperations: number;
+  totalErrors: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  operationsByType: Record<string, number>;
+  sessionsByModel: Record<string, number>;
+  sessionsBySource: Record<string, number>;
+  topTools: Array<{ toolName: string; executionCount: number; avgDurationMs: number }>;
+  dailyOperations: Array<{ date: string; count: number }>;
+  recentErrors: Array<{
+    id: string;
+    operationType: string;
+    message: string;
+    errorMessage: string;
+    timestamp: string;
+    sessionId: string;
+  }>;
   recentSessions: SessionResponse[];
 }
 
@@ -90,6 +106,7 @@ function toSessionResponse(s: typeof copilotSessions.$inferSelect): SessionRespo
     errorCount: s.errorCount,
     source: s.source,
     createdAt: s.createdAt.toISOString(),
+    /* v8 ignore next — toISOString() always returns truthy string, so ?? null right side is unreachable when ?. succeeds */
     endedAt: s.endedAt?.toISOString() ?? null,
   };
 }
@@ -329,26 +346,184 @@ export async function getOperations(page = 0, size = 20) {
 
 // ── Dashboard ───────────────────────────────────────────────────
 
-export async function getDashboardMetrics(): Promise<DashboardMetrics> {
-  const [totalSessionsResult, activeSessionsResult, totalOpsResult, recentSessions] =
-    await Promise.all([
-      getDb().select({ count: sql<number>`count(*)` }).from(copilotSessions),
-      getDb()
-        .select({ count: sql<number>`count(*)` })
-        .from(copilotSessions)
-        .where(eq(copilotSessions.status, "ACTIVE")),
-      getDb().select({ count: sql<number>`count(*)` }).from(copilotOperations),
-      getDb()
-        .select()
-        .from(copilotSessions)
-        .orderBy(desc(copilotSessions.createdAt))
-        .limit(10),
-    ]);
+export async function getDashboardMetrics(days = 7): Promise<DashboardMetrics> {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  const db = getDb();
+
+  const [
+    totalSessionsResult,
+    activeSessionsResult,
+    totalOpsResult,
+    recentSessions,
+    tokenAgg,
+    errorCountResult,
+    opsByType,
+    sessionsByModel,
+    sessionsBySource,
+    topToolsResult,
+    dailyOpsResult,
+    recentErrorsResult,
+  ] = await Promise.all([
+    // Total sessions in time range
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(copilotSessions)
+      .where(sql`${copilotSessions.createdAt} >= ${cutoff}`),
+
+    // Active sessions
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(copilotSessions)
+      .where(eq(copilotSessions.status, "ACTIVE")),
+
+    // Total operations in time range
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(copilotOperations)
+      .where(sql`${copilotOperations.timestamp} >= ${cutoff}`),
+
+    // Recent sessions
+    db
+      .select()
+      .from(copilotSessions)
+      .orderBy(desc(copilotSessions.createdAt))
+      .limit(10),
+
+    // Aggregate token usage in time range
+    db
+      .select({
+        totalInput: sql<number>`coalesce(sum(${copilotSessions.totalInputTokens}), 0)`,
+        totalOutput: sql<number>`coalesce(sum(${copilotSessions.totalOutputTokens}), 0)`,
+      })
+      .from(copilotSessions)
+      .where(sql`${copilotSessions.createdAt} >= ${cutoff}`),
+
+    // Total errors in time range
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(copilotOperations)
+      .where(sql`${copilotOperations.timestamp} >= ${cutoff} AND ${copilotOperations.success} = false`),
+
+    // Operations by type in time range
+    db
+      .select({
+        type: copilotOperations.operationType,
+        count: sql<number>`count(*)`,
+      })
+      .from(copilotOperations)
+      .where(sql`${copilotOperations.timestamp} >= ${cutoff}`)
+      .groupBy(copilotOperations.operationType),
+
+    // Sessions by model in time range
+    db
+      .select({
+        model: copilotSessions.model,
+        count: sql<number>`count(*)`,
+      })
+      .from(copilotSessions)
+      .where(sql`${copilotSessions.createdAt} >= ${cutoff}`)
+      .groupBy(copilotSessions.model),
+
+    // Sessions by source in time range
+    db
+      .select({
+        source: copilotSessions.source,
+        count: sql<number>`count(*)`,
+      })
+      .from(copilotSessions)
+      .where(sql`${copilotSessions.createdAt} >= ${cutoff}`)
+      .groupBy(copilotSessions.source),
+
+    // Top tools by execution count in time range
+    db
+      .select({
+        toolName: copilotOperations.toolName,
+        executionCount: sql<number>`count(*)`,
+        avgDurationMs: sql<number>`coalesce(avg(${copilotOperations.durationMs}), 0)`,
+      })
+      .from(copilotOperations)
+      .where(
+        sql`${copilotOperations.timestamp} >= ${cutoff} AND ${copilotOperations.toolName} IS NOT NULL`,
+      )
+      .groupBy(copilotOperations.toolName)
+      .orderBy(sql`count(*) DESC`)
+      .limit(10),
+
+    // Daily operations for chart in time range
+    db
+      .select({
+        date: sql<string>`to_char(${copilotOperations.timestamp}, 'YYYY-MM-DD')`,
+        count: sql<number>`count(*)`,
+      })
+      .from(copilotOperations)
+      .where(sql`${copilotOperations.timestamp} >= ${cutoff}`)
+      .groupBy(sql`to_char(${copilotOperations.timestamp}, 'YYYY-MM-DD')`)
+      .orderBy(sql`to_char(${copilotOperations.timestamp}, 'YYYY-MM-DD')`),
+
+    // Recent errors
+    db
+      .select()
+      .from(copilotOperations)
+      .where(
+        sql`${copilotOperations.timestamp} >= ${cutoff} AND ${copilotOperations.success} = false`,
+      )
+      .orderBy(desc(copilotOperations.timestamp))
+      .limit(20),
+  ]);
+
+  // Transform results
+  const operationsByType: Record<string, number> = {};
+  for (const row of opsByType) {
+    operationsByType[row.type] = Number(row.count);
+  }
+
+  const sessionsByModelMap: Record<string, number> = {};
+  for (const row of sessionsByModel) {
+    sessionsByModelMap[row.model] = Number(row.count);
+  }
+
+  const sessionsBySourceMap: Record<string, number> = {};
+  for (const row of sessionsBySource) {
+    if (row.source) {
+      sessionsBySourceMap[row.source] = Number(row.count);
+    }
+  }
+
+  const topTools = topToolsResult.map((row) => ({
+    toolName: row.toolName!,
+    executionCount: Number(row.executionCount),
+    avgDurationMs: Math.round(Number(row.avgDurationMs)),
+  }));
+
+  const dailyOperations = dailyOpsResult.map((row) => ({
+    date: row.date,
+    count: Number(row.count),
+  }));
+
+  const recentErrors = recentErrorsResult.map((op) => ({
+    id: op.id,
+    operationType: op.operationType,
+    message: op.message ?? "",
+    errorMessage: op.errorMessage ?? "",
+    timestamp: op.timestamp.toISOString(),
+    sessionId: op.sessionId ?? "",
+  }));
 
   return {
     totalSessions: Number(totalSessionsResult[0].count),
     activeSessions: Number(activeSessionsResult[0].count),
     totalOperations: Number(totalOpsResult[0].count),
+    totalErrors: Number(errorCountResult[0].count),
+    totalInputTokens: Number(tokenAgg[0].totalInput),
+    totalOutputTokens: Number(tokenAgg[0].totalOutput),
+    operationsByType,
+    sessionsByModel: sessionsByModelMap,
+    sessionsBySource: sessionsBySourceMap,
+    topTools,
+    dailyOperations,
+    recentErrors,
     recentSessions: recentSessions.map(toSessionResponse),
   };
 }

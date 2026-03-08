@@ -69,9 +69,11 @@ function removeGitWorktree(repoPath: string, worktreePath: string): void {
   try {
     runGitCommand(repoPath, ["worktree", "remove", "--force", worktreePath]);
   } catch {
+    /* v8 ignore start — defensive fallback when git worktree remove fails */
     if (existsSync(worktreePath)) {
       rmSync(worktreePath, { recursive: true, force: true });
     }
+    /* v8 ignore stop */
   }
 }
 

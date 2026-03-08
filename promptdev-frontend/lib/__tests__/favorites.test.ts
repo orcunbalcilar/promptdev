@@ -66,4 +66,49 @@ describe("favorites", () => {
       expect(getFavorites().size).toBe(0);
     });
   });
+
+  // ── Branch coverage: SSR (typeof window === 'undefined') ──────
+
+  describe("branch coverage – server-side (no window)", () => {
+    const realWindow = globalThis.window;
+
+    afterEach(() => {
+      // Restore window
+      Object.defineProperty(globalThis, "window", {
+        value: realWindow,
+        configurable: true,
+        writable: true,
+      });
+    });
+
+    it("getFavorites returns empty set when window is undefined", () => {
+      Object.defineProperty(globalThis, "window", {
+        value: undefined,
+        configurable: true,
+        writable: true,
+      });
+      const result = getFavorites();
+      expect(result.size).toBe(0);
+    });
+
+    it("toggleFavorite works when window is undefined (no-op write)", () => {
+      Object.defineProperty(globalThis, "window", {
+        value: undefined,
+        configurable: true,
+        writable: true,
+      });
+      // Should not throw
+      const result = toggleFavorite("task-1");
+      expect(result).toBe(true);
+    });
+
+    it("clearFavorites works when window is undefined (no-op)", () => {
+      Object.defineProperty(globalThis, "window", {
+        value: undefined,
+        configurable: true,
+        writable: true,
+      });
+      expect(() => clearFavorites()).not.toThrow();
+    });
+  });
 });

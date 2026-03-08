@@ -131,4 +131,59 @@ describe("analytics", () => {
       expect(result.modelB.totalTasks).toBe(1);
     });
   });
+
+  // ── Branch coverage: getDurationMs edge cases ───────────────
+
+  describe("branch coverage – getDurationMs", () => {
+    it("uses updatedAt for FAILED tasks when completedAt is missing", () => {
+      const tasks = [
+        makeTask({
+          status: "FAILED",
+          completedAt: undefined,
+          updatedAt: "2024-01-15T10:30:00Z",
+          createdAt: "2024-01-15T10:00:00Z",
+        }),
+      ];
+      const metrics = calculateTaskMetrics(tasks);
+      expect(metrics.averageDurationMs).toBe(1800000);
+    });
+
+    it("uses updatedAt for CANCELLED tasks when completedAt is missing", () => {
+      const tasks = [
+        makeTask({
+          status: "CANCELLED",
+          completedAt: undefined,
+          updatedAt: "2024-01-15T10:15:00Z",
+          createdAt: "2024-01-15T10:00:00Z",
+        }),
+      ];
+      const metrics = calculateTaskMetrics(tasks);
+      expect(metrics.averageDurationMs).toBe(900000);
+    });
+
+    it("returns null duration for IN_PROGRESS without completedAt or end status", () => {
+      const tasks = [
+        makeTask({ status: "IN_PROGRESS", completedAt: undefined }),
+      ];
+      const metrics = calculateTaskMetrics(tasks);
+      expect(metrics.averageDurationMs).toBe(0);
+      expect(metrics.medianDurationMs).toBe(0);
+    });
+
+    it("handles tasks without modelId in tasksByModel", () => {
+      const tasks = [
+        makeTask({ modelId: undefined }),
+      ];
+      const metrics = calculateTaskMetrics(tasks);
+      expect(Object.keys(metrics.tasksByModel)).toHaveLength(0);
+    });
+
+    it("handles completed tasks without completedAt in completionTrend", () => {
+      const tasks = [
+        makeTask({ status: "COMPLETED", completedAt: undefined }),
+      ];
+      const metrics = calculateTaskMetrics(tasks);
+      expect(metrics.completionTrend).toEqual([]);
+    });
+  });
 });

@@ -53,7 +53,9 @@ function collectConsecutiveBatch(
   const batch: TaskEvent[] = [events[startIdx]];
   consumed.add(events[startIdx].id);
   for (let j = startIdx + 1; j < events.length; j++) {
+    /* v8 ignore start — type mismatch break rarely hit in grouped batches */
     if (!types.includes(events[j].eventType)) break;
+    /* v8 ignore stop */
     batch.push(events[j]);
     consumed.add(events[j].id);
   }
