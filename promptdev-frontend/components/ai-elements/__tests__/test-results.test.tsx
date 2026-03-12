@@ -37,7 +37,7 @@ const defaultSummary = {
   failed: 2,
   skipped: 1,
   total: 11,
-  duration: 3500,
+  duration: 3030,
 }
 
 describe('TestResults', () => {

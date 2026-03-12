@@ -263,7 +263,7 @@ describe("queueOperation – extended edge cases", () => {
     expect(mockFetch).not.toHaveBeenCalled();
 
     // Advance past FLUSH_INTERVAL (3000ms)
-    await vi.advanceTimersByTimeAsync(3500);
+    await vi.advanceTimersByTimeAsync(3030);
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
     const body = JSON.parse(mockFetch.mock.calls[0][1].body);
@@ -301,11 +301,11 @@ describe("queueOperation – extended edge cases", () => {
   it("timer-based flush clears the timeout", async () => {
     queueOperation({ operationType: "OP_TIMER" });
 
-    await vi.advanceTimersByTimeAsync(3500);
+    await vi.advanceTimersByTimeAsync(3030);
     expect(mockFetch).toHaveBeenCalledTimes(1);
 
     // Another advance should not trigger another flush
-    await vi.advanceTimersByTimeAsync(3500);
+    await vi.advanceTimersByTimeAsync(3030);
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 });

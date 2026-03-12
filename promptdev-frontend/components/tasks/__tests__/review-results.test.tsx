@@ -99,7 +99,7 @@ describe('ReviewResults', () => {
 
   // ---------- 8. Shows duration ----------
   it('shows duration when provided', () => {
-    render(<ReviewResults results={[]} duration={3500} />)
+    render(<ReviewResults results={[]} duration={3030} />)
     expect(screen.getByText('3s')).toBeInTheDocument()
   })
 

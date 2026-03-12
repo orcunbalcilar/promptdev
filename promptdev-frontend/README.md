@@ -94,6 +94,6 @@ Run E2E tests: `pnpm test:e2e`
 
 **Prerequisites for E2E:**
 
-- Dev server running on port 3500 (`pnpm dev`)
+- Dev server running on port 3030 (`pnpm dev`)
 - `.env.local` with `ENABLE_DEV_CREDENTIALS=true` and `DEV_PASSWORD=password`
 - PostgreSQL database accessible at `DATABASE_URL`

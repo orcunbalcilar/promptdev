@@ -112,8 +112,8 @@ start_frontend() {
     info "Starting frontend (Next.js)..."
     cd "$ROOT/promptdev-frontend"
     pnpm install && pnpm dev &
-    FRONTEND_PID=$!
-    success "Frontend starting on http://localhost:3000 (PID: $FRONTEND_PID)"
+    FRONTEND_PID=$!Ö
+    success "Frontend starting on http://localhost:3030 (PID: $FRONTEND_PID)"
 }
 
 start_bot() {
@@ -165,7 +165,7 @@ case "$CMD" in
 
         echo ""
         success "All services running!"
-        info "  Frontend:  http://localhost:3000"
+        info "  Frontend:  http://localhost:3030"
         info "  Database:  localhost:5432"
         echo ""
         info "Press Ctrl+C to stop all services"
