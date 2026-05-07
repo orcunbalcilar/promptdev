@@ -15,10 +15,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "PromptDev - AI-Powered Development Platform",
   description: "Build features with AI agents. Create tasks, select repositories, and get automated pull requests.",
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 import Providers from "./providers";
-import { CommandPalette } from "@/components/command-palette";
 
 export default function RootLayout({
   children,
@@ -26,13 +29,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
           {children}
-          <CommandPalette />
         </Providers>
       </body>
     </html>

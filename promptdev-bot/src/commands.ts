@@ -113,6 +113,8 @@ async function handleCreate(args: string[], respond: RespondFn): Promise<void> {
     repositorySlug,
   });
 
+  await startTask(task.id);
+
   await trackSlackOperation({
     operationType: "SLACK_TASK_CREATED",
     message: `Task created via Slack: ${title}`,
@@ -265,6 +267,8 @@ async function handleReview(
     prompt: `Review the code changes in the ${branch} branch of ${repositorySlug}. Focus on code quality, potential bugs, security issues, and best practices. Provide actionable feedback.`,
     repositorySlug,
   });
+
+  await startTask(task.id);
 
   await trackSlackOperation({
     operationType: "CODE_REVIEW_STARTED",

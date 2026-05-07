@@ -15,7 +15,6 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
   if (options.reset) {
     saveConfig({
       projectDir: "",
-      backendPort: 8080,
       frontendPort: 3000,
       dbPort: 5432,
       repoUrl: "",
@@ -44,12 +43,14 @@ export async function configCommand(options: ConfigOptions): Promise<void> {
 
     // Type-aware setting
     const currentValue = config[configKey];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mutableConfig = config as any;
     if (typeof currentValue === "number") {
-      (config as Record<string, unknown>)[configKey] = Number.parseInt(value, 10);
+      mutableConfig[configKey] = Number.parseInt(value, 10);
     } else if (typeof currentValue === "boolean") {
-      (config as Record<string, unknown>)[configKey] = value === "true";
+      mutableConfig[configKey] = value === "true";
     } else {
-      (config as Record<string, unknown>)[configKey] = value;
+      mutableConfig[configKey] = value;
     }
 
     saveConfig(config);

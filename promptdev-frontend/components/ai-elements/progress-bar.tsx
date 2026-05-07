@@ -102,7 +102,7 @@ export const ProgressBarFill = ({
 }: Omit<ProgressBarFillProps, 'style'>) => (
   <div
     className={cn(
-      "h-full rounded-full transition-all duration-500 ease-out",
+      "h-full rounded-full transition-[width,background-color] duration-500 ease-out",
       value === 100 ? "bg-green-500" : "bg-primary",
       getWidthClass(value),
       className

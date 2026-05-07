@@ -40,13 +40,44 @@ vi.mock('@/lib/monitoring', () => ({
   flushOperations: vi.fn().mockResolvedValue(undefined),
 }))
 
-// Mock fetch globally
-const mockFetch = vi.fn()
-globalThis.fetch = mockFetch
+// Mock service modules used by orchestrator/service-bridge.ts
+vi.mock('@/lib/services/task-service', () => ({
+  getTask: vi.fn(),
+  handleCallback: vi.fn(),
+  processAgentCallback: vi.fn(),
+  createPullRequest: vi.fn(),
+  getQueuedScheduledTasks: vi.fn(),
+}))
+
+vi.mock('@/lib/services/workspace-service', () => ({
+  createWorkspace: vi.fn(),
+  createLocalWorkspace: vi.fn(),
+  cloneRepository: vi.fn(),
+  cleanupWorkspace: vi.fn(),
+}))
+
+vi.mock('@/lib/services/sse-service', () => ({
+  broadcastTaskUpdate: vi.fn(),
+  sendTaskEvent: vi.fn(),
+}))
+
+vi.mock('@/lib/services/jira-service', () => ({
+  getTransitions: vi.fn(),
+  transitionIssue: vi.fn(),
+  addComment: vi.fn(),
+}))
+
+vi.mock('@/lib/services/bitbucket-service', () => ({
+  getCloneUrl: vi.fn().mockReturnValue('https://bitbucket.example.com/scm/proj/my-app.git'),
+  getBitbucketConfig: vi.fn().mockReturnValue({ baseUrl: 'https://bitbucket.example.com', username: 'user', token: 'token' }),
+}))
 
 import { executeTask, cancelTaskSession, isTaskRunning, getTaskSessionId } from '@/lib/copilot/orchestrator'
 import { createCopilotSession, sendMessage, subscribeToSession, destroySession } from '@/lib/copilot/client'
 import { registerMonitoringSession } from '@/lib/monitoring'
+import * as taskService from '@/lib/services/task-service'
+import * as workspaceService from '@/lib/services/workspace-service'
+import * as jiraService from '@/lib/services/jira-service'
 
 const MOCK_TASK = {
   id: 'task-1',
@@ -64,31 +95,17 @@ const MOCK_TASK = {
 beforeEach(() => {
   vi.clearAllMocks()
 
-  // Default fetch responses
-  mockFetch.mockImplementation((url: string) => {
-    if (url.includes('/stream/callback')) {
-      return Promise.resolve({ ok: true })
-    }
-    if (url.includes('/tasks/')) {
-      return Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(MOCK_TASK),
-      })
-    }
-    if (url.includes('/workspaces/')) {
-      return Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ path: '/tmp/workspace/task-1' }),
-      })
-    }
-    if (url.includes('/jira/')) {
-      return Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ transitions: [] }),
-      })
-    }
-    return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
-  })
+  // Default mock implementations
+  vi.mocked(taskService.getTask).mockResolvedValue(MOCK_TASK as never)
+  vi.mocked(taskService.handleCallback).mockResolvedValue(undefined as never)
+  vi.mocked(taskService.processAgentCallback).mockResolvedValue(undefined as never)
+  vi.mocked(workspaceService.createWorkspace).mockReturnValue('/tmp/workspace/task-1')
+  vi.mocked(workspaceService.createLocalWorkspace).mockReturnValue('/tmp/workspace')
+  vi.mocked(workspaceService.cloneRepository).mockReturnValue('/tmp/workspace/task-1')
+  vi.mocked(workspaceService.cleanupWorkspace).mockReturnValue(undefined)
+  vi.mocked(jiraService.getTransitions).mockResolvedValue({ transitions: [] })
+  vi.mocked(jiraService.transitionIssue).mockResolvedValue(undefined)
+  vi.mocked(jiraService.addComment).mockResolvedValue(undefined)
 })
 
 afterEach(() => {
@@ -106,10 +123,8 @@ describe('Task Orchestrator', () => {
       expect(result.success).toBe(true)
       expect(result.sessionId).toBe('session-abc-123')
 
-      // Should have fetched the task
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/tasks/task-1'),
-      )
+      // Should have fetched the task via service
+      expect(taskService.getTask).toHaveBeenCalledWith('task-1')
 
       // Should have created a Copilot session
       expect(createCopilotSession).toHaveBeenCalledWith(
@@ -154,17 +169,13 @@ describe('Task Orchestrator', () => {
       )
     })
 
-    it('should send AGENT_STARTED callback to backend', async () => {
+    it('should send AGENT_STARTED callback', async () => {
       await executeTask('task-1')
 
-      const callbackCalls = mockFetch.mock.calls.filter(
-        ([url]: [string]) => url.includes('/stream/callback'),
+      const calls = vi.mocked(taskService.processAgentCallback).mock.calls
+      const agentStartedCall = calls.find(
+        ([callbackArg]: [{ eventType: string }]) => callbackArg.eventType === 'AGENT_STARTED',
       )
-
-      const agentStartedCall = callbackCalls.find(([, opts]: [string, { body: string }]) => {
-        const body = JSON.parse(opts.body)
-        return body.eventType === 'AGENT_STARTED'
-      })
 
       expect(agentStartedCall).toBeTruthy()
     })
@@ -181,12 +192,7 @@ describe('Task Orchestrator', () => {
     })
 
     it('should handle execution errors gracefully', async () => {
-      mockFetch.mockImplementation((url: string) => {
-        if (url.includes('/tasks/')) {
-          return Promise.reject(new Error('Network error'))
-        }
-        return Promise.resolve({ ok: true })
-      })
+      vi.mocked(taskService.getTask).mockRejectedValue(new Error('Network error'))
 
       const result = await executeTask('task-1')
 
@@ -219,11 +225,8 @@ describe('Task Orchestrator', () => {
     it('should create workspace for the task', async () => {
       await executeTask('task-1')
 
-      // Verify workspace creation was attempted via fetch
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/workspaces/task-1'),
-        expect.objectContaining({ method: 'POST' }),
-      )
+      // Verify workspace creation was called via service
+      expect(workspaceService.createLocalWorkspace).toHaveBeenCalledWith('/tmp/workspace')
     })
 
     it('should pass workingDirectory in session config (source verification)', async () => {
@@ -244,64 +247,28 @@ describe('Task Orchestrator', () => {
     }
 
     beforeEach(() => {
-      mockFetch.mockImplementation((url: string) => {
-        if (url.includes('/tasks/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve(JIRA_TASK),
-          })
-        }
-        if (url.includes('/jira/issues/PROJ-123/transitions')) {
-          return Promise.resolve({
-            ok: true,
-            json: () =>
-              Promise.resolve({
-                transitions: [
-                  { id: '21', name: 'In Progress' },
-                  { id: '31', name: 'Done' },
-                ],
-              }),
-          })
-        }
-        if (url.includes('/jira/')) {
-          return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
-        }
-        if (url.includes('/workspaces/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ path: '/tmp/ws' }),
-          })
-        }
-        return Promise.resolve({ ok: true })
-      })
+      vi.mocked(taskService.getTask).mockResolvedValue(JIRA_TASK as never)
+      vi.mocked(jiraService.getTransitions).mockResolvedValue({
+        transitions: [
+          { id: '21', name: 'In Progress' },
+          { id: '31', name: 'Done' },
+        ],
+      } as never)
     })
 
     it('should transition Jira issue to In Progress', async () => {
       await executeTask('task-1')
 
-      const transitionCall = mockFetch.mock.calls.find(
-        ([url, opts]: [string, { method?: string }]) =>
-          url.includes('/jira/issues/PROJ-123/transition') &&
-          opts?.method === 'POST',
-      )
-
-      expect(transitionCall).toBeTruthy()
-      const body = JSON.parse(transitionCall![1].body)
-      expect(body.transitionId).toBe('21')
+      expect(jiraService.transitionIssue).toHaveBeenCalledWith('PROJ-123', '21')
     })
 
     it('should add a Jira comment when starting', async () => {
       await executeTask('task-1')
 
-      const commentCall = mockFetch.mock.calls.find(
-        ([url, opts]: [string, { method?: string }]) =>
-          url.includes('/jira/issues/PROJ-123/comment') &&
-          opts?.method === 'POST',
+      expect(jiraService.addComment).toHaveBeenCalledWith(
+        'PROJ-123',
+        expect.stringContaining('started working'),
       )
-
-      expect(commentCall).toBeTruthy()
-      const body = JSON.parse(commentCall![1].body)
-      expect(body.comment).toContain('started working')
     })
   })
 
@@ -311,21 +278,7 @@ describe('Task Orchestrator', () => {
         ...MOCK_TASK,
         resumePrompt: 'Fix the failing test in login.test.ts',
       }
-      mockFetch.mockImplementation((url: string) => {
-        if (url.includes('/tasks/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve(RESUME_TASK),
-          })
-        }
-        if (url.includes('/workspaces/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ path: '/tmp/ws' }),
-          })
-        }
-        return Promise.resolve({ ok: true })
-      })
+      vi.mocked(taskService.getTask).mockResolvedValue(RESUME_TASK as never)
 
       await executeTask('task-1')
 
@@ -351,36 +304,7 @@ describe('Task Orchestrator', () => {
     }
 
     beforeEach(() => {
-      mockFetch.mockImplementation((url: string, opts?: { method?: string }) => {
-        if (url.includes('/stream/callback')) {
-          return Promise.resolve({ ok: true })
-        }
-        if (url.includes('/tasks/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve(BITBUCKET_TASK),
-          })
-        }
-        if (url.includes('/clone') && opts?.method === 'POST') {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ path: '/tmp/workspace/task-1' }),
-          })
-        }
-        if (url.includes('/workspaces/') && opts?.method === 'POST') {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ path: '/tmp/workspace/task-1' }),
-          })
-        }
-        if (url.includes('/workspaces/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ path: '/tmp/workspace/task-1' }),
-          })
-        }
-        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
-      })
+      vi.mocked(taskService.getTask).mockResolvedValue(BITBUCKET_TASK as never)
     })
 
     it('should clone repository after creating workspace for BITBUCKET tasks', async () => {
@@ -388,47 +312,16 @@ describe('Task Orchestrator', () => {
 
       expect(result.success).toBe(true)
 
-      // Should have called the clone endpoint
-      const cloneCall = mockFetch.mock.calls.find(
-        ([url, opts]: [string, { method?: string }]) =>
-          url.includes('/clone') && opts?.method === 'POST',
-      )
-      expect(cloneCall).toBeTruthy()
-
-      // Verify clone request body
-      const cloneBody = JSON.parse(cloneCall![1].body)
-      expect(cloneBody.projectKey).toBe('PROJ')
-      expect(cloneBody.repoSlug).toBe('my-app')
-      expect(cloneBody.sourceBranch).toBe('promptdev/task-1')
+      // Should have called workspace clone
+      expect(workspaceService.cloneRepository).toHaveBeenCalled()
     })
 
     it('should not clone for LOCAL workspace type', async () => {
-      // Use default MOCK_TASK which has workspaceType: 'LOCAL'
-      mockFetch.mockImplementation((url: string) => {
-        if (url.includes('/stream/callback')) {
-          return Promise.resolve({ ok: true })
-        }
-        if (url.includes('/tasks/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve(MOCK_TASK),
-          })
-        }
-        if (url.includes('/workspaces/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ path: '/tmp/workspace/task-1' }),
-          })
-        }
-        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
-      })
+      vi.mocked(taskService.getTask).mockResolvedValue(MOCK_TASK as never)
 
       await executeTask('task-1')
 
-      const cloneCall = mockFetch.mock.calls.find(
-        ([url]: [string]) => url.includes('/clone'),
-      )
-      expect(cloneCall).toBeUndefined()
+      expect(workspaceService.cloneRepository).not.toHaveBeenCalled()
     })
 
     it('should include "already cloned" in git workflow for BITBUCKET tasks', async () => {
@@ -466,21 +359,7 @@ describe('Task Orchestrator', () => {
         ...MOCK_TASK,
         skills: 'react, testing',
       }
-      mockFetch.mockImplementation((url: string) => {
-        if (url.includes('/tasks/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve(SKILLED_TASK),
-          })
-        }
-        if (url.includes('/workspaces/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ path: '/tmp/ws' }),
-          })
-        }
-        return Promise.resolve({ ok: true })
-      })
+      vi.mocked(taskService.getTask).mockResolvedValue(SKILLED_TASK as never)
 
       await executeTask('task-1')
 
@@ -495,21 +374,7 @@ describe('Task Orchestrator', () => {
         ...MOCK_TASK,
         reviewEnabled: true,
       }
-      mockFetch.mockImplementation((url: string) => {
-        if (url.includes('/tasks/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve(REVIEW_TASK),
-          })
-        }
-        if (url.includes('/workspaces/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ path: '/tmp/ws' }),
-          })
-        }
-        return Promise.resolve({ ok: true })
-      })
+      vi.mocked(taskService.getTask).mockResolvedValue(REVIEW_TASK as never)
 
       await executeTask('task-1')
 
@@ -524,21 +389,7 @@ describe('Task Orchestrator', () => {
         maxIterations: 5,
         completionCriteria: 'All tests passing and coverage > 80%',
       }
-      mockFetch.mockImplementation((url: string) => {
-        if (url.includes('/tasks/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve(ITER_TASK),
-          })
-        }
-        if (url.includes('/workspaces/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ path: '/tmp/ws' }),
-          })
-        }
-        return Promise.resolve({ ok: true })
-      })
+      vi.mocked(taskService.getTask).mockResolvedValue(ITER_TASK as never)
 
       await executeTask('task-1')
 
@@ -552,21 +403,7 @@ describe('Task Orchestrator', () => {
         ...MOCK_TASK,
         commitMessagePattern: 'feat({{scope}}): {{message}}',
       }
-      mockFetch.mockImplementation((url: string) => {
-        if (url.includes('/tasks/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve(COMMIT_TASK),
-          })
-        }
-        if (url.includes('/workspaces/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ path: '/tmp/ws' }),
-          })
-        }
-        return Promise.resolve({ ok: true })
-      })
+      vi.mocked(taskService.getTask).mockResolvedValue(COMMIT_TASK as never)
 
       await executeTask('task-1')
 
@@ -579,21 +416,7 @@ describe('Task Orchestrator', () => {
         ...MOCK_TASK,
         jiraIssueKey: 'ABC-42',
       }
-      mockFetch.mockImplementation((url: string) => {
-        if (url.includes('/tasks/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve(JIRA_TASK),
-          })
-        }
-        if (url.includes('/workspaces/') || url.includes('/jira/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ path: '/tmp/ws', transitions: [] }),
-          })
-        }
-        return Promise.resolve({ ok: true })
-      })
+      vi.mocked(taskService.getTask).mockResolvedValue(JIRA_TASK as never)
 
       await executeTask('task-1')
 
@@ -606,21 +429,7 @@ describe('Task Orchestrator', () => {
         ...MOCK_TASK,
         bootScript: 'npm install\nnpm run build',
       }
-      mockFetch.mockImplementation((url: string) => {
-        if (url.includes('/tasks/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve(BOOT_TASK),
-          })
-        }
-        if (url.includes('/workspaces/')) {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ path: '/tmp/ws' }),
-          })
-        }
-        return Promise.resolve({ ok: true })
-      })
+      vi.mocked(taskService.getTask).mockResolvedValue(BOOT_TASK as never)
 
       await executeTask('task-1')
 

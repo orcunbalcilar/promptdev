@@ -14,7 +14,6 @@ const CONFIG_FILE = join(CONFIG_DIR, 'config.json')
 
 export interface PromptDevConfig {
   projectDir: string
-  backendPort: number
   frontendPort: number
   dbPort: number
   repoUrl: string
@@ -24,7 +23,6 @@ export interface PromptDevConfig {
 
 const DEFAULT_CONFIG: PromptDevConfig = {
   projectDir: join(homedir(), 'promptdev'),
-  backendPort: 8080,
   frontendPort: 3000,
   dbPort: 5432,
   repoUrl: '',
@@ -108,7 +106,7 @@ export function getProjectDir(optDir?: string): string {
   if (optDir) return optDir
   const config = loadConfig()
   if (config.projectDir && existsSync(config.projectDir)) return config.projectDir
-  if (existsSync('./promptdev-backend')) return process.cwd()
+  if (existsSync('./promptdev-frontend')) return process.cwd()
   return config.projectDir
 }
 
@@ -116,22 +114,12 @@ export function getProjectDir(optDir?: string): string {
 
 export interface VersionInfo {
   cli: string
-  backend: string | null
   frontend: string | null
-  java: string | null
   node: string | null
 }
 
 export function getVersionInfo(projectDir: string): VersionInfo {
   const cliVersion = '1.0.0'
-
-  let backendVersion: string | null = null
-  const pomPath = join(projectDir, 'promptdev-backend', 'pom.xml')
-  if (existsSync(pomPath)) {
-    const pom = readFileSync(pomPath, 'utf-8')
-    const match = new RegExp(/<version>([^<]+)<\/version>/).exec(pom)
-    if (match) backendVersion = match[1]
-  }
 
   let frontendVersion: string | null = null
   const pkgPath = join(projectDir, 'promptdev-frontend', 'package.json')
@@ -142,16 +130,11 @@ export function getVersionInfo(projectDir: string): VersionInfo {
     } catch { /* ignore */ }
   }
 
-  const java = execSafe('java -version 2>&1')
-  const javaVersion = java?.match(/version "([^"]+)"/)?.[1] ?? null
-
   const nodeVersion = execSafe('node --version')
 
   return {
     cli: cliVersion,
-    backend: backendVersion,
     frontend: frontendVersion,
-    java: javaVersion,
     node: nodeVersion,
   }
 }

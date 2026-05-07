@@ -1,30 +1,23 @@
 /**
  * Jira integration helpers for the orchestrator.
+ * Calls jira-service directly within the Next.js process.
  */
 
-import { BACKEND_API } from "./types";
+import * as jiraService from "../../services/jira-service";
 
 export async function transitionJiraIssue(
   issueKey: string,
   targetStatus: string,
 ): Promise<void> {
   try {
-    const transRes = await fetch(
-      `${BACKEND_API}/jira/issues/${issueKey}/transitions`,
-    );
-    if (!transRes.ok) return;
-    const { transitions } = await transRes.json();
+    const result = await jiraService.getTransitions(issueKey);
 
-    const transition = transitions?.find((t: { name: string; id: string }) =>
+    const transition = result?.transitions?.find((t) =>
       t.name.toLowerCase().includes(targetStatus.toLowerCase()),
     );
 
     if (transition) {
-      await fetch(`${BACKEND_API}/jira/issues/${issueKey}/transition`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transitionId: transition.id }),
-      });
+      await jiraService.transitionIssue(issueKey, transition.id);
       console.log(
         `[Orchestrator] Jira ${issueKey} transitioned to ${targetStatus}`,
       );
@@ -42,11 +35,7 @@ export async function addJiraComment(
   comment: string,
 ): Promise<void> {
   try {
-    await fetch(`${BACKEND_API}/jira/issues/${issueKey}/comment`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ comment }),
-    });
+    await jiraService.addComment(issueKey, comment);
   } catch {
     console.warn(`[Orchestrator] Failed to add Jira comment to ${issueKey}`);
   }

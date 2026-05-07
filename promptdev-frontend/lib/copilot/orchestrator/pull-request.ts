@@ -3,8 +3,9 @@
  * Retries up to 3 times to handle push propagation delays.
  */
 
-import { sendCallback } from "./backend";
+import { sendCallback } from "./service-bridge";
 import type { TaskData } from "./types";
+import * as taskService from "../../services/task-service";
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 5000;
@@ -44,56 +45,28 @@ async function attemptCreatePR(
   targetBranch: string,
   attempt: number,
 ): Promise<boolean> {
-  const BACKEND_API =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
-
   try {
     console.log(
       `[Orchestrator] Creating PR for task ${taskId} (attempt ${attempt}/${MAX_RETRIES}): ${branchName} -> ${targetBranch}`,
     );
 
-    const response = await fetch(`${BACKEND_API}/tasks/${taskId}/create-pr`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        branchName,
-        targetBranch,
-        title: task.title ?? `PromptDev: ${taskId}`,
-        description: `Automated PR created by PromptDev AI agent.\n\nTask: ${task.title ?? taskId}`,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(
-        `[Orchestrator] PR creation attempt ${attempt} failed for task ${taskId}: ${response.status} ${errorText}`,
-      );
-
-      if (attempt >= MAX_RETRIES) {
-        await sendCallback(taskId, "ERROR", {
-          message: `Failed to create pull request after ${MAX_RETRIES} attempts: ${response.status} ${response.statusText}`,
-          errorMessage: errorText,
-        });
-      }
-      return false;
-    }
-
-    const prData = (await response.json()) as {
-      id?: number;
-      url?: string;
-      links?: { html?: { href?: string } };
-    };
-    const prUrl = prData.url ?? prData.links?.html?.href;
+    const prData = await taskService.createPullRequestForTask(
+      taskId,
+      branchName,
+      targetBranch,
+      task.title ?? `PromptDev: ${taskId}`,
+      `Automated PR created by PromptDev AI agent.\n\nTask: ${task.title ?? taskId}`,
+    );
 
     await sendCallback(taskId, "PR_CREATED", {
-      message: prUrl
-        ? "Pull request created: " + prUrl
+      message: prData.url
+        ? "Pull request created: " + prData.url
         : "Pull request created",
       pullRequestId: prData.id,
-      pullRequestUrl: prUrl,
+      pullRequestUrl: prData.url,
     });
 
-    console.log(`[Orchestrator] PR created for task ${taskId}: ${prUrl}`);
+    console.log(`[Orchestrator] PR created for task ${taskId}: ${prData.url}`);
     return true;
   } catch (err) {
     console.error(

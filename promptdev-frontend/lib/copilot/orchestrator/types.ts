@@ -2,9 +2,6 @@
  * Shared types and mutable state for the task orchestrator.
  */
 
-export const BACKEND_API =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
-
 /** Active task sessions mapping: taskId → sessionId */
 export const taskSessions = new Map<string, string>();
 

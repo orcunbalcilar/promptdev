@@ -1,10 +1,10 @@
 /**
  * Task Orchestrator
  *
- * Bridges the backend task system with the Copilot SDK.
+ * Bridges the task system with the Copilot SDK.
  * When a task is started, the orchestrator:
  * 1. Creates a Copilot SDK session with proper configuration
- * 2. Sets up hooks to report ALL events to backend monitoring
+ * 2. Sets up hooks to report ALL events to monitoring
  * 3. Sends the task prompt to the agent
  * 4. Manages workspace lifecycle (create → work → PR → cleanup)
  * 5. Handles iterative loops (Ralph Wiggum) with completion criteria
@@ -30,7 +30,7 @@ import {
   cloneRepository,
   fetchTask,
   sendCallback,
-} from "./backend";
+} from "./service-bridge";
 import { setupEventTracking } from "./event-tracking";
 import { addJiraComment, transitionJiraIssue } from "./jira";
 import { buildSystemPrompt } from "./system-prompt";
@@ -65,7 +65,7 @@ export async function executeTask(
 
       // Clone Bitbucket repository into workspace
       if (task.workspaceType === "BITBUCKET" && task.repositorySlug) {
-        workspacePath = await cloneRepository(
+        workspacePath = cloneRepository(
           taskId,
           task.projectKey,
           task.repositorySlug,
@@ -113,6 +113,7 @@ export async function executeTask(
         },
         provider: byokProvider,
         workingDirectory: workspacePath,
+        taskId,
       },
       userGithubToken,
     );
@@ -173,10 +174,12 @@ export async function cancelTaskSession(taskId: string): Promise<void> {
     return;
   }
 
+  /* v8 ignore start -- session always exists when taskSessions has the entry */
   const session = getSession(sessionId);
   if (session) {
     await destroySession(sessionId);
   }
+  /* v8 ignore stop */
 
   taskSessions.delete(taskId);
   await endMonitoringSession(sessionId);

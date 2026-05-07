@@ -34,12 +34,12 @@ function LoginForm() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-background">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md glass-panel">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit">
             <Zap className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="leading-none font-semibold text-2xl">Sign in to PromptDev</h1>
+          <h1 className="leading-none font-semibold text-2xl gradient-text">Sign in to PromptDev</h1>
           <CardDescription>
             AI-powered development platform. Sign in with your GitHub or Google account to continue.
           </CardDescription>

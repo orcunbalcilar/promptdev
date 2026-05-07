@@ -35,7 +35,6 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
 
   const services: ServiceStatus[] = [
     checkService('PostgreSQL', 5432),
-    checkService('Backend', 8080),
     checkService('Frontend', 3000),
   ]
 
@@ -66,9 +65,7 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
   const versions = getVersionInfo(projectDir)
   console.log(chalk.bold('\n📦 Versions\n'))
   console.log(`  CLI:      ${chalk.cyan(versions.cli)}`)
-  if (versions.backend) console.log(`  Backend:  ${chalk.cyan(versions.backend)}`)
   if (versions.frontend) console.log(`  Frontend: ${chalk.cyan(versions.frontend)}`)
-  if (versions.java) console.log(`  Java:     ${chalk.dim(versions.java)}`)
   if (versions.node) console.log(`  Node:     ${chalk.dim(versions.node)}`)
   console.log()
 }

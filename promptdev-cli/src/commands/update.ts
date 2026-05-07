@@ -34,19 +34,6 @@ export async function updateCommand(options: UpdateOptions): Promise<void> {
     throw err
   }
 
-  // Rebuild backend
-  const backendDir = join(projectDir, 'promptdev-backend')
-  if (existsSync(backendDir)) {
-    const backendSpinner = ora('Rebuilding backend...').start()
-    try {
-      const mvnCmd = process.platform === 'win32' ? 'mvnw.cmd' : './mvnw'
-      exec(`${mvnCmd} clean install -DskipTests -q`, backendDir)
-      backendSpinner.succeed('Backend rebuilt')
-    } catch {
-      backendSpinner.fail('Backend rebuild failed')
-    }
-  }
-
   // Rebuild frontend
   const frontendDir = join(projectDir, 'promptdev-frontend')
   if (existsSync(frontendDir)) {
@@ -69,10 +56,9 @@ export async function updateCommand(options: UpdateOptions): Promise<void> {
 
   // Restart services if requested and running
   if (options.restart) {
-    const backendRunning = isPortInUse(8080)
     const frontendRunning = isPortInUse(3000)
 
-    if (backendRunning || frontendRunning) {
+    if (frontendRunning) {
       console.log(chalk.yellow('\n  Restart running services manually:'))
       console.log(chalk.dim('    promptdev stop && promptdev start'))
     }

@@ -1,7 +1,14 @@
 import { auth } from "@/auth"
+import { validateCsrf } from "@/lib/csrf"
 
 export const proxy = auth((req) => {
   const { pathname } = req.nextUrl
+
+  // CSRF Protection
+  if (pathname.startsWith("/api/")) {
+    const csrfError = validateCsrf(req)
+    if (csrfError) return csrfError
+  }
 
   // Public routes that don't require authentication
   const publicPaths = ["/login", "/api/auth", "/api/copilot/models"]
@@ -20,5 +27,5 @@ export const proxy = auth((req) => {
 })
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/auth|api/copilot/models).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/auth).*)"],
 }

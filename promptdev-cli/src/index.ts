@@ -41,7 +41,7 @@ program
 program
   .command('start')
   .description('Start all PromptDev services')
-  .option('-s, --service <service>', 'Start a specific service (backend, frontend, db)')
+  .option('-s, --service <service>', 'Start a specific service (frontend, db)')
   .option('--detach', 'Run in background', false)
   .option('-d, --directory <path>', 'Project directory')
   .option('--env-file <path>', 'Path to a .env file to load before starting services')

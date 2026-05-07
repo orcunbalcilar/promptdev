@@ -210,4 +210,55 @@ describe("useBackendUser", () => {
     expect(result.current.isLoading).toBe(true);
     expect(result.current.userId).toBeUndefined();
   });
+
+  it("should fetch user profile directly if session ID is a UUID", async () => {
+    const mockUuid = "123e4567-e89b-12d3-a456-426614174000";
+    const mockSession = {
+      user: {
+        id: mockUuid,
+        email: "test@example.com",
+        name: "Test User",
+        image: "https://avatar.url/image.png",
+        provider: "github",
+      },
+      expires: "2099-12-31T23:59:59.999Z",
+    };
+
+    const mockBackendProfile = {
+      id: mockUuid,
+      email: "test@example.com",
+      name: "Test User",
+      avatarUrl: "https://avatar.url/image.png",
+      provider: "github",
+      bitbucketTokenSet: false,
+      copilotTokenSet: false,
+      byokApiKeySet: false,
+    };
+
+    vi.mocked(useSession).mockReturnValue({
+      data: mockSession,
+      status: "authenticated",
+      update: vi.fn(),
+    });
+
+    // Mock getUserProfile instead of syncUser
+    vi.mocked(userLib.getUserProfile).mockResolvedValue(mockBackendProfile);
+
+    const { result } = renderHook(() => useBackendUser(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    // Verify getUserProfile was called with the UUID
+    expect(userLib.getUserProfile).toHaveBeenCalledWith(mockUuid);
+    
+    // syncUser should NOT be called
+    expect(userLib.syncUser).not.toHaveBeenCalled();
+
+    expect(result.current.userId).toBe(mockUuid);
+    expect(result.current.profile).toEqual(mockBackendProfile);
+  });
 });

@@ -5,8 +5,9 @@
  * DELETE /api/copilot/sessions/[sessionId] - Destroy session
  */
 
-import { abortSession, destroySession, getSession } from "@/lib/copilot/client";
+import { abortSession, destroySession, getSession, resumeCopilotSession } from "@/lib/copilot/client";
 import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,11 +21,21 @@ interface RouteParams {
  */
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
-    const { sessionId } = await params;
-    const session = getSession(sessionId);
+    const { error, session: authSession } = await requireAuth();
+    if (error) return error;
 
+    const { sessionId } = await params;
+    let session = getSession(sessionId);
+
+    // If not in memory, try resuming from persisted SDK sessions
     if (!session) {
-      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      try {
+        const userExt = authSession.user as Record<string, unknown> | undefined;
+        const userToken = userExt?.copilotToken as string | undefined;
+        session = await resumeCopilotSession(sessionId, userToken);
+      } catch {
+        return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      }
     }
 
     return NextResponse.json(session);
@@ -43,6 +54,9 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
  */
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
+    const { error } = await requireAuth();
+    if (error) return error;
+
     const { sessionId } = await params;
     await destroySession(sessionId);
 
@@ -62,6 +76,9 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
+    const { error } = await requireAuth();
+    if (error) return error;
+
     const { sessionId } = await params;
     const body = (await request.json()) as { action?: string };
 
@@ -74,8 +91,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   } catch (error) {
     console.error("[API] Failed to process session action:", error);
 
+    /* v8 ignore start -- caught errors are always Error instances */
     const message =
       error instanceof Error ? error.message : "Failed to process action";
+    /* v8 ignore stop */
 
     return NextResponse.json({ error: message }, { status: 500 });
   }

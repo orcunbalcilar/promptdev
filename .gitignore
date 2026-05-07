@@ -20,16 +20,6 @@ Thumbs.db
 *.iws
 *.ipr
 
-# ── Java / Maven (promptdev-backend) ───────────────────────────────────────
-promptdev-backend/target/
-promptdev-backend/.apt_generated
-promptdev-backend/.classpath
-promptdev-backend/.factorypath
-promptdev-backend/.project
-promptdev-backend/.settings
-promptdev-backend/.springBeans
-promptdev-backend/.sts4-cache
-
 # ── Node.js (frontend, bot, cli) ───────────────────────────────────────────
 node_modules/
 

@@ -63,7 +63,7 @@ describe('Monitoring Client', () => {
       })
 
       // Advance timer past FLUSH_INTERVAL (3000ms)
-      await vi.advanceTimersByTimeAsync(3500)
+      await vi.advanceTimersByTimeAsync(3030)
 
       expect(mockFetch).toHaveBeenCalled()
     })

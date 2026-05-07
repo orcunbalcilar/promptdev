@@ -3,8 +3,15 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SessionProvider } from "next-auth/react";
+import { ThemeProvider } from "next-themes";
 import { useState } from "react";
 import { Toaster } from "sonner";
+import dynamic from "next/dynamic";
+
+const CommandPalette = dynamic(
+  () => import("@/components/shared/command-palette").then((m) => ({ default: m.CommandPalette })),
+  { ssr: false },
+);
 
 export default function Providers({
   children,
@@ -27,8 +34,18 @@ export default function Providers({
   return (
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>{children}</TooltipProvider>
-        <Toaster position="bottom-right" richColors closeButton />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <TooltipProvider>
+            {children}
+            <CommandPalette />
+          </TooltipProvider>
+          <Toaster position="bottom-right" richColors closeButton />
+        </ThemeProvider>
       </QueryClientProvider>
     </SessionProvider>
   );

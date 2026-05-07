@@ -1,9 +1,11 @@
 /**
- * API client for the PromptDev backend.
+ * API client for the PromptDev application.
+ * All calls go to the local Next.js API routes.
  */
 
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+import { createSseSubscription } from "@/lib/sse-client";
+
+export const API_BASE_URL = "/api";
 
 export type TaskStatus =
   | "PENDING"
@@ -191,6 +193,24 @@ export interface CreateTaskRequest {
   systemPrompt?: string;
 }
 
+export interface UpdateTaskRequest {
+  title?: string;
+  prompt?: string;
+  sourceBranch?: string;
+  targetBranch?: string;
+  modelId?: string;
+  iterative?: boolean;
+  maxIterations?: number;
+  completionCriteria?: string;
+  steps?: string;
+  reviewEnabled?: boolean;
+  reviewModelId?: string;
+  commitMessagePattern?: string;
+  bootScript?: string;
+  skills?: string;
+  systemPrompt?: string;
+}
+
 export interface ScheduledJob {
   id: string;
   name: string;
@@ -256,10 +276,22 @@ async function apiFetch<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
+  // PRD-03: Include CSRF token for state-changing requests
+  const csrfHeaders: Record<string, string> = {};
+  /* v8 ignore next 4 — CSRF extraction requires browser document context with optional chaining */
+  if (typeof document !== "undefined" && options?.method && options.method !== "GET") {
+    const match = /(?:next-auth\.csrf-token|__Host-next-auth\.csrf-token)=([^;|]+)/.exec(document.cookie);
+    if (match?.[1]) {
+      csrfHeaders["x-csrf-token"] = match[1];
+    }
+  }
+
   const response = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...csrfHeaders,
+      /* v8 ignore next */
       ...options?.headers,
     },
   });
@@ -293,6 +325,13 @@ export async function createTask(request: CreateTaskRequest): Promise<Task> {
   });
 }
 
+export async function updateTask(taskId: string, request: UpdateTaskRequest): Promise<Task> {
+  return apiFetch<Task>(`/tasks/${taskId}`, {
+    method: "PATCH",
+    body: JSON.stringify(request),
+  });
+}
+
 export async function getTask(taskId: string): Promise<Task> {
   return apiFetch<Task>(`/tasks/${taskId}`);
 }
@@ -300,8 +339,28 @@ export async function getTask(taskId: string): Promise<Task> {
 export async function getTasks(
   page = 0,
   size = 20,
+  filters?: {
+    status?: string;
+    search?: string;
+    workspaceType?: string;
+  },
 ): Promise<PagedResponse<Task>> {
-  return apiFetch<PagedResponse<Task>>(`/tasks?page=${page}&size=${size}`);
+  const query = new URLSearchParams({
+    page: page.toString(),
+    size: size.toString(),
+  });
+
+  if (filters?.status && filters.status !== "all") {
+    query.set("status", filters.status);
+  }
+  if (filters?.search) {
+    query.set("search", filters.search);
+  }
+  if (filters?.workspaceType && filters.workspaceType !== "all") {
+    query.set("workspaceType", filters.workspaceType);
+  }
+
+  return apiFetch<PagedResponse<Task>>(`/tasks?${query.toString()}`);
 }
 
 export async function getTaskEvents(taskId: string): Promise<TaskEvent[]> {
@@ -327,7 +386,7 @@ export async function cloneTask(taskId: string): Promise<Task> {
 }
 
 export async function startTask(taskId: string): Promise<Task> {
-  // First mark the task as QUEUED in the backend
+  // First mark the task as QUEUED in the database
   const task = await apiFetch<Task>(`/tasks/${taskId}/start`, {
     method: "POST",
   });
@@ -350,7 +409,7 @@ export async function resumeTask(
   taskId: string,
   resumePrompt: string,
 ): Promise<Task> {
-  // Resume the task in backend
+  // Resume the task in the database
   const task = await apiFetch<Task>(`/tasks/${taskId}/resume`, {
     method: "POST",
     body: JSON.stringify({ resumePrompt }),
@@ -417,26 +476,18 @@ export function subscribeToTaskEvents(
   onEvent: (event: TaskEvent) => void,
   onError?: (error: Event) => void,
 ): () => void {
-  const eventSource = new EventSource(`${API_BASE_URL}/stream/tasks/${taskId}`);
-
-  eventSource.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data) as TaskEvent;
-      onEvent(data);
-    } catch (e) {
-      console.error("Failed to parse SSE event:", e);
-    }
-  };
-
-  eventSource.onerror = (error) => {
-    console.error("SSE connection error:", error);
-    onError?.(error);
-  };
-
-  // Return cleanup function
-  return () => {
-    eventSource.close();
-  };
+  return createSseSubscription({
+    url: `${API_BASE_URL}/stream/tasks/${taskId}`,
+    onMessage: (event) => {
+      try {
+        const data = JSON.parse(event.data) as TaskEvent;
+        onEvent(data);
+      } catch (e) {
+        console.error("Failed to parse SSE event:", e);
+      }
+    },
+    onError,
+  });
 }
 
 // ============================================================================

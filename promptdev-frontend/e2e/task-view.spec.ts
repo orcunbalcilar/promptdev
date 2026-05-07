@@ -10,28 +10,33 @@ import { test, expect, type Page } from "@playwright/test";
  * 6. Code review completes (not stuck in REVIEWING)
  */
 
-// Helper: authenticate as test user
+// Helper: authenticate as test user (no-op if already authenticated via setup project)
 async function authenticate(page: Page) {
-  await page.goto("/login");
-  const devLoginButton = page.getByRole("button", {
-    name: "Sign in as Test User",
-  });
-  await expect(devLoginButton).toBeVisible({ timeout: 10000 });
-  await devLoginButton.click();
-  await page.waitForURL("/", { timeout: 15000 });
+  await page.goto("/");
+  // If already authenticated (from Playwright setup), we'll land on home page
+  // If not, we'll be redirected to login
+  const url = page.url();
+  if (url.includes("/login")) {
+    const devLoginButton = page.getByRole("button", {
+      name: "Sign in as Test User",
+    });
+    await expect(devLoginButton).toBeVisible({ timeout: 10000 });
+    await devLoginButton.click();
+    await page.waitForURL("/", { timeout: 15000 });
+  }
 }
 
 // Helper: navigate to a task detail page
 async function navigateToTask(page: Page, taskId: string) {
   await page.goto(`/tasks/${taskId}`);
   // Wait for the task detail page to load
-  await expect(page.getByText("Back")).toBeVisible({ timeout: 10000 });
+  await expect(page.getByRole("button", { name: "Back" })).toBeVisible({ timeout: 10000 });
 }
 
 // Helper: get first available task ID from the API
 async function getFirstTaskId(page: Page): Promise<string> {
   const response = await page.request.get(
-    "http://localhost:8080/api/tasks?page=0&size=1",
+    "/api/tasks?page=0&size=1",
   );
   expect(response.ok()).toBeTruthy();
   const data = await response.json();
@@ -145,7 +150,7 @@ test.describe("Task View Page", () => {
     page,
   }) => {
     // Find a task in REVIEWING status
-    const response = await page.request.get("http://localhost:8080/api/tasks");
+    const response = await page.request.get("/api/tasks");
     const data = await response.json();
     const reviewingTask = data.content.find(
       (t: { status: string }) => t.status === "REVIEWING",
@@ -198,7 +203,7 @@ test.describe("Task View - PR Link (Issue #4)", () => {
     await authenticate(page);
 
     // Check if any task has a PR URL
-    const response = await page.request.get("http://localhost:8080/api/tasks");
+    const response = await page.request.get("/api/tasks");
     const data = await response.json();
     const taskWithPR = data.content.find(
       (t: { pullRequestUrl: string | null }) => t.pullRequestUrl,
@@ -262,7 +267,7 @@ test.describe("Task View - Agent Activity Content (Issue #2)", () => {
 
     // Check events from API to verify LOG events exist
     const eventsResponse = await page.request.get(
-      `http://localhost:8080/api/tasks/${taskId}/events`,
+      `/api/tasks/${taskId}/events`,
     );
     const events = await eventsResponse.json();
     const logEvents = events.filter(
@@ -296,7 +301,7 @@ test.describe("Task View - Navigation and Actions", () => {
   test("should show Cancel button for active tasks", async ({ page }) => {
     await authenticate(page);
 
-    const response = await page.request.get("http://localhost:8080/api/tasks");
+    const response = await page.request.get("/api/tasks");
     const data = await response.json();
     const activeTask = data.content.find((t: { status: string }) =>
       ["IN_PROGRESS", "REVIEWING", "QUEUED"].includes(t.status),
@@ -318,7 +323,7 @@ test.describe("Task View - Navigation and Actions", () => {
   }) => {
     await authenticate(page);
 
-    const response = await page.request.get("http://localhost:8080/api/tasks");
+    const response = await page.request.get("/api/tasks");
     const data = await response.json();
     const failedTask = data.content.find((t: { status: string }) =>
       ["FAILED", "CANCELLED"].includes(t.status),
@@ -342,14 +347,14 @@ test.describe("Task View - File Changes Flow (Issues #1, #3)", () => {
 
     // Query all tasks and find one with FILE_* events
     const tasksResponse = await page.request.get(
-      "http://localhost:8080/api/tasks",
+      "/api/tasks",
     );
     const tasks = await tasksResponse.json();
 
     let taskWithFileEvents = null;
     for (const task of tasks.content) {
       const eventsResponse = await page.request.get(
-        `http://localhost:8080/api/tasks/${task.id}/events`,
+        `/api/tasks/${task.id}/events`,
       );
       const events = await eventsResponse.json();
       const fileEvents = events.filter((e: { eventType: string }) =>
@@ -406,7 +411,7 @@ test.describe("Task View - Review Completion (Issue #6)", () => {
     await authenticate(page);
 
     // Check API for REVIEWING tasks
-    const response = await page.request.get("http://localhost:8080/api/tasks");
+    const response = await page.request.get("/api/tasks");
     const data = await response.json();
     const reviewingTasks = data.content.filter(
       (t: { status: string; updatedAt: string }) => {
@@ -444,14 +449,14 @@ test.describe("Task View - Review Completion (Issue #6)", () => {
 
     // Find a task that has review events
     const tasksResponse = await page.request.get(
-      "http://localhost:8080/api/tasks",
+      "/api/tasks",
     );
     const tasks = await tasksResponse.json();
 
     let taskWithReview = null;
     for (const task of tasks.content) {
       const eventsResponse = await page.request.get(
-        `http://localhost:8080/api/tasks/${task.id}/events`,
+        `/api/tasks/${task.id}/events`,
       );
       const events = await eventsResponse.json();
       const reviewEvents = events.filter(

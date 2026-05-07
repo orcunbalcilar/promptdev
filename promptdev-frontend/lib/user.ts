@@ -2,8 +2,7 @@
  * API client for user profile and settings.
  */
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+const API_BASE_URL = "/api";
 
 export interface UserProfile {
   id: string;

@@ -6,18 +6,27 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("@/lib/api", () => ({
-  API_BASE_URL: "http://localhost:8080/api",
+  API_BASE_URL: "/api",
   getTasks: vi.fn(),
 }));
 
-vi.mock("@/components/create-task-dialog", () => ({
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
+}));
+
+vi.mock("@/components/shared/theme-toggle", () => ({
+  ThemeToggle: () => <div data-testid="theme-toggle" />,
+}));
+
+vi.mock("@/components/tasks/create-task-dialog", () => ({
   CreateTaskDialog: () => <button>New Task</button>,
 }));
 
-vi.mock("@/components/kanban-board", () => ({
+vi.mock("@/components/dashboard/kanban-board", () => ({
   KanbanBoard: ({
     tasks,
     onTaskClick,
@@ -86,7 +95,9 @@ vi.mock("@/components/ui/select", () => {
 });
 
 import { getTasks } from "@/lib/api";
-import Dashboard from "../page";
+import { DashboardView } from "@/components/dashboard/dashboard-view";
+import { Header } from "@/components/layout/header";
+import { STATUS_GROUPS } from "@/lib/task-statuses";
 
 const mockGetTasks = getTasks as ReturnType<typeof vi.fn>;
 
@@ -132,11 +143,42 @@ const emptyResponse = {
   size: 100,
 };
 
+function buildFilteredResponse(opts?: {
+  search?: string;
+  status?: string;
+  workspaceType?: string;
+}) {
+  let filtered = [...mockTasks];
+  if (opts?.search) {
+    const q = opts.search.toLowerCase();
+    filtered = filtered.filter(
+      (t) =>
+        t.title.toLowerCase().includes(q) ||
+        t.prompt.toLowerCase().includes(q),
+    );
+  }
+  if (opts?.status && opts.status !== "all") {
+    const group = STATUS_GROUPS.find((g) => g.label === opts.status);
+    if (group) {
+      filtered = filtered.filter((t) => group.statuses.includes(t.status as never));
+    }
+  }
+  if (opts?.workspaceType && opts.workspaceType !== "all") {
+    filtered = filtered.filter((t) => t.workspaceType === opts.workspaceType);
+  }
+  return {
+    content: filtered,
+    totalElements: filtered.length,
+    totalPages: 1,
+    number: 0,
+    size: 100,
+  };
+}
+
 const mockEventSourceConstructor = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockEventSourceConstructor.mockClear();
   globalThis.EventSource = vi.fn().mockImplementation(function (
     this: Record<string, unknown>,
     url: string,
@@ -165,26 +207,26 @@ function renderWithProviders(ui: React.ReactElement) {
 describe("Dashboard", () => {
   it("shows loading state initially", () => {
     mockGetTasks.mockReturnValue(new Promise(() => {})); // never resolves
-    renderWithProviders(<Dashboard />);
+    renderWithProviders(<DashboardView />);
     expect(document.querySelector(".animate-spin")).toBeInTheDocument();
   });
 
   it("shows error state when API call fails", async () => {
     mockGetTasks.mockRejectedValue(new Error("Network error"));
-    renderWithProviders(<Dashboard />);
+    renderWithProviders(<DashboardView />);
 
     await waitFor(() => {
       expect(screen.getByText("Failed to load tasks")).toBeInTheDocument();
     });
     expect(
-      screen.getByText("Please check if the backend is running."),
+      screen.getByText("Please check if the server is running."),
     ).toBeInTheDocument();
     expect(screen.getByText("Retry")).toBeInTheDocument();
   });
 
   it("shows empty state when no tasks", async () => {
     mockGetTasks.mockResolvedValue(emptyResponse);
-    renderWithProviders(<Dashboard />);
+    renderWithProviders(<DashboardView />);
 
     await waitFor(() => {
       expect(screen.getByText("No tasks yet")).toBeInTheDocument();
@@ -194,7 +236,7 @@ describe("Dashboard", () => {
 
   it("renders KanbanBoard when tasks are loaded", async () => {
     mockGetTasks.mockResolvedValue(successResponse);
-    renderWithProviders(<Dashboard />);
+    renderWithProviders(<DashboardView />);
 
     await waitFor(() => {
       expect(screen.getByTestId("kanban-board")).toBeInTheDocument();
@@ -210,7 +252,7 @@ describe("Dashboard", () => {
 
   it("shows search input when tasks exist", async () => {
     mockGetTasks.mockResolvedValue(successResponse);
-    renderWithProviders(<Dashboard />);
+    renderWithProviders(<DashboardView />);
 
     await waitFor(() => {
       expect(
@@ -221,8 +263,11 @@ describe("Dashboard", () => {
 
   it("filters tasks by search query (title match)", async () => {
     const user = userEvent.setup();
-    mockGetTasks.mockResolvedValue(successResponse);
-    renderWithProviders(<Dashboard />);
+    mockGetTasks.mockImplementation(
+      (_p: number, _s: number, opts?: Record<string, string>) =>
+        Promise.resolve(buildFilteredResponse(opts)),
+    );
+    renderWithProviders(<DashboardView />);
 
     await waitFor(() => {
       expect(screen.getByTestId("kanban-board")).toBeInTheDocument();
@@ -242,8 +287,11 @@ describe("Dashboard", () => {
 
   it("filters tasks by search query (prompt match)", async () => {
     const user = userEvent.setup();
-    mockGetTasks.mockResolvedValue(successResponse);
-    renderWithProviders(<Dashboard />);
+    mockGetTasks.mockImplementation(
+      (_p: number, _s: number, opts?: Record<string, string>) =>
+        Promise.resolve(buildFilteredResponse(opts)),
+    );
+    renderWithProviders(<DashboardView />);
 
     await waitFor(() => {
       expect(screen.getByTestId("kanban-board")).toBeInTheDocument();
@@ -263,8 +311,11 @@ describe("Dashboard", () => {
 
   it("filters tasks by status group", async () => {
     const user = userEvent.setup();
-    mockGetTasks.mockResolvedValue(successResponse);
-    renderWithProviders(<Dashboard />);
+    mockGetTasks.mockImplementation(
+      (_p: number, _s: number, opts?: Record<string, string>) =>
+        Promise.resolve(buildFilteredResponse(opts)),
+    );
+    renderWithProviders(<DashboardView />);
 
     await waitFor(() => {
       expect(screen.getByTestId("kanban-board")).toBeInTheDocument();
@@ -286,8 +337,11 @@ describe("Dashboard", () => {
 
   it("filters tasks by workspace type", async () => {
     const user = userEvent.setup();
-    mockGetTasks.mockResolvedValue(successResponse);
-    renderWithProviders(<Dashboard />);
+    mockGetTasks.mockImplementation(
+      (_p: number, _s: number, opts?: Record<string, string>) =>
+        Promise.resolve(buildFilteredResponse(opts)),
+    );
+    renderWithProviders(<DashboardView />);
 
     await waitFor(() => {
       expect(screen.getByTestId("kanban-board")).toBeInTheDocument();
@@ -310,7 +364,7 @@ describe("Dashboard", () => {
   it("shows Clear filters button when filters are active", async () => {
     const user = userEvent.setup();
     mockGetTasks.mockResolvedValue(successResponse);
-    renderWithProviders(<Dashboard />);
+    renderWithProviders(<DashboardView />);
 
     await waitFor(() => {
       expect(screen.getByTestId("kanban-board")).toBeInTheDocument();
@@ -328,8 +382,11 @@ describe("Dashboard", () => {
 
   it("clears all filters when Clear filters is clicked", async () => {
     const user = userEvent.setup();
-    mockGetTasks.mockResolvedValue(successResponse);
-    renderWithProviders(<Dashboard />);
+    mockGetTasks.mockImplementation(
+      (_p: number, _s: number, opts?: Record<string, string>) =>
+        Promise.resolve(buildFilteredResponse(opts)),
+    );
+    renderWithProviders(<DashboardView />);
 
     await waitFor(() => {
       expect(screen.getByTestId("kanban-board")).toBeInTheDocument();
@@ -358,7 +415,7 @@ describe("Dashboard", () => {
   it("navigates to task detail page when task is clicked", async () => {
     const user = userEvent.setup();
     mockGetTasks.mockResolvedValue(successResponse);
-    renderWithProviders(<Dashboard />);
+    renderWithProviders(<DashboardView />);
 
     await waitFor(() => {
       expect(screen.getByTestId("task-1")).toBeInTheDocument();
@@ -370,8 +427,7 @@ describe("Dashboard", () => {
   });
 
   it("shows navigation buttons (Scheduled Jobs, Monitoring, Settings, Copilot Agent)", async () => {
-    mockGetTasks.mockResolvedValue(successResponse);
-    renderWithProviders(<Dashboard />);
+    renderWithProviders(<Header />);
 
     expect(screen.getByText("Jobs")).toBeInTheDocument();
     expect(screen.getByText("Monitor")).toBeInTheDocument();
@@ -380,20 +436,93 @@ describe("Dashboard", () => {
   });
 
   it("shows Refresh button", async () => {
-    mockGetTasks.mockResolvedValue(successResponse);
-    renderWithProviders(<Dashboard />);
+    renderWithProviders(<Header />);
 
     expect(screen.getByTitle("Refresh")).toBeInTheDocument();
   });
 
   it("creates SSE connection to /stream/tasks", async () => {
     mockGetTasks.mockResolvedValue(successResponse);
-    renderWithProviders(<Dashboard />);
+    renderWithProviders(<DashboardView />);
 
     await waitFor(() => {
       expect(mockEventSourceConstructor).toHaveBeenCalledWith(
-        "http://localhost:8080/api/stream/tasks",
+        "/api/stream/tasks",
       );
     });
+  });
+
+  it("reconnects SSE with exponential backoff on error", async () => {
+    mockGetTasks.mockResolvedValue(successResponse);
+    renderWithProviders(<DashboardView />);
+
+    // Wait for initial SSE connection
+    await waitFor(() => {
+      expect(mockEventSourceConstructor).toHaveBeenCalledTimes(1);
+    });
+
+    // Get the EventSource instance and trigger an error
+    const esMock = globalThis.EventSource as unknown as ReturnType<
+      typeof vi.fn
+    >;
+    const firstInstance = esMock.mock.results[0].value;
+    firstInstance.onerror?.();
+
+    // First reconnect after ~1s (initial delay)
+    await waitFor(
+      () => {
+        expect(mockEventSourceConstructor).toHaveBeenCalledTimes(2);
+      },
+      { timeout: 3000 },
+    );
+
+    // Trigger another error
+    const secondInstance = esMock.mock.results[1].value;
+    secondInstance.onerror?.();
+
+    // Second reconnect takes ~2s (doubled delay)
+    await waitFor(
+      () => {
+        expect(mockEventSourceConstructor).toHaveBeenCalledTimes(3);
+      },
+      { timeout: 5000 },
+    );
+  });
+
+  it("resets SSE backoff delay on successful connection", async () => {
+    mockGetTasks.mockResolvedValue(successResponse);
+    renderWithProviders(<DashboardView />);
+
+    await waitFor(() => {
+      expect(mockEventSourceConstructor).toHaveBeenCalledTimes(1);
+    });
+
+    // First error
+    const esMock = globalThis.EventSource as unknown as ReturnType<
+      typeof vi.fn
+    >;
+    const firstInstance = esMock.mock.results[0].value;
+    firstInstance.onerror?.();
+
+    await waitFor(
+      () => {
+        expect(mockEventSourceConstructor).toHaveBeenCalledTimes(2);
+      },
+      { timeout: 3000 },
+    );
+
+    // Simulate successful connection (onopen) — resets delay to 1s
+    const secondInstance = esMock.mock.results[1].value;
+    secondInstance.onopen?.();
+
+    // Another error — delay should be reset to 1s (not 2s)
+    secondInstance.onerror?.();
+
+    await waitFor(
+      () => {
+        expect(mockEventSourceConstructor).toHaveBeenCalledTimes(3);
+      },
+      { timeout: 3000 },
+    );
   });
 });

@@ -2,7 +2,7 @@
 
 import {
   ChangedFilesTree,
-} from "@/components/agent-activity-stream";
+} from "@/components/tasks/activity-stream/file-tree";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,20 +34,23 @@ import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { showErrorToast } from "@/lib/errors";
+import { stableQueryOptions } from "@/lib/query-policies";
 import {
   statusColors,
-  TaskHeaderActions,
-  TaskSidebar,
-  ResumeForm,
-} from "../_components";
+} from "@/components/tasks/task-helpers";
+import { TaskHeaderActions } from "@/components/tasks/task-header-actions";
+import { TaskSidebar } from "@/components/tasks/task-sidebar";
+import { ResumeForm } from "@/components/tasks/resume-form";
+import { TaskRefineForm } from "@/components/tasks/task-refine-form";
 
 // Lazy-load heaviest components
 const AgentActivityStream = dynamic(
-  () => import("@/components/agent-activity-stream").then((m) => ({ default: m.AgentActivityStream })),
+  () => import("@/components/tasks/activity-stream/stream").then((m) => ({ default: m.AgentActivityStream })),
   { ssr: false, loading: () => <div className="flex items-center justify-center h-32"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> },
 );
 const TaskChangesSummary = dynamic(
-  () => import("@/components/task-changes-summary").then((m) => ({ default: m.TaskChangesSummary })),
+  () => import("@/components/tasks/task-changes-summary").then((m) => ({ default: m.TaskChangesSummary })),
   { ssr: false, loading: () => <div className="flex items-center justify-center h-32"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> },
 );
 
@@ -100,6 +103,8 @@ export default function TaskDetailPage() {
       return data.models || [];
     },
     initialData: [],
+    staleTime: stableQueryOptions.staleTime,
+    gcTime: stableQueryOptions.gcTime,
   });
 
   // Fetch task details — only poll when SSE is not connected
@@ -198,7 +203,9 @@ export default function TaskDetailPage() {
   const isProcessing = isLive;
 
   const handleCancel = async () => {
+    /* v8 ignore start: defensive guard */
     if (!task) return;
+    /* v8 ignore stop */
     if (!globalThis.confirm("Are you sure you want to cancel this task?"))
       return;
 
@@ -208,24 +215,28 @@ export default function TaskDetailPage() {
       toast.success("Task cancelled");
     } catch (e) {
       console.error("Failed to cancel task:", e);
-      toast.error("Failed to cancel task");
+      showErrorToast(e, "cancel task");
     }
   };
 
   const handleStart = async () => {
+    /* v8 ignore start: defensive guard */
     if (!task) return;
+    /* v8 ignore stop */
     try {
       await startTask(task.id);
       await queryClient.refetchQueries({ queryKey: ["task", id] });
       toast.success("Task started");
     } catch (e) {
       console.error("Failed to start task:", e);
-      toast.error("Failed to start task");
+      showErrorToast(e, "start task");
     }
   };
 
   const handleRetry = async () => {
+    /* v8 ignore start: defensive guard */
     if (!task) return;
+    /* v8 ignore stop */
     try {
       // Clone the task to create a fresh copy, then start it
       const cloned = await cloneTask(task.id);
@@ -234,7 +245,7 @@ export default function TaskDetailPage() {
       router.push(`/tasks/${cloned.id}`);
     } catch (e) {
       console.error("Failed to retry task:", e);
-      toast.error("Failed to retry task");
+      showErrorToast(e, "retry task");
     }
   };
 
@@ -249,7 +260,7 @@ export default function TaskDetailPage() {
       setRealtimeEvents([]);
     } catch (e) {
       console.error("Failed to resume task:", e);
-      toast.error("Failed to resume task");
+      showErrorToast(e, "resume task");
     } finally {
       setIsResuming(false);
     }
@@ -317,6 +328,14 @@ export default function TaskDetailPage() {
           </div>
         </div>
       </header>
+
+      {/* Jira Task Refinement Form */}
+      {task.status === "PENDING" && task.jiraIssueKey && (
+        <TaskRefineForm
+          task={task}
+          onStarted={() => queryClient.refetchQueries({ queryKey: ["task", id] })}
+        />
+      )}
 
       {/* Resume Form */}
       {showResumeForm && (

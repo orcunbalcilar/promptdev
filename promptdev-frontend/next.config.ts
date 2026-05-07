@@ -7,19 +7,17 @@ const nextConfig: NextConfig = {
   // Enable React Compiler for automatic memoization optimization
   reactCompiler: true,
 
-  // Force @github/copilot-sdk to be treated as an external package
-  // This prevents Turbopack from bundling it and breaking import.meta.resolve
-  serverExternalPackages: ["@github/copilot-sdk"],
+  // Force Copilot packages to be treated as external (they use node:sqlite at runtime)
+  serverExternalPackages: ["@github/copilot-sdk", "@github/copilot"],
 
   // Standalone output for Podman/Docker container deployments
   output: "standalone",
 
-  // Include external packages in standalone output
-  // Required for packages in serverExternalPackages that need node_modules at runtime
-  outputFileTracingIncludes: {
-    "/*": [
-      "node_modules/@github/copilot-sdk/**/*",
-      "node_modules/@github/copilot/**/*",
+  // Image optimization: allow external avatar sources
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "avatars.githubusercontent.com" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],
   },
 };

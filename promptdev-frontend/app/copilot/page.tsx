@@ -3,6 +3,10 @@
 import {
   ArrowLeft,
   Bot,
+  Copy,
+  Download,
+  PanelLeftClose,
+  PanelLeftOpen,
   RefreshCw,
   Sparkles,
   Trash2,
@@ -14,11 +18,11 @@ import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // AI Elements
 import {
@@ -40,16 +44,25 @@ import { useCopilotSession } from "@/hooks/useCopilotSession";
 import { DEFAULT_MODEL_ID } from "@/lib/copilot/models";
 import { cn } from "@/lib/utils";
 
-import { stateColors } from "./_components/constants";
+import { stateColors } from "@/components/copilot/constants";
 import {
   CopilotMessageDisplay,
   StreamingAssistantMessage,
-} from "./_components/copilot-messages";
-import { SettingsDialog } from "./_components/settings-dialog";
-import { StartSessionDialog } from "./_components/start-session-dialog";
+} from "@/components/copilot/copilot-messages";
+import { SessionHistorySidebar } from "@/components/copilot/session-history-sidebar";
+import { SettingsDialog } from "@/components/copilot/settings-dialog";
+import { StartSessionDialog } from "@/components/copilot/start-session-dialog";
+import { TokenUsageDisplay } from "@/components/copilot/token-usage-display";
+
+const QUICK_PROMPTS = [
+  { label: "Review my code", prompt: "Review the code in all changed files. Focus on bugs, security, and best practices." },
+  { label: "Explain this project", prompt: "Explain the architecture and key components of this project." },
+  { label: "Write tests", prompt: "Generate comprehensive unit tests for the most recently changed files." },
+  { label: "Find bugs", prompt: "Analyze the codebase for potential bugs, race conditions, and edge cases." },
+];
 
 /**
- * Copilot Agent Page
+ * Copilot Agent Page — redesigned with session history, export, and rich UX
  */
 export default function CopilotAgentPage() {
   const router = useRouter();
@@ -59,6 +72,8 @@ export default function CopilotAgentPage() {
   >("medium");
   const [input, setInput] = useState("");
   const [showStartDialog, setShowStartDialog] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [copyFeedback, setCopyFeedback] = useState(false);
 
   const {
     session,
@@ -70,23 +85,25 @@ export default function CopilotAgentPage() {
     streamingReasoning,
     isStreaming,
     error,
+    inputTokens,
+    outputTokens,
     createSession,
+    resumeSession,
     sendMessage,
     abort,
     destroy,
     clearError,
+    exportConversation,
   } = useCopilotSession({
     model,
     reasoningEffort,
   });
 
-  // Create session only when user chooses to start
   const handleStartSession = useCallback(async () => {
     setShowStartDialog(false);
     await createSession({ model, reasoningEffort });
   }, [model, reasoningEffort, createSession]);
 
-  // Re-create if model or reasoning effort changes (only if already started)
   useEffect(() => {
     const reinitSession = async () => {
       if (session && !showStartDialog) {
@@ -105,13 +122,49 @@ export default function CopilotAgentPage() {
     setShowStartDialog(true);
   }, [session, destroy]);
 
+  const handleResumeSession = useCallback(
+    async (sessionId: string) => {
+      setShowStartDialog(false);
+      await resumeSession(sessionId);
+    },
+    [resumeSession],
+  );
+
+  const handleDeleteSession = useCallback(
+    async (sessionId: string) => {
+      try {
+        await fetch(`/api/copilot/sessions/${sessionId}`, { method: "DELETE" });
+      } catch {
+        // Non-critical
+      }
+    },
+    [],
+  );
+
+  const handleExport = useCallback(() => {
+    const md = exportConversation();
+    const blob = new Blob([md], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `copilot-${/* v8 ignore next -- footer line 565 crashes before fallback can trigger */ session?.id?.slice(0, 8) ?? "session"}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [exportConversation, session]);
+
+  const handleCopyConversation = useCallback(() => {
+    const md = exportConversation();
+    navigator.clipboard.writeText(md);
+    setCopyFeedback(true);
+    setTimeout(() => setCopyFeedback(false), 2000);
+  }, [exportConversation]);
+
   const handleSubmit = useCallback(
     async (msg: { text: string }) => {
       const text = msg.text.trim();
       if (!text) return;
       setInput("");
 
-      // Handle slash commands
       if (text.startsWith("/")) {
         const parts = text.split(/\s+/);
         const cmd = parts[0].toLowerCase();
@@ -121,9 +174,7 @@ export default function CopilotAgentPage() {
             const newModelId = parts[1];
             if (newModelId) {
               const found = availableModels.find((m) => m.id === newModelId);
-              if (found) {
-                setModel(newModelId);
-              }
+              if (found) setModel(newModelId);
             }
             return;
           }
@@ -163,7 +214,7 @@ export default function CopilotAgentPage() {
     [sendMessage, handleNewSession, availableModels],
   );
 
-  const renderContent = () => {
+  const renderConversationArea = () => {
     if (showStartDialog) {
       return (
         <StartSessionDialog
@@ -186,11 +237,28 @@ export default function CopilotAgentPage() {
             <Conversation className="h-full">
               <ConversationContent className="p-6">
                 {messages.length === 0 && !isStreaming ? (
-                  <ConversationEmptyState
-                    icon={<Sparkles className="h-12 w-12" />}
-                    title="Start a conversation"
-                    description="Ask Copilot to help you with coding tasks, debugging, or any development questions."
-                  />
+                  <div className="flex flex-col items-center justify-center h-full gap-6">
+                    <ConversationEmptyState
+                      icon={<Sparkles className="h-12 w-12" />}
+                      title="Start a conversation"
+                      description="Ask Copilot to help you with coding tasks, debugging, or any development questions."
+                    />
+                    {/* Quick prompts */}
+                    <div className="grid grid-cols-2 gap-2 max-w-lg w-full">
+                      {QUICK_PROMPTS.map((qp) => (
+                        <Button
+                          key={qp.label}
+                          variant="outline"
+                          size="sm"
+                          className="justify-start text-xs h-auto py-2 px-3 text-left"
+                          onClick={() => sendMessage(qp.prompt)}
+                        >
+                          <Sparkles className="h-3 w-3 mr-2 shrink-0 text-primary" />
+                          {qp.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 ) : (
                   <>
                     {messages.map((message, index) => (
@@ -205,7 +273,6 @@ export default function CopilotAgentPage() {
                       />
                     ))}
 
-                    {/* Show streaming assistant message if no messages yet */}
                     {messages.length > 0 &&
                       messages.at(-1)?.role === "user" &&
                       isStreaming && (
@@ -228,7 +295,7 @@ export default function CopilotAgentPage() {
               <PromptInputTextarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask Copilot anything..."
+                placeholder="Ask Copilot anything... (/ for commands)"
                 className="min-h-12"
               />
               <PromptInputFooter>
@@ -301,139 +368,215 @@ export default function CopilotAgentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="border-b sticky top-0 bg-background/95 backdrop-blur z-10">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push("/")}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-              <div className="flex items-center gap-2">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  <Bot className="h-5 w-5 text-primary" />
+    <TooltipProvider>
+      <div className="h-screen bg-background flex flex-col">
+        {/* Header */}
+        <header className="border-b sticky top-0 bg-background/95 backdrop-blur z-10 shrink-0">
+          <div className="px-4 py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setShowSidebar(!showSidebar)}
+                >
+                  {showSidebar ? (
+                    <PanelLeftClose className="h-4 w-4" />
+                  ) : (
+                    <PanelLeftOpen className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push("/")}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
+                </Button>
+                <div className="flex items-center gap-2">
+                  <div className="bg-primary/10 p-1.5 rounded-full">
+                    <Bot className="h-4 w-4 text-primary" />
+                  </div>
+                  <h1 className="text-base font-bold">Copilot Agent</h1>
+                  {session?.title && (
+                    <span className="text-sm text-muted-foreground truncate max-w-48">
+                      — {session.title}
+                    </span>
+                  )}
+                  {session && (
+                    <Badge variant="outline" className="font-mono text-xs">
+                      {model}
+                    </Badge>
+                  )}
                 </div>
-                <h1 className="text-lg font-bold">Copilot Agent</h1>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Token usage */}
+                {session && (inputTokens > 0 || outputTokens > 0) && (
+                  <TokenUsageDisplay
+                    inputTokens={inputTokens}
+                    outputTokens={outputTokens}
+                  />
+                )}
+
+                {/* Session state indicator */}
                 {session && (
-                  <Badge variant="outline" className="font-mono text-xs">
-                    {model}
-                  </Badge>
+                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted">
+                    <div
+                      className={cn(
+                        "h-2 w-2 rounded-full",
+                        stateColors[state],
+                      )}
+                    />
+                    <span className="text-xs font-medium capitalize">
+                      {state}
+                    </span>
+                  </div>
+                )}
+
+                {/* Export actions */}
+                {session && messages.length > 0 && (
+                  <>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={handleCopyConversation}
+                        >
+                          <Copy
+                            className={cn(
+                              "h-4 w-4",
+                              copyFeedback && "text-green-500",
+                            )}
+                          />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {copyFeedback
+                          ? "Copied!"
+                          : "Copy conversation"}
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={handleExport}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Export as Markdown</TooltipContent>
+                    </Tooltip>
+                  </>
+                )}
+
+                <SettingsDialog
+                  model={model}
+                  setModel={setModel}
+                  reasoningEffort={reasoningEffort}
+                  setReasoningEffort={(v) =>
+                    setReasoningEffort(v as typeof reasoningEffort)
+                  }
+                  models={availableModels}
+                />
+
+                {session && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNewSession}
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      New
+                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={destroy}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Destroy session</TooltipContent>
+                    </Tooltip>
+                  </>
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {/* Session state indicator */}
-              {session && (
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted">
-                  <div
-                    className={cn("h-2 w-2 rounded-full", stateColors[state])}
-                  />
-                  <span className="text-xs font-medium capitalize">
-                    {state}
+          </div>
+        </header>
+
+        {/* Error banner */}
+        {error && (
+          <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-2 shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-destructive">
+                <XCircle className="h-4 w-4" />
+                <span className="text-sm">{error}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearError}
+                className="text-destructive hover:text-destructive"
+              >
+                Dismiss
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Main layout: sidebar + content */}
+        <div className="flex-1 flex min-h-0">
+          {/* Session history sidebar */}
+          {showSidebar && (
+            <SessionHistorySidebar
+              activeSessionId={session?.id}
+              onResumeSession={handleResumeSession}
+              onNewSession={handleNewSession}
+              onDeleteSession={handleDeleteSession}
+            />
+          )}
+
+          {/* Conversation area */}
+          <main className="flex-1 flex flex-col min-h-0 min-w-0">
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {renderConversationArea()}
+            </div>
+
+            {/* Session info bar */}
+            {session && (
+              <div className="border-t px-4 py-2 bg-muted/30 shrink-0">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="flex items-center gap-4">
+                    <span>
+                      Session:{" "}
+                      <span className="font-mono">{session.id.slice(0, 12)}...</span>
+                    </span>
+                    <span>Model: <span className="font-medium">{session.model}</span></span>
+                    <span>Messages: <span className="font-medium">{messages.length}</span></span>
+                  </div>
+                  <span>
+                    Started:{" "}
+                    {new Date(session.createdAt).toLocaleTimeString()}
                   </span>
                 </div>
-              )}
-
-              <SettingsDialog
-                model={model}
-                setModel={setModel}
-                reasoningEffort={reasoningEffort}
-                setReasoningEffort={(v) =>
-                  setReasoningEffort(v as typeof reasoningEffort)
-                }
-                models={availableModels}
-              />
-
-              {session && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleNewSession}
-                  >
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    New Session
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={destroy}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Error banner */}
-      {error && (
-        <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-3">
-          <div className="container mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-2 text-destructive">
-              <XCircle className="h-4 w-4" />
-              <span className="text-sm">{error}</span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearError}
-              className="text-destructive hover:text-destructive"
-            >
-              Dismiss
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Main content */}
-      <main className="flex-1 container mx-auto px-4 py-6 flex flex-col min-h-0">
-        <div className="flex-1 flex flex-col rounded-lg border bg-card shadow-sm overflow-hidden">
-          {renderContent()}
-        </div>
-
-        {/* Session info card */}
-        {session && (
-          <Card className="mt-4">
-            <CardHeader className="py-3">
-              <CardTitle className="text-sm font-medium">
-                Session Info
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="py-2">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Session ID</span>
-                  <p className="font-mono text-xs truncate">{session.id}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Model</span>
-                  <p className="font-medium">{session.model}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Messages</span>
-                  <p className="font-medium">{messages.length}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Created</span>
-                  <p className="font-medium">
-                    {new Date(session.createdAt).toLocaleTimeString()}
-                  </p>
-                </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
-      </main>
-    </div>
+            )}
+          </main>
+        </div>
+      </div>
+    </TooltipProvider>
   );
 }

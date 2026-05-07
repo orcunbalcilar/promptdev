@@ -8,6 +8,7 @@
 import { createCopilotSession, getAllSessions } from "@/lib/copilot/client";
 import type { CreateSessionRequest } from "@/lib/copilot/types";
 import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +18,9 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: NextRequest) {
   try {
+    const { error } = await requireAuth();
+    if (error) return error;
+
     const body = (await request.json()) as CreateSessionRequest;
 
     const session = await createCopilotSession({
@@ -42,6 +46,9 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   try {
+    const { error } = await requireAuth();
+    if (error) return error;
+
     const sessions = getAllSessions();
     return NextResponse.json(sessions);
   } catch (error) {

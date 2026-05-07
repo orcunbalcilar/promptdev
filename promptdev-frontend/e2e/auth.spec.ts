@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+// Auth tests need their own unauthenticated context, not the shared one from setup
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test.describe('Authentication', () => {
   test('should login with development credentials', async ({ page }) => {
     // Navigate to the custom login page
@@ -21,35 +24,30 @@ test.describe('Authentication', () => {
     expect(sessionCookie).toBeDefined();
 
     // Also verify we are NOT redirected back to login
-    expect(page.url()).toBe('http://localhost:3000/');
+    expect(page.url()).toBe('http://localhost:3030/');
   });
 
   test('should redirect to login when unauthenticated', async ({ page }) => {
-    // This assumes /copilot is a protected route. 
-    // If not, we can't test this yet, but based on naming it likely should be.
-    // Let's check /settings which is usually protected.
+    // Visit a protected route without auth
     await page.goto('/settings');
     
-    // If middleware or layout protects it, it should redirect. 
-    // If not protected yet, this test might fail or need adjustment.
-    // Given existing code, we haven't seen middleware, so this might not redirect.
-    // I'll skip this test case for now or make it conditional/commented if I'm not sure.
-    // Instead, I'll test that visiting /login while authenticated redirects to home.
+    // Should redirect to login page
+    await expect(page).toHaveURL(/\/login/);
   });
 
   test('should redirect away from login page if already authenticated', async ({ page }) => {
     // First login
-    await page.goto('/api/auth/signin');
-    await page.getByLabel('Password').fill('password');
-    await page.getByRole('button', { name: 'Sign in with Password' }).click();
+    await page.goto('/login');
+    const devLoginButton = page.getByRole('button', { name: 'Sign in as Test User' });
+    await expect(devLoginButton).toBeVisible();
+    await devLoginButton.click();
     await page.waitForURL('/');
 
     // Try to go to login page
     await page.goto('/login');
     
     // Should be redirected back to home (or callbackUrl default)
-    // The login page component has logic: if (status === "authenticated") router.replace(callbackUrl)
     await page.waitForURL('/');
-    expect(page.url()).toBe('http://localhost:3000/');
+    expect(page.url()).toBe('http://localhost:3030/');
   });
 });

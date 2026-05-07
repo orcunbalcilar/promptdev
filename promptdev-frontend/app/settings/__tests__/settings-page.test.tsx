@@ -36,18 +36,11 @@ vi.mock('next/navigation', () => ({
 // Mock user API
 const mockGetUserProfile = vi.fn()
 const mockUpdateUserSettings = vi.fn()
+const mockSyncUser = vi.fn()
 vi.mock('@/lib/user', () => ({
   getUserProfile: (...args: unknown[]) => mockGetUserProfile(...args),
   updateUserSettings: (...args: unknown[]) => mockUpdateUserSettings(...args),
-  syncUser: vi.fn().mockResolvedValue({
-    id: 'user-123',
-    email: 'test@example.com',
-    name: 'Test User',
-    provider: 'github',
-    bitbucketTokenSet: false,
-    copilotTokenSet: false,
-    jiraTokenSet: false,
-  }),
+  syncUser: (...args: unknown[]) => mockSyncUser(...args),
 }))
 
 function renderWithProviders(ui: React.ReactElement) {
@@ -72,6 +65,15 @@ async function getSettingsPage() {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockSyncUser.mockResolvedValue({
+    id: 'user-123',
+    email: 'test@example.com',
+    name: 'Test User',
+    provider: 'github',
+    bitbucketTokenSet: false,
+    copilotTokenSet: false,
+    jiraTokenSet: false,
+  })
   mockGetUserProfile.mockResolvedValue({
     id: 'user-123',
     email: 'test@example.com',
@@ -339,6 +341,83 @@ describe('SettingsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /save provider settings/i })).toBeInTheDocument()
+    })
+  })
+})
+
+describe('SettingsPage - loading & error states', () => {
+  it('shows loading spinner while profile is loading', async () => {
+    mockGetUserProfile.mockReturnValue(new Promise(() => {}))
+
+    const SettingsPage = await getSettingsPage()
+    renderWithProviders(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(document.querySelector('.animate-spin')).toBeInTheDocument()
+    })
+  })
+
+  it('shows error card when profile fails to load', async () => {
+    mockGetUserProfile.mockRejectedValue(new Error('Profile fetch failed'))
+
+    const SettingsPage = await getSettingsPage()
+    renderWithProviders(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Error')).toBeInTheDocument()
+      expect(screen.getByText(/Failed to load your profile/)).toBeInTheDocument()
+    })
+  })
+
+  it('renders error card with proper message when profile fetch fails', async () => {
+    mockGetUserProfile.mockRejectedValue(new Error('Server error'))
+
+    const SettingsPage = await getSettingsPage()
+    renderWithProviders(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Error')).toBeInTheDocument()
+    })
+
+    // Verify the error message specifically mentions signing out
+    expect(screen.getByText(/Failed to load your profile/)).toBeInTheDocument()
+    expect(screen.getByText(/try signing out and signing in again/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument()
+  })
+
+  it('sign out button in error state calls signOut', async () => {
+    mockGetUserProfile.mockRejectedValue(new Error('Profile fetch failed'))
+
+    const SettingsPage = await getSettingsPage()
+    const user = userEvent.setup()
+    renderWithProviders(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Error')).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /sign out/i }))
+    expect(mockSignOut).toHaveBeenCalled()
+  })
+
+  it('displays user email in header when profile is loaded', async () => {
+    const SettingsPage = await getSettingsPage()
+    renderWithProviders(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Settings')).toBeInTheDocument()
+    })
+
+    // Check for user name display and signout button as proxy for header rendering
+    expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument()
+  })
+
+  it('shows System Prompt section', async () => {
+    const SettingsPage = await getSettingsPage()
+    renderWithProviders(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('System Prompt')).toBeInTheDocument()
     })
   })
 })

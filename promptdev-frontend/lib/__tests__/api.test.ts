@@ -9,6 +9,7 @@ import {
   cloneTask,
   startTask,
   resumeTask,
+  updateTask,
   getRepositories,
   getBranches,
   getDefaultBranch,
@@ -23,7 +24,7 @@ import {
   ApiError,
 } from '@/lib/api'
 
-const API_BASE = 'http://localhost:8080/api'
+const API_BASE = '/api'
 
 const mockFetch = vi.fn()
 globalThis.fetch = mockFetch
@@ -184,6 +185,40 @@ describe('API Client', () => {
     })
   })
 
+  describe('updateTask', () => {
+    it('should PATCH /tasks/:id with update fields', async () => {
+      const updated = { id: 'task-1', title: 'Refined Title', prompt: 'Refined prompt', status: 'PENDING' }
+      mockFetch.mockResolvedValue(jsonResponse(updated))
+
+      const result = await updateTask('task-1', {
+        title: 'Refined Title',
+        prompt: 'Refined prompt',
+        modelId: 'claude-sonnet-4.5',
+      })
+
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      const [url, opts] = mockFetch.mock.calls[0]
+      expect(url).toBe(`${API_BASE}/tasks/task-1`)
+      expect(opts.method).toBe('PATCH')
+      const body = JSON.parse(opts.body)
+      expect(body.title).toBe('Refined Title')
+      expect(body.prompt).toBe('Refined prompt')
+      expect(body.modelId).toBe('claude-sonnet-4.5')
+      expect(result).toEqual(updated)
+    })
+
+    it('should send only provided fields', async () => {
+      mockFetch.mockResolvedValue(jsonResponse({ id: 'task-1' }))
+
+      await updateTask('task-1', { prompt: 'Only prompt updated' })
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body)
+      expect(body.prompt).toBe('Only prompt updated')
+      expect(body.title).toBeUndefined()
+      expect(body.modelId).toBeUndefined()
+    })
+  })
+
   describe('startTask', () => {
     it('should POST /tasks/:id/start', async () => {
       mockFetch.mockResolvedValue(jsonResponse({ id: 'task-1', status: 'IN_PROGRESS' }))
@@ -202,7 +237,7 @@ describe('API Client', () => {
 
       const result = await resumeTask('task-1', 'Fix the tests')
 
-      // resumeTask makes 2 fetch calls: one to backend resume, one to execute route
+      // resumeTask makes 2 fetch calls: one to resume API, one to execute route
       expect(mockFetch).toHaveBeenCalledTimes(2)
       const [url, opts] = mockFetch.mock.calls[0]
       expect(url).toBe(`${API_BASE}/tasks/task-1/resume`)
@@ -477,6 +512,59 @@ describe('API Client', () => {
       const result = await deleteScheduledJob('job-1')
 
       expect(result).toBeUndefined()
+    })
+  })
+
+  // ── Branch coverage: startTask/resumeTask execute trigger failures ──
+
+  describe('startTask execution trigger failure', () => {
+    it('should still return task when execute trigger fails', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      // First call succeeds (apiFetch for task start), second throws (execute trigger)
+      let callCount = 0
+      mockFetch.mockImplementation(() => {
+        callCount++
+        if (callCount === 1) {
+          return Promise.resolve(jsonResponse({ id: 'task-exec', status: 'QUEUED' }))
+        }
+        return Promise.reject(new Error('Network error'))
+      })
+
+      const result = await startTask('task-exec')
+
+      expect(result.status).toBe('QUEUED')
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[API] Failed to trigger task execution'),
+        expect.any(Error),
+      )
+      consoleSpy.mockRestore()
+    })
+  })
+
+  describe('resumeTask execution trigger failure', () => {
+    it('should still return task when execute trigger fails', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      let callCount = 0
+      mockFetch.mockImplementation(() => {
+        callCount++
+        if (callCount === 1) {
+          return Promise.resolve(
+            jsonResponse({ id: 'task-resume', status: 'PENDING', resumeCount: 1 }),
+          )
+        }
+        return Promise.reject(new Error('Network error'))
+      })
+
+      const result = await resumeTask('task-resume', 'Try again')
+
+      expect(result.status).toBe('PENDING')
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[API] Failed to trigger resumed task execution'),
+        expect.any(Error),
+      )
+      consoleSpy.mockRestore()
     })
   })
 })

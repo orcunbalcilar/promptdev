@@ -20,26 +20,20 @@ When a user cancels a task that was automatically created from a Jira issue, the
 
 ## Database Schema
 
-### New Table: `jira_issue_opt_outs`
+### Table: `jira_issue_opt_outs`
 
-```sql
-CREATE TABLE jira_issue_opt_outs (
-    id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id),
-    jira_issue_key VARCHAR(255) NOT NULL,
-    reason VARCHAR(500),
-    created_at TIMESTAMP NOT NULL,
-    CONSTRAINT uk_jira_opt_outs_user_issue UNIQUE (user_id, jira_issue_key)
-);
-```
+Defined in `promptdev-frontend/lib/db/schema.ts`:
 
-### Updated Table: `tasks`
-
-Added `user_id` column to track task ownership:
-
-```sql
-ALTER TABLE tasks
-ADD COLUMN user_id UUID REFERENCES users(id);
+```typescript
+export const jiraIssueOptOuts = pgTable("jira_issue_opt_outs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  jiraIssueKey: varchar("jira_issue_key", { length: 255 }).notNull(),
+  reason: varchar("reason", { length: 500 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  unique("uk_jira_opt_outs_user_issue").on(table.userId, table.jiraIssueKey),
+]);
 ```
 
 ## API Endpoints
@@ -103,48 +97,42 @@ true
 
 ### Task Cancellation Flow
 
-```java
-// TaskService.cancelTask()
+```typescript
+// task-service.ts — cancelTask()
 1. Mark task as CANCELLED
-2. Check if task has jiraIssueKey AND user
+2. Check if task has jiraIssueKey AND userId
 3. If yes, check if opt-out already exists
-4. If not exists, create JiraIssueOptOut record
-5. Save task and broadcast update
+4. If not exists, create jiraIssueOptOut record
+5. Save task and broadcast SSE update
 ```
 
 ### Jira Polling Flow
 
-```java
-// JiraPollingService.createTaskForIssue()
+```typescript
+// Jira auto-task creation
 1. Check if user has opted out (new step)
    - If yes, skip task creation
-2. Check if non-terminal task exists
+2. Check if non-terminal task exists (taskExistsForJiraIssue)
    - If yes, skip task creation
 3. Create task with userId
 ```
 
-## Migration
+## Service Layer
 
-Run the migration SQL script to add the new table and column:
+Implemented in `promptdev-frontend/lib/services/jira-opt-out-service.ts`:
 
-```bash
-# Apply the migration
-psql -h localhost -U promptdev -d promptdev < src/main/resources/db/migration/V001__add_jira_opt_out.sql
-```
-
-Or set `JPA_DDL_AUTO=update` in development to let Hibernate create the schema.
+- `getOptOutsForUser(userId)` — List all opt-outs for a user
+- `createOptOut(userId, jiraIssueKey, reason?)` — Create opt-out (upsert with onConflictDoNothing)
+- `deleteOptOut(userId, jiraIssueKey)` — Remove opt-out to re-enable auto-task
+- `isOptedOut(userId, jiraIssueKey)` — Check opt-out status
 
 ## Testing
 
-Comprehensive tests have been added:
+Unit tests in `promptdev-frontend/lib/services/__tests__/jira-opt-out-service.test.ts`:
 
-- **JiraIssueOptOutServiceTest**: Tests opt-out service operations
-- **JiraPollingServiceTest**: Tests opt-out checking during polling
-- **TaskServiceOptOutTest**: Tests opt-out creation during task cancellation
-
-Run tests:
 ```bash
-./mvnw test -Dtest=JiraIssueOptOutServiceTest,JiraPollingServiceTest,TaskServiceOptOutTest
+cd promptdev-frontend
+pnpm vitest run lib/services/__tests__/jira-opt-out-service.test.ts
 ```
 
 ## Benefits

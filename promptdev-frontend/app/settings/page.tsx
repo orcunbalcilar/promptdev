@@ -10,22 +10,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useBackendUser } from "@/hooks/useBackendUser";
+import { useUserSync } from "@/hooks/useUserSync";
 import { getUserProfile } from "@/lib/user";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, LogOut } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-import {
-  BitbucketCard,
-  ByokProviderCard,
-  CopilotTokenCard,
-  JiraCard,
-  ProfileCard,
-  SecurityNoteCard,
-  SystemPromptCard,
-} from "./_components";
+import { BitbucketCard } from "@/components/settings/bitbucket-card";
+import { ByokProviderCard } from "@/components/settings/byok-provider-card";
+import { CopilotTokenCard } from "@/components/settings/copilot-token-card";
+import { JiraCard } from "@/components/settings/jira-card";
+import { ProfileCard } from "@/components/settings/profile-card";
+import { SecurityNoteCard } from "@/components/settings/security-note-card";
+import { SystemPromptCard } from "@/components/settings/system-prompt-card";
+import { stableQueryOptions } from "@/lib/query-policies";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -33,17 +32,19 @@ export default function SettingsPage() {
 
   const {
     userId,
-    isLoading: isLoadingBackendUser,
-    error: backendUserError,
-  } = useBackendUser();
+    isLoading: isLoadingUserSync,
+    error: userSyncError,
+  } = useUserSync();
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading, error: profileError } = useQuery({
     queryKey: ["userProfile", userId],
     queryFn: () => getUserProfile(userId!),
     enabled: !!userId,
+    staleTime: stableQueryOptions.staleTime,
+    gcTime: stableQueryOptions.gcTime,
   });
 
-  if (isLoading || isLoadingBackendUser) {
+  if (isLoading || isLoadingUserSync) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -51,16 +52,16 @@ export default function SettingsPage() {
     );
   }
 
-  if (backendUserError) {
+  if (userSyncError || profileError) {
+    const message = userSyncError
+      ? "Failed to sync your user account. Please try signing out and signing in again."
+      : "Failed to load your profile. Please try signing out and signing in again.";
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle>Error</CardTitle>
-            <CardDescription>
-              Failed to sync user with backend. Please try signing out and
-              signing in again.
-            </CardDescription>
+            <CardDescription>{message}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => signOut()}>
