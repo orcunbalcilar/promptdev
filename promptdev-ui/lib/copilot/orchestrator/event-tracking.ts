@@ -385,47 +385,24 @@ async function routeEvent(
 ): Promise<void> {
   switch (event.type) {
     case "assistant.message":
-      await handleAssistantMessage(
-        taskId,
-        sessionId,
-        state,
-        event.data as Record<string, unknown>,
-      );
+      await handleAssistantMessage(taskId, sessionId, state, event.data);
       break;
 
     case "tool.execution_start":
-      await handleToolStart(
-        taskId,
-        sessionId,
-        state,
-        event.data as Record<string, unknown>,
-      );
+      await handleToolStart(taskId, sessionId, state, event.data);
       break;
 
     case "tool.execution_end":
     case "tool.execution_complete":
-      await handleToolEnd(
-        taskId,
-        sessionId,
-        state,
-        event.data as Record<string, unknown>,
-      );
+      await handleToolEnd(taskId, sessionId, state, event.data);
       break;
 
     case "assistant.usage":
-      await handleUsage(
-        taskId,
-        sessionId,
-        event.data as Record<string, unknown>,
-      );
+      await handleUsage(taskId, sessionId, event.data);
       break;
 
     case "session.usage_info":
-      await handleSessionUsage(
-        taskId,
-        sessionId,
-        event.data as Record<string, unknown>,
-      );
+      await handleSessionUsage(taskId, sessionId, event.data);
       break;
 
     case "session.idle":
