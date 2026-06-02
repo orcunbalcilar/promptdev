@@ -8,8 +8,8 @@
 - always make detailed research on the web before taking any design or implementation decision. You can use the web to find the best practices, patterns, and solutions for the problem at hand.
 - always update the documentation and readme files to reflect the changes you made.
 - always try finishing all the work in one go. Do not leave any work half done.
-- always use Claude Opus 4.6 parallel subagents to be fast and efficient.
-- always work in parallel by using the unlimited Claude Opus 4.6 parallel subagents.
+- always use claude-opus-4.6 parallel subagents to be fast and efficient.
+- always work in parallel by using the unlimited claude-opus-4.6 parallel subagents.
 - always be responsible for the project and its code quality. "None of these are caused by my changes." is not an acceptable answer. If you see any issues, fix them.
 - always learn from your mistakes. And update the rules under lessons section. This is as important as implementing the features.
 
