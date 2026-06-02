@@ -35,7 +35,7 @@ export async function updateCommand(options: UpdateOptions): Promise<void> {
   }
 
   // Rebuild frontend
-  const frontendDir = join(projectDir, 'promptdev-frontend')
+  const frontendDir = join(projectDir, 'promptdev-ui')
   if (existsSync(frontendDir)) {
     const frontendSpinner = ora('Updating frontend dependencies...').start()
     try {

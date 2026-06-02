@@ -9,7 +9,7 @@
 
 ## Problem Statement
 
-All 46 API route handlers in `promptdev-frontend/app/api/` lack explicit authentication checks. The application relies solely on middleware (`proxy.ts`) which performs a redirect for unauthenticated browser navigations but does NOT block programmatic API calls. An attacker can bypass the middleware redirect and call any API endpoint directly with crafted HTTP requests.
+All 46 API route handlers in `promptdev-ui/app/api/` lack explicit authentication checks. The application relies solely on middleware (`proxy.ts`) which performs a redirect for unauthenticated browser navigations but does NOT block programmatic API calls. An attacker can bypass the middleware redirect and call any API endpoint directly with crafted HTTP requests.
 
 ## Evidence
 
@@ -106,7 +106,7 @@ Replace hardcoded or client-provided `userId` with the authenticated user's ID f
 
 ```bash
 # After implementation, run:
-cd promptdev-frontend
+cd promptdev-ui
 npx vitest run --reporter=verbose
 # Verify all auth guard tests pass
 ```

@@ -23,11 +23,11 @@ Thumbs.db
 # ── Node.js (frontend, bot, cli) ───────────────────────────────────────────
 node_modules/
 
-# ── Next.js (promptdev-frontend) ───────────────────────────────────────────
-promptdev-frontend/.next/
-promptdev-frontend/out/
-promptdev-frontend/.vercel
-promptdev-frontend/next-env.d.ts
+# ── Next.js (promptdev-ui) ───────────────────────────────────────────
+promptdev-ui/.next/
+promptdev-ui/out/
+promptdev-ui/.vercel
+promptdev-ui/next-env.d.ts
 
 # ── TypeScript build output ────────────────────────────────────────────────
 promptdev-bot/dist/

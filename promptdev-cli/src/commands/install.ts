@@ -68,7 +68,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
   if (!options.skipDeps) {
     const frontendSpinner = ora('Installing frontend dependencies...').start()
     try {
-      exec('pnpm install', `${projectDir}/promptdev-frontend`)
+      exec('pnpm install', `${projectDir}/promptdev-ui`)
       frontendSpinner.succeed('Frontend dependencies installed')
     } catch (err) {
       frontendSpinner.fail('Frontend dependency installation failed')
@@ -78,7 +78,7 @@ export async function installCommand(options: InstallOptions): Promise<void> {
     // Build frontend
     const buildSpinner = ora('Building frontend...').start()
     try {
-      exec('pnpm run build', `${projectDir}/promptdev-frontend`)
+      exec('pnpm run build', `${projectDir}/promptdev-ui`)
       buildSpinner.succeed('Frontend built successfully')
     } catch (err) {
       buildSpinner.fail('Frontend build failed')

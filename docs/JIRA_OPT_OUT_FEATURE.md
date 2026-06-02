@@ -22,7 +22,7 @@ When a user cancels a task that was automatically created from a Jira issue, the
 
 ### Table: `jira_issue_opt_outs`
 
-Defined in `promptdev-frontend/lib/db/schema.ts`:
+Defined in `promptdev-ui/lib/db/schema.ts`:
 
 ```typescript
 export const jiraIssueOptOuts = pgTable("jira_issue_opt_outs", {
@@ -119,7 +119,7 @@ true
 
 ## Service Layer
 
-Implemented in `promptdev-frontend/lib/services/jira-opt-out-service.ts`:
+Implemented in `promptdev-ui/lib/services/jira-opt-out-service.ts`:
 
 - `getOptOutsForUser(userId)` — List all opt-outs for a user
 - `createOptOut(userId, jiraIssueKey, reason?)` — Create opt-out (upsert with onConflictDoNothing)
@@ -128,10 +128,10 @@ Implemented in `promptdev-frontend/lib/services/jira-opt-out-service.ts`:
 
 ## Testing
 
-Unit tests in `promptdev-frontend/lib/services/__tests__/jira-opt-out-service.test.ts`:
+Unit tests in `promptdev-ui/lib/services/__tests__/jira-opt-out-service.test.ts`:
 
 ```bash
-cd promptdev-frontend
+cd promptdev-ui
 pnpm vitest run lib/services/__tests__/jira-opt-out-service.test.ts
 ```
 

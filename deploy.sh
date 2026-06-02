@@ -152,7 +152,7 @@ detect_runtime() {
 
 # ── Clone repo if needed ────────────────────────────────────────────────────
 ensure_repo() {
-    if [ -f "docker-compose.yml" ] && [ -d "promptdev-frontend" ]; then
+    if [ -f "docker-compose.yml" ] && [ -d "promptdev-ui" ]; then
         PROJECT_DIR="$(pwd)"
         return
     fi

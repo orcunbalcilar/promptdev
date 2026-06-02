@@ -1,4 +1,4 @@
-# Architecture Review — promptdev-frontend
+# Architecture Review — promptdev-ui
 
 **Date:** 2026-02-21
 **Reviewer:** Software Architect
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-The `promptdev-frontend` codebase has **critical security vulnerabilities** that must be fixed before any release. All 46 API route handlers lack authentication checks, creating a bypass path around the middleware-only auth strategy. Authorization (ownership checks) is absent, enabling IDOR attacks on user settings, tasks, and copilot sessions. Beyond security, the codebase has structural issues: monolithic form state (50+ properties in a single context), no error boundaries, broken SSE reconnection in copilot, and 17 files with `transition-all` causing layout thrashing.
+The `promptdev-ui` codebase has **critical security vulnerabilities** that must be fixed before any release. All 46 API route handlers lack authentication checks, creating a bypass path around the middleware-only auth strategy. Authorization (ownership checks) is absent, enabling IDOR attacks on user settings, tasks, and copilot sessions. Beyond security, the codebase has structural issues: monolithic form state (50+ properties in a single context), no error boundaries, broken SSE reconnection in copilot, and 17 files with `transition-all` causing layout thrashing.
 
 **Total issues found: 17** (classified across 5 severity levels)
 
@@ -143,4 +143,4 @@ PRD-17 ──> ADR documents
 5. **Contract tests**: Verify filtered/unfiltered task responses share one schema
 6. **Performance tests**: Lighthouse CI for transition-all regressions
 7. **Bundle analysis**: Verify tree-shaking after barrel file removal
-8. Run full suite: `cd promptdev-frontend && npx vitest run`
+8. Run full suite: `cd promptdev-ui && npx vitest run`

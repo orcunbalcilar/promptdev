@@ -37,7 +37,7 @@ vi.mock("lucide-react", () => ({
   RefreshCw: () => <span data-testid="refresh-icon" />,
 }));
 
-import TaskError from "../../tasks/[id]/error";
+import TaskError from "../[id]/error";
 
 describe("TaskError", () => {
   const mockReset = vi.fn();

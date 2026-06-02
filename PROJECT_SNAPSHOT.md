@@ -72,7 +72,7 @@ Build an AI-powered development platform where users describe features via promp
 
 | Module               | Language   | Description                              |
 | -------------------- | ---------- | ---------------------------------------- |
-| `promptdev-frontend`  | TypeScript | Next.js 16 full-stack app (UI + API)    |
+| `promptdev-ui`  | TypeScript | Next.js 16 full-stack app (UI + API)    |
 | `promptdev-bot`      | TypeScript | Slack bot                                |
 | `promptdev-cli`      | TypeScript | CLI tool                                 |
 

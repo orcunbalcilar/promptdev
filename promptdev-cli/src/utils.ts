@@ -106,7 +106,7 @@ export function getProjectDir(optDir?: string): string {
   if (optDir) return optDir
   const config = loadConfig()
   if (config.projectDir && existsSync(config.projectDir)) return config.projectDir
-  if (existsSync('./promptdev-frontend')) return process.cwd()
+  if (existsSync('./promptdev-ui')) return process.cwd()
   return config.projectDir
 }
 
@@ -122,7 +122,7 @@ export function getVersionInfo(projectDir: string): VersionInfo {
   const cliVersion = '1.0.0'
 
   let frontendVersion: string | null = null
-  const pkgPath = join(projectDir, 'promptdev-frontend', 'package.json')
+  const pkgPath = join(projectDir, 'promptdev-ui', 'package.json')
   if (existsSync(pkgPath)) {
     try {
       const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))

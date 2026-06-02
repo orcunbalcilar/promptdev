@@ -43,12 +43,12 @@ services:
       timeout: 3s
       retries: 10
 
-  # ── Next.js Frontend (with integrated backend) ────────────────────────────
-  frontend:
+  # ── Next.js UI (with integrated backend) ────────────────────────────
+  ui:
     build:
-      context: ./promptdev-frontend
+      context: ./promptdev-ui
       dockerfile: Dockerfile
-    container_name: promptdev-frontend
+    container_name: promptdev-ui
     restart: unless-stopped
     depends_on:
       db:

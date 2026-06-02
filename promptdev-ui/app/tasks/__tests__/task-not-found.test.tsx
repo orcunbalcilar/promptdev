@@ -23,7 +23,7 @@ vi.mock("@/components/ui/button", () => ({
   }) => (asChild ? <>{children}</> : <button {...props}>{children}</button>),
 }));
 
-import TaskNotFound from "../../tasks/[id]/not-found";
+import TaskNotFound from "../[id]/not-found";
 
 describe("TaskNotFound", () => {
   it("should render the task not found heading", () => {

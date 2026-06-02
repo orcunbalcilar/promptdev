@@ -96,7 +96,7 @@ async function startFrontend(
   detach: boolean,
 ): Promise<boolean> {
   const spinner = ora("Starting frontend...").start();
-  const frontendDir = join(projectDir, "promptdev-frontend");
+  const frontendDir = join(projectDir, "promptdev-ui");
 
   if (!existsSync(frontendDir)) {
     spinner.fail("Frontend directory not found");

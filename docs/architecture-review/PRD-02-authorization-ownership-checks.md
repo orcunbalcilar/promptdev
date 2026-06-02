@@ -145,5 +145,5 @@ Verify session ownership before allowing message sends or stream access.
 # 2. Try to GET /api/users/{userB-id}/profile → expect 403
 # 3. Try to PATCH /api/tasks/{userB-task-id} → expect 403
 # 4. Try to PUT /api/users/{userB-id}/settings → expect 403
-cd promptdev-frontend && npx vitest run
+cd promptdev-ui && npx vitest run
 ```

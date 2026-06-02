@@ -28,7 +28,7 @@ Critical architectural patterns are implemented but not codified. This includes 
 
 - No `docs/adr/` directory
 - No architectural decision records in the repository
-- `promptdev-frontend/README.md` covers setup but not design decisions
+- `promptdev-ui/README.md` covers setup but not design decisions
 
 ## Goals
 
@@ -100,7 +100,7 @@ Critical architectural patterns are implemented but not codified. This includes 
 
 - [ ] `docs/adr/` directory created
 - [ ] ADR-001 through ADR-005 written and merged
-- [ ] `promptdev-frontend/README.md` references ADR directory
+- [ ] `promptdev-ui/README.md` references ADR directory
 - [ ] ADR template included as `docs/adr/TEMPLATE.md`
 - [ ] Contributing guidelines reference relevant ADRs
 

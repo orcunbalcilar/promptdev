@@ -1,4 +1,4 @@
-// /Users/orcun/projects/promptdev/promptdev-frontend/components/ai-elements/__tests__/reasoning-coverage.test.tsx
+// /Users/orcun/projects/promptdev/promptdev-ui/components/ai-elements/__tests__/reasoning-coverage.test.tsx
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

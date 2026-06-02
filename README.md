@@ -213,7 +213,7 @@ podman run -d \
 #### 2. Start Frontend
 
 ```bash
-cd promptdev-frontend
+cd promptdev-ui
 
 export DATABASE_URL="postgresql://promptdev:promptdev@localhost:5432/promptdev"
 export ENCRYPTION_KEY="$(openssl rand -hex 32)"
@@ -292,7 +292,7 @@ If no `--env-file` is specified, both tools default to `.env` in the project roo
 | `JIRA_TOKEN`            | Jira personal access token      |
 | `WORKSPACE_BASE_PATH`   | Base path for workspace files   |
 
-#### Authentication (`promptdev-frontend/.env.local`)
+#### Authentication (`promptdev-ui/.env.local`)
 
 | Variable              | Description                                 |
 | --------------------- | ------------------------------------------- |
@@ -324,7 +324,7 @@ PromptDev uses **NextAuth.js v5** for user authentication with GitHub and Google
 2. **Google OAuth**: [Google Cloud Console](https://console.cloud.google.com/apis/credentials) → Create OAuth 2.0 Client
    - Authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
 
-3. Set the credentials in `promptdev-frontend/.env.local`.
+3. Set the credentials in `promptdev-ui/.env.local`.
 
 ### User Settings
 
@@ -530,7 +530,7 @@ promptdev/                          ← monorepo root
 ├── README.md
 ├── PROJECT_SNAPSHOT.md
 │
-├── promptdev-frontend/             # Next.js 16 full-stack application
+├── promptdev-ui/             # Next.js 16 full-stack application
 │   ├── Dockerfile
 │   ├── auth.ts                     # NextAuth.js v5 configuration
 │   ├── proxy.ts                    # Route protection
@@ -570,7 +570,7 @@ promptdev/                          ← monorepo root
 ### Application
 
 ```bash
-cd promptdev-frontend
+cd promptdev-ui
 pnpm dev             # Development server with hot reload
 pnpm build           # Production build
 pnpm test            # Unit tests (Vitest — 42 files, 581 tests)

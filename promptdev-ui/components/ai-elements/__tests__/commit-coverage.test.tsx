@@ -1,4 +1,4 @@
-// /Users/orcun/projects/promptdev/promptdev-frontend/components/ai-elements/__tests__/commit-coverage.test.tsx
+// /Users/orcun/projects/promptdev/promptdev-ui/components/ai-elements/__tests__/commit-coverage.test.tsx
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

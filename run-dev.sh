@@ -110,7 +110,7 @@ start_db() {
 
 start_frontend() {
     info "Starting frontend (Next.js)..."
-    cd "$ROOT/promptdev-frontend"
+    cd "$ROOT/promptdev-ui"
     pnpm install && pnpm dev &
     FRONTEND_PID=$!Ö
     success "Frontend starting on http://localhost:3030 (PID: $FRONTEND_PID)"
