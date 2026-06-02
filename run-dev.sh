@@ -6,15 +6,15 @@
 # This file is gitignored — safe to customize with your own env values.
 #
 # Prerequisites:
-#   - Node.js 25+   (frontend, bot)
-#   - pnpm           (frontend, bot)
+#   - Node.js 25+   (ui, bot)
+#   - pnpm           (ui, bot)
 #   - Docker/Podman  (PostgreSQL only)
 #
 # Usage:
-#   ./run-dev.sh              Start all services (db + frontend)
+#   ./run-dev.sh              Start all services (db + ui)
 #   ./run-dev.sh stop         Stop everything
 #   ./run-dev.sh db           Start only PostgreSQL
-#   ./run-dev.sh frontend     Start only frontend
+#   ./run-dev.sh ui     Start only ui
 #   ./run-dev.sh bot          Start only Slack bot
 # =============================================================================
 
@@ -108,12 +108,12 @@ start_db() {
   success "PostgreSQL running on localhost:5432"
 }
 
-start_frontend() {
-    info "Starting frontend (Next.js)..."
+start_ui() {
+    info "Starting ui (Next.js)..."
     cd "$ROOT/promptdev-ui"
     pnpm install && pnpm dev &
-    FRONTEND_PID=$!Ö
-    success "Frontend starting on http://localhost:3030 (PID: $FRONTEND_PID)"
+    UI_PID=$!
+    success "ui starting on http://localhost:3030 (PID: $UI_PID)"
 }
 
 start_bot() {
@@ -151,8 +151,8 @@ case "$CMD" in
     db)
         start_db
         ;;
-    frontend)
-        start_frontend
+    ui)
+        start_ui
         wait
         ;;
     bot)
@@ -161,11 +161,11 @@ case "$CMD" in
         ;;
     all)
         start_db
-        start_frontend
+        start_ui
 
         echo ""
         success "All services running!"
-        info "  Frontend:  http://localhost:3030"
+        info "  ui:  http://localhost:3030"
         info "  Database:  localhost:5432"
         echo ""
         info "Press Ctrl+C to stop all services"
@@ -175,7 +175,7 @@ case "$CMD" in
         wait
         ;;
     *)
-        echo "Usage: ./run-dev.sh [all|stop|db|frontend|bot]"
+        echo "Usage: ./run-dev.sh [all|stop|db|ui|bot]"
         exit 1
         ;;
 esac
