@@ -11,8 +11,20 @@ export interface StatusGroup {
 
 export const STATUS_GROUPS: StatusGroup[] = [
   { label: "Pending", statuses: ["PENDING", "QUEUED", "TRIAGING"] },
-  { label: "In Progress", statuses: ["IN_PROGRESS", "VALIDATING", "ITERATION_PENDING"] },
-  { label: "Review", statuses: ["REVIEWING", "CODE_GENERATED", "COMMITTING", "PUSHING", "CREATING_PR"] },
+  {
+    label: "In Progress",
+    statuses: ["IN_PROGRESS", "VALIDATING", "ITERATION_PENDING"],
+  },
+  {
+    label: "Review",
+    statuses: [
+      "REVIEWING",
+      "CODE_GENERATED",
+      "COMMITTING",
+      "PUSHING",
+      "CREATING_PR",
+    ],
+  },
   { label: "Completed", statuses: ["COMPLETED"] },
   { label: "Failed", statuses: ["FAILED", "CANCELLED"] },
 ];
@@ -20,11 +32,11 @@ export const STATUS_GROUPS: StatusGroup[] = [
 /** CSS class for each Kanban column's colored top border.
  * Note: "Failed" maps to "kanban-column-stopped" for backward compatibility with existing CSS. */
 export const STATUS_GROUP_STYLES: Record<string, string> = {
-  "Pending": "kanban-column-pending",
+  Pending: "kanban-column-pending",
   "In Progress": "kanban-column-progress",
-  "Review": "kanban-column-review",
-  "Completed": "kanban-column-completed",
-  "Failed": "kanban-column-stopped",
+  Review: "kanban-column-review",
+  Completed: "kanban-column-completed",
+  Failed: "kanban-column-stopped",
 };
 
 /**
@@ -32,5 +44,7 @@ export const STATUS_GROUP_STYLES: Record<string, string> = {
  * Returns "Other" for unknown statuses so tasks are never silently dropped.
  */
 export function getStatusGroup(status: TaskStatus): string {
-  return STATUS_GROUPS.find((g) => g.statuses.includes(status))?.label ?? "Other";
+  return (
+    STATUS_GROUPS.find((g) => g.statuses.includes(status))?.label ?? "Other"
+  );
 }

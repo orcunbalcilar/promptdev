@@ -68,10 +68,17 @@ export type UserInputHandler = (
 export type PreToolUseHandler = (
   input: { toolName: string; toolArgs: Record<string, unknown> },
   invocation?: { sessionId: string },
-) => Promise<{ permissionDecision: "allow" | "deny"; modifiedArgs?: Record<string, unknown> } | void>;
+) => Promise<{
+  permissionDecision: "allow" | "deny";
+  modifiedArgs?: Record<string, unknown>;
+} | void>;
 
 export type PostToolUseHandler = (
-  input: { toolName: string; toolArgs: Record<string, unknown>; result: unknown },
+  input: {
+    toolName: string;
+    toolArgs: Record<string, unknown>;
+    result: unknown;
+  },
   invocation?: { sessionId: string },
 ) => Promise<Record<string, unknown> | void>;
 

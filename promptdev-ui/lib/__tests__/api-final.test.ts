@@ -215,19 +215,28 @@ describe("lib/api – uncovered functions", () => {
       subscribeToTaskEvents("task-5", onEvent, onError);
 
       // Simulate SSE message via captured handler
-      const handler = (globalThis as Record<string, unknown>).__lastSseOnMessage as (msg: { data: string }) => void;
-      handler({ data: JSON.stringify({ taskId: "task-5", eventType: "PROGRESS" }) });
+      const handler = (globalThis as Record<string, unknown>)
+        .__lastSseOnMessage as (msg: { data: string }) => void;
+      handler({
+        data: JSON.stringify({ taskId: "task-5", eventType: "PROGRESS" }),
+      });
 
-      expect(onEvent).toHaveBeenCalledWith({ taskId: "task-5", eventType: "PROGRESS" });
+      expect(onEvent).toHaveBeenCalledWith({
+        taskId: "task-5",
+        eventType: "PROGRESS",
+      });
     });
 
     it("handles parse errors without throwing", () => {
       const onEvent = vi.fn();
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       subscribeToTaskEvents("task-6", onEvent);
 
-      const handler = (globalThis as Record<string, unknown>).__lastSseOnMessage as (msg: { data: string }) => void;
+      const handler = (globalThis as Record<string, unknown>)
+        .__lastSseOnMessage as (msg: { data: string }) => void;
       handler({ data: "not-json" });
 
       expect(onEvent).not.toHaveBeenCalled();

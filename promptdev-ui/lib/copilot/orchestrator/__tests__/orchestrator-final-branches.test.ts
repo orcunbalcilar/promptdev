@@ -25,7 +25,9 @@ vi.mock("../pull-request", () => ({
 
 vi.mock("../service-bridge", () => ({
   sendCallback: vi.fn().mockResolvedValue(undefined),
-  serializeField: vi.fn((v: unknown) => (typeof v === "string" ? v : JSON.stringify(v))),
+  serializeField: vi.fn((v: unknown) =>
+    typeof v === "string" ? v : JSON.stringify(v),
+  ),
 }));
 
 vi.mock("../session-lifecycle", () => ({
@@ -81,7 +83,11 @@ describe("event-tracking.ts line 178 — implicit else branch", () => {
     // Covers the implicit else branch at line 178
     handler({
       type: "tool.execution_end",
-      data: { toolId: "unknown-tool-id", output: "result", toolName: "someTool" },
+      data: {
+        toolId: "unknown-tool-id",
+        output: "result",
+        toolName: "someTool",
+      },
     } as TypedCopilotEvent);
     await flushEventQueue();
 

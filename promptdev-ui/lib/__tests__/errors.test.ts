@@ -25,7 +25,9 @@ describe("classifyError", () => {
   });
 
   it("classifies 400 as VALIDATION", () => {
-    const result = classifyError(new ApiError("Bad request", 400, "Invalid title"));
+    const result = classifyError(
+      new ApiError("Bad request", 400, "Invalid title"),
+    );
     expect(result.category).toBe("VALIDATION");
     expect(result.details).toBe("Invalid title");
   });

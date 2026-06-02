@@ -1,6 +1,6 @@
 /**
  * Test helper for mocking Drizzle ORM's chainable query builder.
- * 
+ *
  * Drizzle queries are thenables (awaitable) at any point in the chain,
  * so this creates a Proxy that can be chained freely and resolves to configurable data.
  */
@@ -14,7 +14,8 @@ export function chainResult(result: unknown = []) {
   const handler: ProxyHandler<Record<string, unknown>> = {
     get(target, prop: string) {
       if (prop === "then") {
-        return (resolve: (v: unknown) => unknown) => Promise.resolve(result).then(resolve);
+        return (resolve: (v: unknown) => unknown) =>
+          Promise.resolve(result).then(resolve);
       }
       if (prop === "catch" || prop === "finally") {
         const p = Promise.resolve(result);
@@ -23,7 +24,9 @@ export function chainResult(result: unknown = []) {
       }
       // Return a stable vi.fn for the same property name
       if (!target[prop]) {
-        target[prop] = vi.fn(() => new Proxy({} as Record<string, unknown>, handler));
+        target[prop] = vi.fn(
+          () => new Proxy({} as Record<string, unknown>, handler),
+        );
       }
       return target[prop];
     },
@@ -35,7 +38,7 @@ export function chainResult(result: unknown = []) {
 /**
  * Create a mock db object whose select/insert/update/delete
  * methods each return the given default results.
- * 
+ *
  * Override per-call with mockReturnValueOnce on the returned fns:
  *   mockDb.select.mockReturnValueOnce(chainResult([newData]))
  */

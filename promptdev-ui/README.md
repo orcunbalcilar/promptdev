@@ -28,14 +28,14 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
 
 ## Scripts
 
-| Command          | Description                           |
-| ---------------- | ------------------------------------- |
-| `pnpm dev`       | Development server with hot reload    |
-| `pnpm build`     | Production build                      |
-| `pnpm start`     | Start production server               |
-| `pnpm test`      | Unit tests (Vitest)                   |
-| `pnpm test:e2e`  | E2E tests (Playwright)                |
-| `pnpm lint`      | ESLint                                |
+| Command         | Description                        |
+| --------------- | ---------------------------------- |
+| `pnpm dev`      | Development server with hot reload |
+| `pnpm build`    | Production build                   |
+| `pnpm start`    | Start production server            |
+| `pnpm test`     | Unit tests (Vitest)                |
+| `pnpm test:e2e` | E2E tests (Playwright)             |
+| `pnpm lint`     | ESLint                             |
 
 ## Architecture
 
@@ -57,18 +57,18 @@ The project heavily leverages the `@github/copilot-sdk` (v0.1.24):
 
 SSE is necessary and cannot be replaced by the SDK's event system because SDK events are server-side only. SSE provides the transport layer to push events to browser clients.
 
-| Endpoint | Purpose |
-| --- | --- |
-| `/api/copilot/sessions/[id]/stream` | SDK event relay to browser |
-| `/api/stream/tasks/[id]` | Task-specific progress events |
-| `/api/stream/tasks` | Global dashboard updates |
+| Endpoint                            | Purpose                       |
+| ----------------------------------- | ----------------------------- |
+| `/api/copilot/sessions/[id]/stream` | SDK event relay to browser    |
+| `/api/stream/tasks/[id]`            | Task-specific progress events |
+| `/api/stream/tasks`                 | Global dashboard updates      |
 
 ### Testing
 
 **Unit Tests** — 100% coverage enforced via Vitest with v8 coverage provider:
 
 | Metric     | Coverage |
-|------------|----------|
+| ---------- | -------- |
 | Statements | 100%     |
 | Branches   | 100%     |
 | Functions  | 100%     |
@@ -80,7 +80,7 @@ Run with coverage: `npx vitest run --coverage`
 **E2E Tests** — 60 Playwright tests covering all application routes:
 
 | Route             | Tests | Status |
-|-------------------|-------|--------|
+| ----------------- | ----- | ------ |
 | `/login`          | 4     | ✅     |
 | `/` (Dashboard)   | 5     | ✅     |
 | `/tasks/[id]`     | 20+   | ✅     |

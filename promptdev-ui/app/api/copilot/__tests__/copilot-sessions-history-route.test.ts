@@ -39,7 +39,7 @@ describe("GET /api/copilot/sessions/history", () => {
 
     expect(res.status).toBe(200);
     expect(body.sessions).toEqual(sessions);
-    expect(mockListSDKSessions).toHaveBeenCalledWith("gho_tok");
+    expect(mockListSDKSessions).toHaveBeenCalledWith();
   });
 
   it("returns 401 when not authenticated", async () => {
@@ -60,7 +60,7 @@ describe("GET /api/copilot/sessions/history", () => {
     expect(body.error).toBe("SDK error");
   });
 
-  it("passes undefined copilotToken when user has none", async () => {
+  it("uses shared client regardless of user token", async () => {
     mockRequireAuth.mockResolvedValue({
       session: { user: { id: "user-1" } },
     });
@@ -68,6 +68,6 @@ describe("GET /api/copilot/sessions/history", () => {
 
     await GET();
 
-    expect(mockListSDKSessions).toHaveBeenCalledWith(undefined);
+    expect(mockListSDKSessions).toHaveBeenCalledWith();
   });
 });

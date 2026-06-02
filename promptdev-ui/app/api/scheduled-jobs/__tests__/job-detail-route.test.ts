@@ -37,7 +37,9 @@ describe("GET /api/scheduled-jobs/[id]", () => {
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
     });
 
-    const req = new NextRequest("http://localhost:3000/api/scheduled-jobs/job-1");
+    const req = new NextRequest(
+      "http://localhost:3000/api/scheduled-jobs/job-1",
+    );
     const res = await GET(req, makeParams("job-1"));
 
     expect(res.status).toBe(401);
@@ -47,7 +49,9 @@ describe("GET /api/scheduled-jobs/[id]", () => {
     const job = { id: "job-1", name: "Daily sync", enabled: true };
     mockGetJob.mockResolvedValue(job);
 
-    const req = new NextRequest("http://localhost:3000/api/scheduled-jobs/job-1");
+    const req = new NextRequest(
+      "http://localhost:3000/api/scheduled-jobs/job-1",
+    );
     const res = await GET(req, makeParams("job-1"));
 
     expect(res.status).toBe(200);
@@ -59,7 +63,9 @@ describe("GET /api/scheduled-jobs/[id]", () => {
   it("returns 404 when getJob throws", async () => {
     mockGetJob.mockRejectedValue(new Error("not found"));
 
-    const req = new NextRequest("http://localhost:3000/api/scheduled-jobs/job-1");
+    const req = new NextRequest(
+      "http://localhost:3000/api/scheduled-jobs/job-1",
+    );
     const res = await GET(req, makeParams("job-1"));
 
     expect(res.status).toBe(404);
@@ -74,9 +80,12 @@ describe("DELETE /api/scheduled-jobs/[id]", () => {
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
     });
 
-    const req = new NextRequest("http://localhost:3000/api/scheduled-jobs/job-1", {
-      method: "DELETE",
-    });
+    const req = new NextRequest(
+      "http://localhost:3000/api/scheduled-jobs/job-1",
+      {
+        method: "DELETE",
+      },
+    );
     const res = await DELETE(req, makeParams("job-1"));
 
     expect(res.status).toBe(401);
@@ -85,9 +94,12 @@ describe("DELETE /api/scheduled-jobs/[id]", () => {
   it("deletes the job and returns 204", async () => {
     mockDeleteJob.mockResolvedValue(undefined);
 
-    const req = new NextRequest("http://localhost:3000/api/scheduled-jobs/job-1", {
-      method: "DELETE",
-    });
+    const req = new NextRequest(
+      "http://localhost:3000/api/scheduled-jobs/job-1",
+      {
+        method: "DELETE",
+      },
+    );
 
     const res = await DELETE(req, makeParams("job-1"));
 

@@ -193,7 +193,7 @@ describe("Edge component rendering", () => {
     render(
       <svg>
         <Edge.Temporary {...tempProps} />
-      </svg>
+      </svg>,
     );
 
     expect(screen.getByTestId("edge-temp-1")).toBeInTheDocument();
@@ -205,18 +205,38 @@ describe("Edge component rendering", () => {
       internals: {
         positionAbsolute: { x: 0, y: 0 },
         handleBounds: {
-          source: [{ id: `${id}-source`, x: 10, y: 10, width: 10, height: 10, position: "right" }],
-          target: [{ id: `${id}-target`, x: 10, y: 10, width: 10, height: 10, position: "left" }],
+          source: [
+            {
+              id: `${id}-source`,
+              x: 10,
+              y: 10,
+              width: 10,
+              height: 10,
+              position: "right",
+            },
+          ],
+          target: [
+            {
+              id: `${id}-target`,
+              x: 10,
+              y: 10,
+              width: 10,
+              height: 10,
+              position: "left",
+            },
+          ],
         },
       },
     });
 
-    (useInternalNode as ReturnType<typeof vi.fn>).mockImplementation((id: string) => mockNode(id));
+    (useInternalNode as ReturnType<typeof vi.fn>).mockImplementation(
+      (id: string) => mockNode(id),
+    );
 
     render(
       <svg>
         <Edge.Animated {...animProps} />
-      </svg>
+      </svg>,
     );
 
     expect(screen.getByTestId("edge-anim-1")).toBeInTheDocument();
@@ -228,18 +248,38 @@ describe("Edge component rendering", () => {
       internals: {
         positionAbsolute: { x: 0, y: 0 },
         handleBounds: {
-          source: [{ id: `${id}-source`, x: 10, y: 10, width: 10, height: 10, position: "top" }],
-          target: [{ id: `${id}-target`, x: 10, y: 10, width: 10, height: 10, position: "bottom" }],
+          source: [
+            {
+              id: `${id}-source`,
+              x: 10,
+              y: 10,
+              width: 10,
+              height: 10,
+              position: "top",
+            },
+          ],
+          target: [
+            {
+              id: `${id}-target`,
+              x: 10,
+              y: 10,
+              width: 10,
+              height: 10,
+              position: "bottom",
+            },
+          ],
         },
       },
     });
 
-    (useInternalNode as ReturnType<typeof vi.fn>).mockImplementation((id: string) => mockNode(id));
+    (useInternalNode as ReturnType<typeof vi.fn>).mockImplementation(
+      (id: string) => mockNode(id),
+    );
 
     render(
       <svg>
         <Edge.Animated {...{ ...animProps, id: "anim-topbot" }} />
-      </svg>
+      </svg>,
     );
 
     expect(screen.getByTestId("edge-anim-topbot")).toBeInTheDocument();
@@ -251,7 +291,7 @@ describe("Edge component rendering", () => {
     render(
       <svg>
         <Edge.Animated {...{ ...animProps, id: "anim-null" }} />
-      </svg>
+      </svg>,
     );
 
     expect(screen.queryByTestId("edge-anim-null")).not.toBeInTheDocument();

@@ -11,9 +11,7 @@ import {
 describe("Confirmation useConfirmation error (line 52)", () => {
   it("throws when ConfirmationRequest is used outside Confirmation context", () => {
     // Suppress React error boundary console output
-    const consoleSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     expect(() => {
       render(<ConfirmationRequest>Approve?</ConfirmationRequest>);
@@ -26,7 +24,7 @@ describe("Confirmation useConfirmation error (line 52)", () => {
     const { container } = render(
       <Confirmation state="approval-requested" approval={undefined}>
         <ConfirmationTitle>Title</ConfirmationTitle>
-      </Confirmation>
+      </Confirmation>,
     );
     expect(container.innerHTML).toBe("");
   });
@@ -38,7 +36,7 @@ describe("Confirmation useConfirmation error (line 52)", () => {
         approval={{ id: "1", approved: true }}
       >
         <ConfirmationTitle>Title</ConfirmationTitle>
-      </Confirmation>
+      </Confirmation>,
     );
     expect(container.innerHTML).toBe("");
   });

@@ -81,7 +81,12 @@ export function SessionHistorySidebar({
       <div className="p-3 border-b space-y-2">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold">History</h2>
-          <Button variant="ghost" size="icon" onClick={onNewSession} className="h-7 w-7">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onNewSession}
+            className="h-7 w-7"
+          >
             <Plus className="h-4 w-4" />
           </Button>
         </div>
@@ -117,7 +122,7 @@ export function SessionHistorySidebar({
               className={cn(
                 "group relative rounded-md p-2 cursor-pointer",
                 "hover:bg-accent transition-colors duration-150",
-                activeSessionId === session.sessionId && "bg-accent"
+                activeSessionId === session.sessionId && "bg-accent",
               )}
               onClick={() => onResumeSession(session.sessionId)}
             >

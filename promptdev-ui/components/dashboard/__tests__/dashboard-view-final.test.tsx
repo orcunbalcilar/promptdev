@@ -21,7 +21,9 @@ vi.mock("next/dynamic", () => ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   default: (_importFn: unknown) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const DynamicComponent = (_props: unknown) => <div data-testid="dynamic-component" />;
+    const DynamicComponent = (_props: unknown) => (
+      <div data-testid="dynamic-component" />
+    );
     DynamicComponent.displayName = "DynamicComponent";
     return DynamicComponent;
   },
@@ -72,8 +74,6 @@ describe("DashboardView", () => {
     };
     renderWithQuery(<DashboardView initialTasks={initialTasks} />);
     // Empty state shows "Create your first task"
-    expect(
-      screen.getByText(/Create your first task/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Create your first task/i)).toBeInTheDocument();
   });
 });

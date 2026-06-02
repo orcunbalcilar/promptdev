@@ -14,7 +14,7 @@ vi.mock("@radix-ui/react-use-controllable-state", async () => {
       onChange?: (v: unknown) => void;
     }) => {
       const [val, setVal] = react.useState(
-        prop === undefined ? defaultProp : prop
+        prop === undefined ? defaultProp : prop,
       );
       return [val, setVal] as const;
     },
@@ -27,10 +27,7 @@ vi.mock("@/components/ui/collapsible", () => ({
       {children}
     </div>
   ),
-  CollapsibleContent: ({
-    children,
-    ...props
-  }: React.ComponentProps<"div">) => (
+  CollapsibleContent: ({ children, ...props }: React.ComponentProps<"div">) => (
     <div data-testid="collapsible-content" {...props}>
       {children}
     </div>
@@ -64,18 +61,14 @@ vi.mock("@/components/ai-elements/shimmer", () => ({
   ),
 }));
 
-import {
-  Reasoning,
-  ReasoningTrigger,
-  ReasoningContent,
-} from "../reasoning";
+import { Reasoning, ReasoningTrigger, ReasoningContent } from "../reasoning";
 
 describe("ReasoningTrigger (lines 97-105)", () => {
   it("renders default thinking message with brain icon when not streaming", () => {
     render(
       <Reasoning isStreaming={false} defaultOpen={true}>
         <ReasoningTrigger />
-      </Reasoning>
+      </Reasoning>,
     );
     const trigger = screen.getByTestId("collapsible-trigger");
     expect(trigger).toBeInTheDocument();
@@ -87,7 +80,7 @@ describe("ReasoningTrigger (lines 97-105)", () => {
     render(
       <Reasoning isStreaming={true}>
         <ReasoningTrigger />
-      </Reasoning>
+      </Reasoning>,
     );
     expect(screen.getByTestId("shimmer")).toHaveTextContent("Thinking...");
   });
@@ -100,10 +93,10 @@ describe("ReasoningTrigger (lines 97-105)", () => {
             isStreaming ? "Working..." : "Done thinking"
           }
         />
-      </Reasoning>
+      </Reasoning>,
     );
     expect(screen.getByTestId("collapsible-trigger")).toHaveTextContent(
-      "Done thinking"
+      "Done thinking",
     );
   });
 
@@ -113,7 +106,7 @@ describe("ReasoningTrigger (lines 97-105)", () => {
         <ReasoningTrigger>
           <span>Custom trigger</span>
         </ReasoningTrigger>
-      </Reasoning>
+      </Reasoning>,
     );
     expect(screen.getByText("Custom trigger")).toBeInTheDocument();
   });
@@ -124,10 +117,10 @@ describe("ReasoningContent (lines 116-127)", () => {
     render(
       <Reasoning isStreaming={false} defaultOpen={true}>
         <ReasoningContent>Some reasoning text</ReasoningContent>
-      </Reasoning>
+      </Reasoning>,
     );
     expect(screen.getByTestId("streamdown")).toHaveTextContent(
-      "Some reasoning text"
+      "Some reasoning text",
     );
   });
 
@@ -135,7 +128,7 @@ describe("ReasoningContent (lines 116-127)", () => {
     render(
       <Reasoning isStreaming={false} defaultOpen={true}>
         <ReasoningContent className="extra-class">Content</ReasoningContent>
-      </Reasoning>
+      </Reasoning>,
     );
     const content = screen.getByTestId("collapsible-content");
     expect(content).toBeInTheDocument();

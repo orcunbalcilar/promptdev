@@ -16,7 +16,10 @@ function getAuthHeaders(): Record<string, string> {
   return { Authorization: `Bearer ${token}` };
 }
 
-async function bitbucketFetch<T>(path: string, options?: RequestInit): Promise<T> {
+async function bitbucketFetch<T>(
+  path: string,
+  options?: RequestInit,
+): Promise<T> {
   const { baseUrl } = getBitbucketConfig();
   if (!baseUrl) throw new Error("BITBUCKET_URL is not configured");
 
@@ -82,16 +85,18 @@ export interface PullRequestResponse {
 }
 
 export async function listProjects(): Promise<ProjectResponse[]> {
-  const response = await bitbucketFetch<PagedBitbucketResponse<ProjectResponse>>(
-    "/projects?limit=100",
-  );
+  const response = await bitbucketFetch<
+    PagedBitbucketResponse<ProjectResponse>
+  >("/projects?limit=100");
   return response?.values ?? [];
 }
 
-export async function listRepositories(projectKey: string): Promise<RepositoryResponse[]> {
-  const response = await bitbucketFetch<PagedBitbucketResponse<RepositoryResponse>>(
-    `/projects/${encodeURIComponent(projectKey)}/repos?limit=100`,
-  );
+export async function listRepositories(
+  projectKey: string,
+): Promise<RepositoryResponse[]> {
+  const response = await bitbucketFetch<
+    PagedBitbucketResponse<RepositoryResponse>
+  >(`/projects/${encodeURIComponent(projectKey)}/repos?limit=100`);
   /* v8 ignore start — defensive ?? when API returns null */
   return response?.values ?? [];
   /* v8 ignore stop */
@@ -130,7 +135,9 @@ export async function listBranches(
   repoSlug: string,
   filterText?: string,
 ): Promise<BranchResponse[]> {
-  const filter = filterText ? `&filterText=${encodeURIComponent(filterText)}` : "";
+  const filter = filterText
+    ? `&filterText=${encodeURIComponent(filterText)}`
+    : "";
   const response = await bitbucketFetch<PagedBitbucketResponse<BranchResponse>>(
     `/projects/${encodeURIComponent(projectKey)}/repos/${encodeURIComponent(repoSlug)}/branches?limit=100${filter}`,
   );

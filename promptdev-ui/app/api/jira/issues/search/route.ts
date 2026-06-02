@@ -7,7 +7,9 @@ export async function GET(request: NextRequest) {
   if (error) return error;
 
   const jql = request.nextUrl.searchParams.get("jql") ?? "";
-  const maxResults = Number(request.nextUrl.searchParams.get("maxResults") ?? 50);
+  const maxResults = Number(
+    request.nextUrl.searchParams.get("maxResults") ?? 50,
+  );
   const result = await jiraService.searchIssues(jql, maxResults);
   return NextResponse.json(result);
 }

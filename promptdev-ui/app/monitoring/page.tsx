@@ -1,18 +1,24 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from "@/components/ui/tooltip";
 import {
   ArrowLeft,
   Activity,
@@ -26,35 +32,47 @@ import {
   Timer,
   Wrench,
   Zap,
-} from 'lucide-react'
+} from "lucide-react";
 import {
   getMonitoringDashboard,
   getMonitoringSessions,
   type MonitoringDashboard,
   type MonitoringSession,
   type PaginatedResponse,
-} from '@/lib/monitoring'
-import { MetricCard } from '@/components/monitoring/metric-card'
-import { DailyOperationsChart, OperationsByTypeChart, TopToolsChart, SessionsByModelChart } from '@/components/monitoring/charts'
-import { RecentErrorsSection, PaginationControls, SessionsTable } from '@/components/monitoring/sessions-table'
-import { SessionDetail } from '@/components/monitoring/session-detail'
-import { ReviewsTab } from '@/components/monitoring/reviews-tab'
-import { formatNumber, formatTokens } from '@/components/monitoring/constants'
-import { standardQueryOptions } from '@/lib/query-policies'
+} from "@/lib/monitoring";
+import { MetricCard } from "@/components/monitoring/metric-card";
+import {
+  DailyOperationsChart,
+  OperationsByTypeChart,
+  TopToolsChart,
+  SessionsByModelChart,
+} from "@/components/monitoring/charts";
+import {
+  RecentErrorsSection,
+  PaginationControls,
+  SessionsTable,
+} from "@/components/monitoring/sessions-table";
+import { SessionDetail } from "@/components/monitoring/session-detail";
+import { ReviewsTab } from "@/components/monitoring/reviews-tab";
+import { formatNumber, formatTokens } from "@/components/monitoring/constants";
+import { standardQueryOptions } from "@/lib/query-policies";
 
 // Rough cost per token for estimation (GPT-4 class pricing as approximation)
-const COST_PER_INPUT_TOKEN = 0.00001 // $0.01 per 1K input tokens
-const COST_PER_OUTPUT_TOKEN = 0.00003 // $0.03 per 1K output tokens
+const COST_PER_INPUT_TOKEN = 0.00001; // $0.01 per 1K input tokens
+const COST_PER_OUTPUT_TOKEN = 0.00003; // $0.03 per 1K output tokens
 
 function estimateCost(inputTokens: number, outputTokens: number): string {
-  const cost = inputTokens * COST_PER_INPUT_TOKEN + outputTokens * COST_PER_OUTPUT_TOKEN
-  if (cost < 0.01) return `$${cost.toFixed(4)}`
-  return `$${cost.toFixed(2)}`
+  const cost =
+    inputTokens * COST_PER_INPUT_TOKEN + outputTokens * COST_PER_OUTPUT_TOKEN;
+  if (cost < 0.01) return `$${cost.toFixed(4)}`;
+  return `$${cost.toFixed(2)}`;
 }
 
-function PerformanceSummaryBar({ dashboard }: Readonly<{ dashboard: MonitoringDashboard }>) {
+function PerformanceSummaryBar({
+  dashboard,
+}: Readonly<{ dashboard: MonitoringDashboard }>) {
   /* v8 ignore start: parent guards topTools before rendering this component */
-  if (!dashboard.topTools?.length) return null
+  if (!dashboard.topTools?.length) return null;
   /* v8 ignore stop */
 
   return (
@@ -66,9 +84,12 @@ function PerformanceSummaryBar({ dashboard }: Readonly<{ dashboard: MonitoringDa
             <span className="text-muted-foreground">Avg tool latency:</span>
             <span className="font-medium tabular-nums">
               {Math.round(
-                dashboard.topTools.reduce((sum, t) => sum + t.avgDurationMs, 0) /
-                dashboard.topTools.length,
-              )}ms
+                dashboard.topTools.reduce(
+                  (sum, t) => sum + t.avgDurationMs,
+                  0,
+                ) / dashboard.topTools.length,
+              )}
+              ms
             </span>
           </div>
           <div className="h-4 border-l" />
@@ -76,7 +97,12 @@ function PerformanceSummaryBar({ dashboard }: Readonly<{ dashboard: MonitoringDa
             <Wrench className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Tool calls:</span>
             <span className="font-medium tabular-nums">
-              {formatNumber(dashboard.topTools.reduce((sum, t) => sum + t.executionCount, 0))}
+              {formatNumber(
+                dashboard.topTools.reduce(
+                  (sum, t) => sum + t.executionCount,
+                  0,
+                ),
+              )}
             </span>
           </div>
           <div className="h-4 border-l" />
@@ -84,13 +110,13 @@ function PerformanceSummaryBar({ dashboard }: Readonly<{ dashboard: MonitoringDa
             <Bot className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Models:</span>
             <span className="font-medium">
-              {Object.keys(dashboard.sessionsByModel ?? {}).join(', ') || 'N/A'}
+              {Object.keys(dashboard.sessionsByModel ?? {}).join(", ") || "N/A"}
             </span>
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function SessionsTab({
@@ -101,12 +127,12 @@ function SessionsTab({
   sessionsPage,
   setSessionsPage,
 }: Readonly<{
-  selectedSession: MonitoringSession | null
-  setSelectedSession: (s: MonitoringSession | null) => void
-  sessions: PaginatedResponse<MonitoringSession> | undefined
-  sessionsLoading: boolean
-  sessionsPage: number
-  setSessionsPage: (p: number) => void
+  selectedSession: MonitoringSession | null;
+  setSelectedSession: (s: MonitoringSession | null) => void;
+  sessions: PaginatedResponse<MonitoringSession> | undefined;
+  sessionsLoading: boolean;
+  sessionsPage: number;
+  setSessionsPage: (p: number) => void;
 }>) {
   if (selectedSession) {
     return (
@@ -114,7 +140,7 @@ function SessionsTab({
         session={selectedSession}
         onBack={() => setSelectedSession(null)}
       />
-    )
+    );
   }
 
   return (
@@ -150,39 +176,54 @@ function SessionsTab({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export default function MonitoringPage() {
-  const router = useRouter()
-  const [activeTab, setActiveTab] = useState('overview')
-  const [sessionsPage, setSessionsPage] = useState(0)
-  const [selectedSession, setSelectedSession] = useState<MonitoringSession | null>(null)
-  const [days, setDays] = useState(7)
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [sessionsPage, setSessionsPage] = useState(0);
+  const [selectedSession, setSelectedSession] =
+    useState<MonitoringSession | null>(null);
+  const [days, setDays] = useState(7);
 
-  const { data: dashboard, isLoading: dashboardLoading, refetch: refetchDashboard, dataUpdatedAt } = useQuery<MonitoringDashboard>({
-    queryKey: ['monitoring-dashboard', days],
+  const {
+    data: dashboard,
+    isLoading: dashboardLoading,
+    refetch: refetchDashboard,
+    dataUpdatedAt,
+  } = useQuery<MonitoringDashboard>({
+    queryKey: ["monitoring-dashboard", days],
     queryFn: () => getMonitoringDashboard(days),
     staleTime: standardQueryOptions.staleTime,
     gcTime: standardQueryOptions.gcTime,
     refetchInterval: 15000,
-  })
+  });
 
-  const { data: sessions, isLoading: sessionsLoading, refetch: refetchSessions } = useQuery<PaginatedResponse<MonitoringSession>>({
-    queryKey: ['monitoring-sessions', sessionsPage],
+  const {
+    data: sessions,
+    isLoading: sessionsLoading,
+    refetch: refetchSessions,
+  } = useQuery<PaginatedResponse<MonitoringSession>>({
+    queryKey: ["monitoring-sessions", sessionsPage],
     queryFn: () => getMonitoringSessions(sessionsPage, 15),
     staleTime: standardQueryOptions.staleTime,
     gcTime: standardQueryOptions.gcTime,
     refetchInterval: 15000,
-  })
+  });
 
-  const isLoading = dashboardLoading && !dashboard
+  const isLoading = dashboardLoading && !dashboard;
 
-  const totalTokens = (dashboard?.totalInputTokens ?? 0) + (dashboard?.totalOutputTokens ?? 0)
-  const estimatedCost = estimateCost(dashboard?.totalInputTokens ?? 0, dashboard?.totalOutputTokens ?? 0)
-  const errorRate = dashboard && dashboard.totalOperations > 0
-    ? ((dashboard.totalErrors / dashboard.totalOperations) * 100).toFixed(1)
-    : '0.0'
+  const totalTokens =
+    (dashboard?.totalInputTokens ?? 0) + (dashboard?.totalOutputTokens ?? 0);
+  const estimatedCost = estimateCost(
+    dashboard?.totalInputTokens ?? 0,
+    dashboard?.totalOutputTokens ?? 0,
+  );
+  const errorRate =
+    dashboard && dashboard.totalOperations > 0
+      ? ((dashboard.totalErrors / dashboard.totalOperations) * 100).toFixed(1)
+      : "0.0";
 
   return (
     <TooltipProvider>
@@ -192,7 +233,11 @@ export default function MonitoringPage() {
           <div className="px-4 py-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push("/")}
+                >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back
                 </Button>
@@ -204,7 +249,10 @@ export default function MonitoringPage() {
                 </div>
                 {/* Live status */}
                 {dashboard && dashboard.activeSessions > 0 && (
-                  <Badge variant="outline" className="gap-1.5 text-green-700 border-green-200 bg-green-50">
+                  <Badge
+                    variant="outline"
+                    className="gap-1.5 text-green-700 border-green-200 bg-green-50"
+                  >
                     <CircleDot className="h-3 w-3 animate-pulse" />
                     {dashboard.activeSessions} active
                   </Badge>
@@ -216,7 +264,7 @@ export default function MonitoringPage() {
                   {[7, 14, 30].map((d) => (
                     <Button
                       key={d}
-                      variant={days === d ? 'default' : 'ghost'}
+                      variant={days === d ? "default" : "ghost"}
                       size="sm"
                       onClick={() => setDays(d)}
                       className="h-7 text-xs"
@@ -230,16 +278,21 @@ export default function MonitoringPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => { refetchDashboard(); refetchSessions() }}
+                      onClick={() => {
+                        refetchDashboard();
+                        refetchSessions();
+                      }}
                       disabled={isLoading}
                     >
-                      <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                      <RefreshCw
+                        className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                      />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
                     {dataUpdatedAt
                       ? `Last updated: ${new Date(dataUpdatedAt).toLocaleTimeString()}`
-                      : 'Refresh'}
+                      : "Refresh"}
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -284,12 +337,18 @@ export default function MonitoringPage() {
                   value={formatNumber(dashboard?.totalErrors ?? 0)}
                   subtitle={`${errorRate}% error rate`}
                   icon={AlertTriangle}
-                  trend={dashboard && dashboard.totalErrors > 0 ? 'up' : undefined}
+                  trend={
+                    dashboard && dashboard.totalErrors > 0 ? "up" : undefined
+                  }
                 />
                 <MetricCard
                   title="Tools Used"
                   value={formatNumber(dashboard?.topTools?.length ?? 0)}
-                  subtitle={dashboard?.topTools?.[0]?.toolName ? `Top: ${dashboard.topTools[0].toolName}` : undefined}
+                  subtitle={
+                    dashboard?.topTools?.[0]?.toolName
+                      ? `Top: ${dashboard.topTools[0].toolName}`
+                      : undefined
+                  }
                   icon={Wrench}
                 />
               </div>
@@ -306,7 +365,10 @@ export default function MonitoringPage() {
                   <TabsTrigger value="sessions">
                     Sessions
                     {sessions?.totalElements ? (
-                      <Badge variant="secondary" className="ml-1.5 text-xs px-1.5 py-0">
+                      <Badge
+                        variant="secondary"
+                        className="ml-1.5 text-xs px-1.5 py-0"
+                      >
                         {sessions.totalElements}
                       </Badge>
                     ) : null}
@@ -315,7 +377,10 @@ export default function MonitoringPage() {
                   <TabsTrigger value="errors">
                     Errors
                     {dashboard && dashboard.totalErrors > 0 && (
-                      <Badge variant="destructive" className="ml-1.5 text-xs px-1.5 py-0">
+                      <Badge
+                        variant="destructive"
+                        className="ml-1.5 text-xs px-1.5 py-0"
+                      >
                         {dashboard.totalErrors}
                       </Badge>
                     )}
@@ -323,12 +388,26 @@ export default function MonitoringPage() {
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6">
-                  {dashboard && <DailyOperationsChart data={dashboard.dailyOperations ?? []} />}
+                  {dashboard && (
+                    <DailyOperationsChart
+                      data={dashboard.dailyOperations ?? []}
+                    />
+                  )}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {dashboard && <OperationsByTypeChart data={dashboard.operationsByType ?? {}} />}
-                    {dashboard && <SessionsByModelChart data={dashboard.sessionsByModel ?? {}} />}
+                    {dashboard && (
+                      <OperationsByTypeChart
+                        data={dashboard.operationsByType ?? {}}
+                      />
+                    )}
+                    {dashboard && (
+                      <SessionsByModelChart
+                        data={dashboard.sessionsByModel ?? {}}
+                      />
+                    )}
                   </div>
-                  {dashboard && <TopToolsChart tools={dashboard.topTools ?? []} />}
+                  {dashboard && (
+                    <TopToolsChart tools={dashboard.topTools ?? []} />
+                  )}
                 </TabsContent>
 
                 <TabsContent value="sessions" className="space-y-4">
@@ -347,8 +426,13 @@ export default function MonitoringPage() {
                 </TabsContent>
 
                 <TabsContent value="errors" className="space-y-4">
-                  {dashboard && <RecentErrorsSection errors={dashboard.recentErrors ?? []} />}
-                  {(!dashboard?.recentErrors || dashboard.recentErrors.length === 0) && (
+                  {dashboard && (
+                    <RecentErrorsSection
+                      errors={dashboard.recentErrors ?? []}
+                    />
+                  )}
+                  {(!dashboard?.recentErrors ||
+                    dashboard.recentErrors.length === 0) && (
                     <Card>
                       <CardContent className="py-12 text-center text-muted-foreground">
                         No errors recorded in the last {days} days.
@@ -362,5 +446,5 @@ export default function MonitoringPage() {
         </main>
       </div>
     </TooltipProvider>
-  )
+  );
 }

@@ -10,8 +10,10 @@ export function formatApiError(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.status === 404) return "Resource not found.";
     if (error.status === 401) return "Authentication required. Please sign in.";
-    if (error.status === 403) return "You don't have permission for this action.";
-    if (error.status === 429) return "Too many requests. Please try again later.";
+    if (error.status === 403)
+      return "You don't have permission for this action.";
+    if (error.status === 429)
+      return "Too many requests. Please try again later.";
     if (error.status >= 500) return "Server error. Please try again later.";
     return error.details ?? error.message;
   }

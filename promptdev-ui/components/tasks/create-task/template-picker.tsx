@@ -14,8 +14,12 @@ import { useTaskForm } from "./_form-context";
 
 export function TemplatePicker() {
   const { setPrompt, setSystemPrompt, setTitle } = useTaskForm();
-  const [selectedCategory, setSelectedCategory] = useState<SDLCCategory | null>(null);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<SDLCCategory | null>(
+    null,
+  );
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
+    null,
+  );
 
   const filteredTemplates = selectedCategory
     ? SDLC_TEMPLATES.filter((t) => t.category === selectedCategory)
@@ -62,22 +66,25 @@ export function TemplatePicker() {
         >
           All
         </button>
-        {(Object.entries(SDLC_CATEGORIES) as [SDLCCategory, typeof SDLC_CATEGORIES[SDLCCategory]][]).map(
-          ([key, cat]) => (
-            <button
-              type="button"
-              key={key}
-              onClick={() => setSelectedCategory(key)}
-              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                selectedCategory === key
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-muted/50 border-border hover:bg-muted"
-              }`}
-            >
-              {cat.icon} {cat.label}
-            </button>
-          ),
-        )}
+        {(
+          Object.entries(SDLC_CATEGORIES) as [
+            SDLCCategory,
+            (typeof SDLC_CATEGORIES)[SDLCCategory],
+          ][]
+        ).map(([key, cat]) => (
+          <button
+            type="button"
+            key={key}
+            onClick={() => setSelectedCategory(key)}
+            className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+              selectedCategory === key
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-muted/50 border-border hover:bg-muted"
+            }`}
+          >
+            {cat.icon} {cat.label}
+          </button>
+        ))}
       </div>
 
       {/* Template grid */}
@@ -97,15 +104,22 @@ export function TemplatePicker() {
             >
               <span className="text-lg mt-0.5 shrink-0">{template.icon}</span>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium leading-tight">{template.name}</div>
+                <div className="text-sm font-medium leading-tight">
+                  {template.name}
+                </div>
                 <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
                   {template.description}
                 </p>
                 <div className="flex items-center gap-1.5 mt-1.5">
-                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">
+                  <Badge
+                    variant="secondary"
+                    className="text-[9px] px-1.5 py-0 h-4"
+                  >
                     {template.reasoningEffort}
                   </Badge>
-                  <span className="text-[9px] text-muted-foreground">{template.estimatedDuration}</span>
+                  <span className="text-[9px] text-muted-foreground">
+                    {template.estimatedDuration}
+                  </span>
                 </div>
               </div>
             </button>

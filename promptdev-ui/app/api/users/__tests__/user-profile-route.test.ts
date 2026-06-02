@@ -43,7 +43,9 @@ describe("GET /api/users/[userId]/profile", () => {
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
     });
 
-    const req = new NextRequest("http://localhost:3000/api/users/user-1/profile");
+    const req = new NextRequest(
+      "http://localhost:3000/api/users/user-1/profile",
+    );
     const res = await GET(req, makeParams("user-1"));
 
     expect(res.status).toBe(401);
@@ -54,7 +56,9 @@ describe("GET /api/users/[userId]/profile", () => {
       NextResponse.json({ error: "Forbidden" }, { status: 403 }),
     );
 
-    const req = new NextRequest("http://localhost:3000/api/users/other-user/profile");
+    const req = new NextRequest(
+      "http://localhost:3000/api/users/other-user/profile",
+    );
     const res = await GET(req, makeParams("other-user"));
 
     expect(res.status).toBe(403);
@@ -64,7 +68,9 @@ describe("GET /api/users/[userId]/profile", () => {
     const profile = { id: "user-1", email: "a@b.com", bitbucketTokenSet: true };
     mockGetProfile.mockResolvedValue(profile);
 
-    const req = new NextRequest("http://localhost:3000/api/users/user-1/profile");
+    const req = new NextRequest(
+      "http://localhost:3000/api/users/user-1/profile",
+    );
     const res = await GET(req, makeParams("user-1"));
 
     expect(res.status).toBe(200);
@@ -76,7 +82,9 @@ describe("GET /api/users/[userId]/profile", () => {
   it("returns 404 when getUserProfile throws", async () => {
     mockGetProfile.mockRejectedValue(new Error("not found"));
 
-    const req = new NextRequest("http://localhost:3000/api/users/user-1/profile");
+    const req = new NextRequest(
+      "http://localhost:3000/api/users/user-1/profile",
+    );
     const res = await GET(req, makeParams("user-1"));
 
     expect(res.status).toBe(404);
@@ -93,10 +101,13 @@ describe("PUT /api/users/[userId]/settings", () => {
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
     });
 
-    const req = new NextRequest("http://localhost:3000/api/users/user-1/settings", {
-      method: "PUT",
-      body: JSON.stringify({ theme: "dark" }),
-    });
+    const req = new NextRequest(
+      "http://localhost:3000/api/users/user-1/settings",
+      {
+        method: "PUT",
+        body: JSON.stringify({ theme: "dark" }),
+      },
+    );
     const res = await PUT(req, makeParams("user-1"));
 
     expect(res.status).toBe(401);
@@ -107,10 +118,13 @@ describe("PUT /api/users/[userId]/settings", () => {
       NextResponse.json({ error: "Forbidden" }, { status: 403 }),
     );
 
-    const req = new NextRequest("http://localhost:3000/api/users/other/settings", {
-      method: "PUT",
-      body: JSON.stringify({ theme: "dark" }),
-    });
+    const req = new NextRequest(
+      "http://localhost:3000/api/users/other/settings",
+      {
+        method: "PUT",
+        body: JSON.stringify({ theme: "dark" }),
+      },
+    );
     const res = await PUT(req, makeParams("other"));
 
     expect(res.status).toBe(403);
@@ -120,26 +134,34 @@ describe("PUT /api/users/[userId]/settings", () => {
     const profile = { id: "user-1", theme: "dark" };
     mockUpdateSettings.mockResolvedValue(profile);
 
-    const req = new NextRequest("http://localhost:3000/api/users/user-1/settings", {
-      method: "PUT",
-      body: JSON.stringify({ theme: "dark" }),
-    });
+    const req = new NextRequest(
+      "http://localhost:3000/api/users/user-1/settings",
+      {
+        method: "PUT",
+        body: JSON.stringify({ theme: "dark" }),
+      },
+    );
 
     const res = await PUT(req, makeParams("user-1"));
 
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual(profile);
-    expect(mockUpdateSettings).toHaveBeenCalledWith("user-1", { theme: "dark" });
+    expect(mockUpdateSettings).toHaveBeenCalledWith("user-1", {
+      theme: "dark",
+    });
   });
 
   it("returns 400 when updateSettings throws", async () => {
     mockUpdateSettings.mockRejectedValue(new Error("Invalid settings"));
 
-    const req = new NextRequest("http://localhost:3000/api/users/user-1/settings", {
-      method: "PUT",
-      body: JSON.stringify({ bad: "data" }),
-    });
+    const req = new NextRequest(
+      "http://localhost:3000/api/users/user-1/settings",
+      {
+        method: "PUT",
+        body: JSON.stringify({ bad: "data" }),
+      },
+    );
 
     const res = await PUT(req, makeParams("user-1"));
 

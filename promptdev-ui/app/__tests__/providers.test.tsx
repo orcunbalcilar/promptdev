@@ -39,7 +39,7 @@ describe("Providers", () => {
     render(
       <Providers>
         <div data-testid="child-content">Hello</div>
-      </Providers>
+      </Providers>,
     );
     expect(screen.getByTestId("child-content")).toBeInTheDocument();
     expect(screen.getByText("Hello")).toBeInTheDocument();
@@ -49,7 +49,7 @@ describe("Providers", () => {
     render(
       <Providers>
         <span>test</span>
-      </Providers>
+      </Providers>,
     );
     expect(screen.getByTestId("session-provider")).toBeInTheDocument();
   });
@@ -58,7 +58,7 @@ describe("Providers", () => {
     render(
       <Providers>
         <span>test</span>
-      </Providers>
+      </Providers>,
     );
     expect(screen.getByTestId("theme-provider")).toBeInTheDocument();
   });
@@ -67,7 +67,7 @@ describe("Providers", () => {
     render(
       <Providers>
         <span>test</span>
-      </Providers>
+      </Providers>,
     );
     expect(screen.getByTestId("tooltip-provider")).toBeInTheDocument();
   });
@@ -76,7 +76,7 @@ describe("Providers", () => {
     render(
       <Providers>
         <span>test</span>
-      </Providers>
+      </Providers>,
     );
     expect(screen.getByTestId("toaster")).toBeInTheDocument();
   });

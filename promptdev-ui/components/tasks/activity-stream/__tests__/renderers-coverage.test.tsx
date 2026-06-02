@@ -19,7 +19,9 @@ vi.mock("@/components/ai-elements/agent", () => ({
 }));
 
 vi.mock("@/components/ai-elements/chain-of-thought", () => ({
-  ChainOfThought: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  ChainOfThought: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   ChainOfThoughtContent: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
@@ -42,8 +44,12 @@ vi.mock("@/components/ai-elements/chain-of-thought", () => ({
 }));
 
 vi.mock("@/components/ai-elements/checkpoint", () => ({
-  Checkpoint: ({ children }: { children: React.ReactNode }) => <div data-testid="checkpoint">{children}</div>,
-  CheckpointIcon: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  Checkpoint: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="checkpoint">{children}</div>
+  ),
+  CheckpointIcon: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 vi.mock("@/components/ai-elements/code-block", () => ({
@@ -60,31 +66,27 @@ vi.mock("@/components/ai-elements/code-block", () => ({
 }));
 
 vi.mock("@/components/ai-elements/commit", () => ({
-  Commit: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  Commit: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   CommitContent: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
   CommitFile: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
-  CommitFileAdditions: ({ count }: { count: number }) => (
-    <span>+{count}</span>
-  ),
+  CommitFileAdditions: ({ count }: { count: number }) => <span>+{count}</span>,
   CommitFileChanges: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
-  CommitFileDeletions: ({ count }: { count: number }) => (
-    <span>-{count}</span>
-  ),
+  CommitFileDeletions: ({ count }: { count: number }) => <span>-{count}</span>,
   CommitFileInfo: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
   CommitFilePath: ({ children }: { children: React.ReactNode }) => (
     <span>{children}</span>
   ),
-  CommitFileStatus: ({ status }: { status: string }) => (
-    <span>{status}</span>
-  ),
+  CommitFileStatus: ({ status }: { status: string }) => <span>{status}</span>,
   CommitFiles: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
@@ -302,7 +304,9 @@ function makeTask(overrides?: Partial<Task>): Task {
   };
 }
 
-function makeEvent(overrides: Partial<TaskEvent> & { eventType: EventType }): TaskEvent {
+function makeEvent(
+  overrides: Partial<TaskEvent> & { eventType: EventType },
+): TaskEvent {
   return {
     id: `evt-${Math.random().toString(36).slice(2, 8)}`,
     message: "",
@@ -311,10 +315,7 @@ function makeEvent(overrides: Partial<TaskEvent> & { eventType: EventType }): Ta
   };
 }
 
-function makeGroup(
-  type: EventGroup["type"],
-  events: TaskEvent[],
-): EventGroup {
+function makeGroup(type: EventGroup["type"], events: TaskEvent[]): EventGroup {
   return { type, events, key: `group-${events[0]?.id}` };
 }
 

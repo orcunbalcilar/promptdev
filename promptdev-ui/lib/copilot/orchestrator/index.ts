@@ -34,10 +34,7 @@ import {
 import { setupEventTracking } from "./event-tracking";
 import { addJiraComment, transitionJiraIssue } from "./jira";
 import { buildSystemPrompt } from "./system-prompt";
-import {
-  taskSessions,
-  type ExecutionResult,
-} from "./types";
+import { taskSessions, type ExecutionResult } from "./types";
 
 // ── Core Execution ──────────────────────────────────────────────
 

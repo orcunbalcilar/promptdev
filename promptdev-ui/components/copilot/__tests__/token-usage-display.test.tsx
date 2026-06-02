@@ -45,7 +45,11 @@ describe("TokenUsageDisplay", () => {
 
   it("should accept className prop", () => {
     const { container } = render(
-      <TokenUsageDisplay inputTokens={100} outputTokens={50} className="extra-class" />,
+      <TokenUsageDisplay
+        inputTokens={100}
+        outputTokens={50}
+        className="extra-class"
+      />,
     );
 
     expect(container.firstChild).toHaveClass("extra-class");

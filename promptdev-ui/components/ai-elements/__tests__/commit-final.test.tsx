@@ -30,14 +30,14 @@ describe("Commit components (lines 230, 310, 357, 382)", () => {
     render(
       <Commit>
         <CommitCopyButton hash="abc123" onError={onError} />
-      </Commit>
+      </Commit>,
     );
 
     const button = screen.getByRole("button");
     fireEvent.click(button);
 
     expect(onError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Clipboard API not available" })
+      expect.objectContaining({ message: "Clipboard API not available" }),
     );
 
     Object.defineProperty(navigator, "clipboard", {
@@ -51,7 +51,7 @@ describe("Commit components (lines 230, 310, 357, 382)", () => {
       <CommitFileInfo>
         <CommitFileIcon />
         <CommitFilePath>src/index.ts</CommitFilePath>
-      </CommitFileInfo>
+      </CommitFileInfo>,
     );
 
     expect(screen.getByText("src/index.ts")).toBeTruthy();
@@ -59,7 +59,7 @@ describe("Commit components (lines 230, 310, 357, 382)", () => {
 
   it("CommitFilePath renders with custom className (line 357)", () => {
     const { container } = render(
-      <CommitFilePath className="custom-path">lib/utils.ts</CommitFilePath>
+      <CommitFilePath className="custom-path">lib/utils.ts</CommitFilePath>,
     );
 
     const span = container.querySelector("span");
@@ -98,7 +98,7 @@ describe("Commit components (lines 230, 310, 357, 382)", () => {
       <CommitFileChanges>
         <CommitFileAdditions count={2} />
         <CommitFileDeletions count={1} />
-      </CommitFileChanges>
+      </CommitFileChanges>,
     );
 
     expect(screen.getByText("2")).toBeTruthy();

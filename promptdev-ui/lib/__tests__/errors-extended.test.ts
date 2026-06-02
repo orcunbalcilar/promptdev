@@ -50,7 +50,9 @@ describe("classifyError – additional branches", () => {
   });
 
   it("preserves message and details for VALIDATION errors", () => {
-    const result = classifyError(new ApiError("Invalid field", 422, "Name is required"));
+    const result = classifyError(
+      new ApiError("Invalid field", 422, "Name is required"),
+    );
     expect(result.category).toBe("VALIDATION");
     expect(result.message).toBe("Invalid field");
     expect(result.details).toBe("Name is required");
@@ -146,7 +148,9 @@ describe("showErrorToast", () => {
     it("shows contextual server error message", () => {
       const error = new ApiError("Internal", 500);
       showErrorToast(error, "save task");
-      expect(toast.error).toHaveBeenCalledWith("Failed to save task. Server error.");
+      expect(toast.error).toHaveBeenCalledWith(
+        "Failed to save task. Server error.",
+      );
     });
 
     it("handles 502 as server error", () => {

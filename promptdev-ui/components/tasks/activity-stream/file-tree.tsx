@@ -226,14 +226,12 @@ export function ChangedFilesTree({
     );
   }
 
-  const sortedRootChildren = Array.from(tree.children.values()).sort(
-    (a, b) => {
-      const aIsDir = !a.status;
-      const bIsDir = !b.status;
-      if (aIsDir !== bIsDir) return aIsDir ? -1 : 1;
-      return a.name.localeCompare(b.name);
-    },
-  );
+  const sortedRootChildren = Array.from(tree.children.values()).sort((a, b) => {
+    const aIsDir = !a.status;
+    const bIsDir = !b.status;
+    if (aIsDir !== bIsDir) return aIsDir ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
 
   return (
     <div className="space-y-0.5 p-2 font-mono text-xs">

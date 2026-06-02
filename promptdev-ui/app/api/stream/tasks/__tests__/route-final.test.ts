@@ -21,7 +21,10 @@ describe("Tasks stream route (line 34 - heartbeat catch)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
-    mockRequireAuth.mockResolvedValue({ error: undefined, session: {} as never });
+    mockRequireAuth.mockResolvedValue({
+      error: undefined,
+      session: {} as never,
+    });
   });
 
   afterEach(() => {

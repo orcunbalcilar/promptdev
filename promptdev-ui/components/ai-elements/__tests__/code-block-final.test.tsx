@@ -10,7 +10,10 @@ vi.mock("shiki", () => ({
       bg: "#fff",
       fg: "#000",
       tokens: [
-        [{ content: "const ", color: "#0000ff" }, { content: "x = 1;", color: "#000" }],
+        [
+          { content: "const ", color: "#0000ff" },
+          { content: "x = 1;", color: "#000" },
+        ],
         [{ content: "console.log(x);", color: "#333" }],
       ],
     }),
@@ -40,7 +43,6 @@ import {
 } from "@/components/ai-elements/code-block";
 
 describe("CodeBlock — uncovered lines", () => {
-
   // Lines 232-233: highlightCode processes highlighting and caches
   it("renders code with syntax highlighting", async () => {
     render(
@@ -50,7 +52,7 @@ describe("CodeBlock — uncovered lines", () => {
             <CodeBlockFilename>test.js</CodeBlockFilename>
           </CodeBlockTitle>
         </CodeBlockHeader>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     // Should render the code content immediately (raw tokens)
@@ -74,7 +76,7 @@ describe("CodeBlock — uncovered lines", () => {
             <CodeBlockCopyButton onCopy={onCopy} />
           </CodeBlockActions>
         </CodeBlockHeader>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     const copyButton = screen.getByRole("button");
@@ -103,12 +105,12 @@ describe("CodeBlock — uncovered lines", () => {
             <CodeBlockCopyButton onError={onError} />
           </CodeBlockActions>
         </CodeBlockHeader>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     await user.click(screen.getByRole("button"));
     expect(onError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Clipboard API not available" })
+      expect.objectContaining({ message: "Clipboard API not available" }),
     );
 
     Object.defineProperty(navigator, "clipboard", {
@@ -121,13 +123,17 @@ describe("CodeBlock — uncovered lines", () => {
   // Line 302: CodeBlockBody with line numbers
   it("renders code with line numbers", () => {
     render(
-      <CodeBlock code={"line1\nline2\nline3"} language="javascript" showLineNumbers>
+      <CodeBlock
+        code={"line1\nline2\nline3"}
+        language="javascript"
+        showLineNumbers
+      >
         <CodeBlockHeader>
           <CodeBlockTitle>
             <CodeBlockFilename>numbered.js</CodeBlockFilename>
           </CodeBlockTitle>
         </CodeBlockHeader>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     // Should contain the code text
@@ -156,7 +162,7 @@ describe("CodeBlock — uncovered lines", () => {
             </CodeBlockLanguageSelector>
           </CodeBlockActions>
         </CodeBlockHeader>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     expect(screen.getByText("Language")).toBeInTheDocument();
@@ -174,7 +180,7 @@ describe("CodeBlock — uncovered lines", () => {
             <button type="button">Run</button>
           </CodeBlockActions>
         </CodeBlockHeader>
-      </CodeBlockContainer>
+      </CodeBlockContainer>,
     );
 
     const wrapper = container.querySelector('[data-language="python"]');
@@ -192,7 +198,7 @@ describe("CodeBlock — uncovered lines", () => {
             <CodeBlockFilename>empty.js</CodeBlockFilename>
           </CodeBlockTitle>
         </CodeBlockHeader>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     expect(screen.getByText("empty.js")).toBeInTheDocument();
@@ -213,7 +219,7 @@ describe("CodeBlock — uncovered lines", () => {
         <CodeBlockActions>
           <CodeBlockCopyButton />
         </CodeBlockActions>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     const btn = screen.getByRole("button");
@@ -241,7 +247,7 @@ describe("CodeBlock — uncovered lines", () => {
         <CodeBlockActions>
           <CodeBlockCopyButton onError={onError} />
         </CodeBlockActions>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     await user.click(screen.getByRole("button"));
@@ -264,20 +270,22 @@ describe("CodeBlock — uncovered lines", () => {
         <CodeBlockActions>
           <CodeBlockCopyButton onCopy={onCopy} />
         </CodeBlockActions>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     await user.click(screen.getByRole("button"));
     expect(onCopy).toHaveBeenCalled();
   });
 
-  // Lines 232-233: highlightCode catch path — when highlighting fails  
+  // Lines 232-233: highlightCode catch path — when highlighting fails
   it("handles highlighting failure gracefully", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    
+
     // Re-mock shiki to fail the highlight
     const { createHighlighter: mockCreateHighlighter } = await import("shiki");
-    const mockHighlighter = await (mockCreateHighlighter as ReturnType<typeof vi.fn>)();
+    const mockHighlighter = await (
+      mockCreateHighlighter as ReturnType<typeof vi.fn>
+    )();
     mockHighlighter.codeToTokens.mockImplementation(() => {
       throw new Error("Highlight failed");
     });
@@ -289,14 +297,14 @@ describe("CodeBlock — uncovered lines", () => {
             <CodeBlockFilename>fail.js</CodeBlockFilename>
           </CodeBlockTitle>
         </CodeBlockHeader>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     // Wait for the async catch handler to fire
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith(
         "Failed to highlight code:",
-        expect.any(Error)
+        expect.any(Error),
       );
     });
 
@@ -325,7 +333,7 @@ describe("CodeBlock — uncovered lines", () => {
         <CodeBlockActions>
           <CodeBlockCopyButton timeout={500} />
         </CodeBlockActions>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     const btn = screen.getByRole("button");
@@ -373,14 +381,14 @@ describe("CodeBlock — uncovered lines", () => {
             <CodeBlockFilename>styled.ts</CodeBlockFilename>
           </CodeBlockTitle>
         </CodeBlockHeader>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     // Wait for async highlighting to resolve
     await waitFor(() => {
       const spans = container.querySelectorAll("span");
-      const italicSpan = Array.from(spans).find((s) =>
-        s.textContent === "italic"
+      const italicSpan = Array.from(spans).find(
+        (s) => s.textContent === "italic",
       );
       if (italicSpan) {
         expect(italicSpan.style.fontStyle).toBe("italic");
@@ -398,7 +406,7 @@ describe("CodeBlock — uncovered lines", () => {
             <CodeBlockFilename>long.ts</CodeBlockFilename>
           </CodeBlockTitle>
         </CodeBlockHeader>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     // Should render without errors
@@ -416,7 +424,7 @@ describe("CodeBlock — uncovered lines", () => {
             <CodeBlockFilename>test.js</CodeBlockFilename>
           </CodeBlockTitle>
         </CodeBlockHeader>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     rerender(
@@ -430,7 +438,7 @@ describe("CodeBlock — uncovered lines", () => {
             <CodeBlockFilename>test.js</CodeBlockFilename>
           </CodeBlockTitle>
         </CodeBlockHeader>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     // Should render without errors
@@ -453,7 +461,7 @@ describe("CodeBlock — uncovered lines", () => {
             <CodeBlockFilename>unknown.xyz</CodeBlockFilename>
           </CodeBlockTitle>
         </CodeBlockHeader>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
     await waitFor(() => {

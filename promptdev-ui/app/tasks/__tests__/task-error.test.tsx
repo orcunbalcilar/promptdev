@@ -61,7 +61,7 @@ describe("TaskError", () => {
   it("should render the try again button", () => {
     render(<TaskError error={testError} reset={mockReset} />);
     expect(
-      screen.getByRole("button", { name: /try again/i })
+      screen.getByRole("button", { name: /try again/i }),
     ).toBeInTheDocument();
   });
 
@@ -82,10 +82,7 @@ describe("TaskError", () => {
 
   it("should log the error to console", () => {
     render(<TaskError error={testError} reset={mockReset} />);
-    expect(console.error).toHaveBeenCalledWith(
-      "Task detail error:",
-      testError
-    );
+    expect(console.error).toHaveBeenCalledWith("Task detail error:", testError);
   });
 
   it("should display error with digest property", () => {

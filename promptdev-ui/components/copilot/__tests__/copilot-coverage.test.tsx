@@ -10,24 +10,42 @@ import React from "react";
 
 // ── Mock ai-elements ──────────────────────────────────────────
 vi.mock("@/components/ai-elements/reasoning", () => ({
-  Reasoning: ({ children }: { children: React.ReactNode }) => <div data-testid="reasoning">{children}</div>,
-  ReasoningContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  Reasoning: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="reasoning">{children}</div>
+  ),
+  ReasoningContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   ReasoningTrigger: () => <button>Toggle reasoning</button>,
 }));
 vi.mock("@/components/ai-elements/shimmer", () => ({
-  Shimmer: ({ children }: { children: React.ReactNode }) => <div data-testid="shimmer">{children}</div>,
+  Shimmer: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="shimmer">{children}</div>
+  ),
 }));
 vi.mock("@/components/ai-elements/tool", () => ({
-  Tool: ({ children }: { children: React.ReactNode }) => <div data-testid="tool">{children}</div>,
-  ToolContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  Tool: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="tool">{children}</div>
+  ),
+  ToolContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   ToolHeader: ({ title }: { title?: string }) => <div>{title}</div>,
-  ToolInput: ({ input }: { input?: Record<string, unknown> }) => <div>{JSON.stringify(input)}</div>,
+  ToolInput: ({ input }: { input?: Record<string, unknown> }) => (
+    <div>{JSON.stringify(input)}</div>
+  ),
   ToolOutput: ({ output }: { output?: string }) => <div>{output}</div>,
 }));
 vi.mock("@/components/ai-elements/message", () => ({
-  Message: ({ children }: { children: React.ReactNode }) => <div data-testid="message">{children}</div>,
-  MessageContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  MessageResponse: ({ children }: { children: React.ReactNode }) => <div data-testid="msg-response">{children}</div>,
+  Message: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="message">{children}</div>
+  ),
+  MessageContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  MessageResponse: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="msg-response">{children}</div>
+  ),
 }));
 
 import {
@@ -124,21 +142,51 @@ describe("copilot-messages.tsx branch coverage", () => {
 
 // ── settings-dialog.tsx ────────────────────────────────────────
 vi.mock("@/components/ui/dialog", () => ({
-  Dialog: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogDescription: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogTitle: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  Dialog: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DialogContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DialogDescription: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DialogHeader: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DialogTitle: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DialogTrigger: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 vi.mock("@/components/ui/select", () => ({
-  Select: ({ children, onValueChange }: { children: React.ReactNode; onValueChange?: (v: string) => void }) => (
-    <button data-testid="select" onClick={() => onValueChange?.("test")}>{children}</button>
+  Select: ({
+    children,
+    onValueChange,
+  }: {
+    children: React.ReactNode;
+    onValueChange?: (v: string) => void;
+  }) => (
+    <button data-testid="select" onClick={() => onValueChange?.("test")}>
+      {children}
+    </button>
   ),
-  SelectContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children, value }: { children: React.ReactNode; value: string }) => <div data-value={value}>{children}</div>,
-  SelectTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SelectContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  SelectItem: ({
+    children,
+    value,
+  }: {
+    children: React.ReactNode;
+    value: string;
+  }) => <div data-value={value}>{children}</div>,
+  SelectTrigger: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   SelectValue: () => <span>value</span>,
 }));
 
@@ -182,8 +230,11 @@ describe("session-history-sidebar.tsx branch coverage", () => {
   });
 
   it("line 54: catch block on fetch error", async () => {
-    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("network fail"));
-    const { SessionHistorySidebar } = await import("../session-history-sidebar");
+    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(
+      new Error("network fail"),
+    );
+    const { SessionHistorySidebar } =
+      await import("../session-history-sidebar");
     render(
       <SessionHistorySidebar
         activeSessionId="s1"

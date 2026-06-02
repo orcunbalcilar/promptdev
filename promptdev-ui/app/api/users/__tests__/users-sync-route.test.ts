@@ -14,10 +14,7 @@ vi.mock("@/lib/services/user-service", () => ({
 
 import { POST } from "@/app/api/users/sync/route";
 import { requireAuth } from "@/lib/auth-guard";
-import {
-  findOrCreateUser,
-  getUserProfile,
-} from "@/lib/services/user-service";
+import { findOrCreateUser, getUserProfile } from "@/lib/services/user-service";
 
 const mockRequireAuth = requireAuth as ReturnType<typeof vi.fn>;
 const mockFindOrCreate = findOrCreateUser as ReturnType<typeof vi.fn>;
@@ -44,7 +41,11 @@ describe("POST /api/users/sync", () => {
 
   it("syncs user and returns profile", async () => {
     const user = { id: "user-42" };
-    const profile = { id: "user-42", email: "bob@test.com", bitbucketTokenSet: false };
+    const profile = {
+      id: "user-42",
+      email: "bob@test.com",
+      bitbucketTokenSet: false,
+    };
     mockFindOrCreate.mockResolvedValue(user);
     mockGetProfile.mockResolvedValue(profile);
 

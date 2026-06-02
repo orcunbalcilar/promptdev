@@ -7,7 +7,7 @@ const mockDb = vi.hoisted(() => ({
   update: vi.fn(),
 }));
 
-vi.mock("@/lib/db", () => ({ 
+vi.mock("@/lib/db", () => ({
   db: mockDb,
   getDb: () => mockDb,
 }));
@@ -83,7 +83,12 @@ describe("user-service", () => {
       mockDb.select.mockReturnValueOnce(chainResult([existing]));
       mockDb.update.mockReturnValue(chainResult([updated]));
 
-      const result = await findOrCreateUser("github", "acc-123", "test@example.com", "Updated Name");
+      const result = await findOrCreateUser(
+        "github",
+        "acc-123",
+        "test@example.com",
+        "Updated Name",
+      );
 
       expect(result.name).toBe("Updated Name");
       expect(mockDb.update).toHaveBeenCalled();
@@ -94,7 +99,12 @@ describe("user-service", () => {
       mockDb.select.mockReturnValueOnce(chainResult([]));
       mockDb.insert.mockReturnValue(chainResult([newUser]));
 
-      const result = await findOrCreateUser("github", "acc-456", "new@example.com", "New User");
+      const result = await findOrCreateUser(
+        "github",
+        "acc-456",
+        "new@example.com",
+        "New User",
+      );
 
       expect(result.id).toBe("user-new");
       expect(mockDb.insert).toHaveBeenCalled();
@@ -109,7 +119,12 @@ describe("user-service", () => {
       const valuesSpy = vi.fn().mockReturnValue({ returning: returningSpy });
       mockDb.insert.mockReturnValue({ values: valuesSpy });
 
-      await findOrCreateUser("github", "acc-456", "new@example.com", "New User");
+      await findOrCreateUser(
+        "github",
+        "acc-456",
+        "new@example.com",
+        "New User",
+      );
 
       expect(valuesSpy).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -138,7 +153,9 @@ describe("user-service", () => {
     it("should throw when user not found", async () => {
       mockDb.select.mockReturnValueOnce(chainResult([]));
 
-      await expect(getUserProfile("nonexistent")).rejects.toThrow("User not found");
+      await expect(getUserProfile("nonexistent")).rejects.toThrow(
+        "User not found",
+      );
     });
   });
 
@@ -260,7 +277,12 @@ describe("user-service", () => {
       mockDb.select.mockReturnValueOnce(chainResult([existing]));
       mockDb.update.mockReturnValue(chainResult([updated]));
 
-      const result = await findOrCreateUser("github", "acc-123", "test@example.com", undefined);
+      const result = await findOrCreateUser(
+        "github",
+        "acc-123",
+        "test@example.com",
+        undefined,
+      );
 
       expect(result.name).toBe("Existing Name");
     });
@@ -271,7 +293,13 @@ describe("user-service", () => {
       mockDb.select.mockReturnValueOnce(chainResult([existing]));
       mockDb.update.mockReturnValue(chainResult([updated]));
 
-      const result = await findOrCreateUser("github", "acc-123", "test@example.com", "Test", undefined);
+      const result = await findOrCreateUser(
+        "github",
+        "acc-123",
+        "test@example.com",
+        "Test",
+        undefined,
+      );
 
       expect(result.avatarUrl).toBe("https://old-avatar.com");
     });

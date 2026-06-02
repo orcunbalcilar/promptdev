@@ -3,9 +3,15 @@ import { render } from "@testing-library/react";
 import React from "react";
 
 vi.mock("@/components/ui/hover-card", () => ({
-  HoverCard: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  HoverCardContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  HoverCardTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  HoverCard: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  HoverCardContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  HoverCardTrigger: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 import {
@@ -46,7 +52,7 @@ describe("Attachments (lines 141, 256)", () => {
         <Attachment data={videoData}>
           <AttachmentPreview />
         </Attachment>
-      </Attachments>
+      </Attachments>,
     );
 
     const video = container.querySelector("video");
@@ -69,7 +75,7 @@ describe("Attachments (lines 141, 256)", () => {
         <Attachment data={unknownData}>
           <AttachmentPreview />
         </Attachment>
-      </Attachments>
+      </Attachments>,
     );
 
     // Should render a document icon (SVG element)

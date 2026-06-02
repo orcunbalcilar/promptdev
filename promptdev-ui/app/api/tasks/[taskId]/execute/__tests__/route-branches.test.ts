@@ -9,7 +9,8 @@ const mockRequireAuth = vi.fn();
 const mockRequireTaskOwnership = vi.fn();
 vi.mock("@/lib/auth-guard", () => ({
   requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
-  requireTaskOwnership: (...args: unknown[]) => mockRequireTaskOwnership(...args),
+  requireTaskOwnership: (...args: unknown[]) =>
+    mockRequireTaskOwnership(...args),
 }));
 
 const mockExecuteTask = vi.fn();
@@ -32,7 +33,10 @@ function makeReq(method = "GET") {
   return new NextRequest("http://localhost/api/tasks/task-1/execute", {
     method,
     ...(method === "POST"
-      ? { body: JSON.stringify({}), headers: { "content-type": "application/json" } }
+      ? {
+          body: JSON.stringify({}),
+          headers: { "content-type": "application/json" },
+        }
       : {}),
   });
 }
@@ -44,7 +48,10 @@ const authErr = new Response(JSON.stringify({ error: "Unauthorized" }), {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockRequireAuth.mockResolvedValue({ session: { user: { id: "u1" } }, error: null });
+  mockRequireAuth.mockResolvedValue({
+    session: { user: { id: "u1" } },
+    error: null,
+  });
   mockRequireTaskOwnership.mockResolvedValue(null);
   mockIsTaskRunning.mockReturnValue(false);
   mockGetTaskSessionId.mockReturnValue(null);

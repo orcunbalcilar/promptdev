@@ -8,9 +8,11 @@ import { join, resolve, basename, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { execFileSync } from "node:child_process";
 
-const BASE_PATH = process.env.WORKSPACE_BASE_PATH || join(tmpdir(), "promptdev-workspaces");
+const BASE_PATH =
+  process.env.WORKSPACE_BASE_PATH || join(tmpdir(), "promptdev-workspaces");
 const MAX_SIZE_MB = Number(process.env.WORKSPACE_MAX_SIZE_MB) || 500;
-const CLONE_TIMEOUT_SECONDS = Number(process.env.WORKSPACE_CLONE_TIMEOUT) || 300;
+const CLONE_TIMEOUT_SECONDS =
+  Number(process.env.WORKSPACE_CLONE_TIMEOUT) || 300;
 
 export function createWorkspace(taskId: string): string {
   const workspaceDir = join(BASE_PATH, taskId);
@@ -57,9 +59,20 @@ export function createGitWorktree(
   mkdirSync(dirname(worktreeDir), { recursive: true });
 
   try {
-    runGitCommand(repoPath, ["worktree", "add", resolve(worktreeDir), branchName]);
+    runGitCommand(repoPath, [
+      "worktree",
+      "add",
+      resolve(worktreeDir),
+      branchName,
+    ]);
   } catch {
-    runGitCommand(repoPath, ["worktree", "add", "-b", branchName, resolve(worktreeDir)]);
+    runGitCommand(repoPath, [
+      "worktree",
+      "add",
+      "-b",
+      branchName,
+      resolve(worktreeDir),
+    ]);
   }
 
   return resolve(worktreeDir);
@@ -98,7 +111,13 @@ export function cloneRepository(
   const authCloneUrl = buildAuthenticatedUrl(cloneUrl, username, token);
 
   try {
-    runGitCommand(workspaceDir, ["clone", "--branch", sourceBranch, authCloneUrl, "."]);
+    runGitCommand(workspaceDir, [
+      "clone",
+      "--branch",
+      sourceBranch,
+      authCloneUrl,
+      ".",
+    ]);
   } catch {
     // Clean up and try without branch
     const entries = readdirSync(workspaceDir);
@@ -195,7 +214,11 @@ export function cleanupOldWorkspaces(maxAgeHours: number): number {
       const ageHours = (now - stats.mtimeMs) / (1000 * 60 * 60);
       if (ageHours > maxAgeHours) {
         // Validate entry name is a UUID
-        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entry.name)) {
+        if (
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            entry.name,
+          )
+        ) {
           rmSync(fullPath, { recursive: true, force: true });
           cleaned++;
         }

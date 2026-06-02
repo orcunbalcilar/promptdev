@@ -11,37 +11,74 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const mockGetSessionOperations = vi.fn();
 vi.mock("@/lib/monitoring", async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
-  return { ...actual, getSessionOperations: (...a: unknown[]) => mockGetSessionOperations(...a) };
+  return {
+    ...actual,
+    getSessionOperations: (...a: unknown[]) => mockGetSessionOperations(...a),
+  };
 });
 
 vi.mock("@/components/ai-elements/tool", () => ({
-  Tool: ({ children }: { children: React.ReactNode }) => <div data-testid="tool">{children}</div>,
-  ToolHeader: ({ title }: { title?: string }) => <div data-testid="tool-header">{title}</div>,
-  ToolContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  ToolInput: ({ input }: { input: { message: string } }) => <div data-testid="tool-input">{input.message}</div>,
-  ToolOutput: ({ output, errorText }: { output?: string; errorText?: string }) => (
-    <div data-testid="tool-output">{errorText ?? output}</div>
+  Tool: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="tool">{children}</div>
   ),
+  ToolHeader: ({ title }: { title?: string }) => (
+    <div data-testid="tool-header">{title}</div>
+  ),
+  ToolContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ToolInput: ({ input }: { input: { message: string } }) => (
+    <div data-testid="tool-input">{input.message}</div>
+  ),
+  ToolOutput: ({
+    output,
+    errorText,
+  }: {
+    output?: string;
+    errorText?: string;
+  }) => <div data-testid="tool-output">{errorText ?? output}</div>,
 }));
 
 vi.mock("@/components/ai-elements/stack-trace", () => ({
-  StackTrace: ({ children, trace }: { children: React.ReactNode; trace: string }) => (
-    <div data-testid="stack-trace" data-trace={trace}>{children}</div>
+  StackTrace: ({
+    children,
+    trace,
+  }: {
+    children: React.ReactNode;
+    trace: string;
+  }) => (
+    <div data-testid="stack-trace" data-trace={trace}>
+      {children}
+    </div>
   ),
-  StackTraceHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  StackTraceError: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  StackTraceHeader: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  StackTraceError: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   StackTraceErrorType: () => <span />,
   StackTraceErrorMessage: () => <span />,
-  StackTraceContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  StackTraceContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   StackTraceFrames: () => <div />,
   StackTraceExpandButton: () => <button aria-label="expand" />,
 }));
 
 vi.mock("@/components/ai-elements/progress-bar", () => ({
-  ProgressBar: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  ProgressBarLabel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  ProgressBarValue: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  ProgressBarTrack: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  ProgressBar: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ProgressBarLabel: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ProgressBarValue: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ProgressBarTrack: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   ProgressBarFill: () => <div />,
 }));
 
@@ -93,7 +130,9 @@ describe("session-detail.tsx branch coverage", () => {
       expect(screen.getByTestId("stack-trace")).toBeInTheDocument();
     });
     // traceText should be the message, not errorMessage
-    expect(screen.getByTestId("stack-trace").dataset.trace).toBe("Something went wrong");
+    expect(screen.getByTestId("stack-trace").dataset.trace).toBe(
+      "Something went wrong",
+    );
   });
 
   it("line 119: ErrorOperation falls back to operationType when both absent", async () => {
@@ -130,7 +169,9 @@ describe("session-detail.tsx branch coverage", () => {
     await waitFor(() => {
       expect(screen.getByTestId("tool-input")).toBeInTheDocument();
     });
-    expect(screen.getByTestId("tool-input")).toHaveTextContent("Listed files successfully");
+    expect(screen.getByTestId("tool-input")).toHaveTextContent(
+      "Listed files successfully",
+    );
     expect(screen.getByTestId("tool-output")).toBeInTheDocument();
   });
 
@@ -151,7 +192,9 @@ describe("session-detail.tsx branch coverage", () => {
     await waitFor(() => {
       expect(screen.getByTestId("tool-output")).toBeInTheDocument();
     });
-    expect(screen.getByTestId("tool-output")).toHaveTextContent("Command failed");
+    expect(screen.getByTestId("tool-output")).toHaveTextContent(
+      "Command failed",
+    );
   });
 
   it("line 307: DefaultOperation renders toolName badge", async () => {

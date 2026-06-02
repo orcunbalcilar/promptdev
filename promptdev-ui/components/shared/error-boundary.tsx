@@ -31,9 +31,10 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
-      
+
       /* v8 ignore start -- error always has message when hasError is true */
-      const errorMessage = this.state.error?.message ?? "An unexpected error occurred.";
+      const errorMessage =
+        this.state.error?.message ?? "An unexpected error occurred.";
       /* v8 ignore stop */
 
       return (

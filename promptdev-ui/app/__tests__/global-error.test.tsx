@@ -31,7 +31,7 @@ describe("GlobalError", () => {
 
   it("should render error content in a centered container", () => {
     const { container } = render(
-      <GlobalError error={testError} reset={mockReset} />
+      <GlobalError error={testError} reset={mockReset} />,
     );
     const centered = container.querySelector(".flex.flex-col.items-center");
     expect(centered).toBeInTheDocument();
@@ -40,7 +40,7 @@ describe("GlobalError", () => {
   it("should render the try again button", () => {
     render(<GlobalError error={testError} reset={mockReset} />);
     expect(
-      screen.getByRole("button", { name: /try again/i })
+      screen.getByRole("button", { name: /try again/i }),
     ).toBeInTheDocument();
   });
 

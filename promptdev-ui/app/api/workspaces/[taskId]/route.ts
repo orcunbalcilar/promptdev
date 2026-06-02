@@ -21,7 +21,8 @@ export async function POST(
     }
     return NextResponse.json({ path });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Workspace creation failed";
+    const message =
+      e instanceof Error ? e.message : "Workspace creation failed";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

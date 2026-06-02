@@ -20,7 +20,10 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const target = event.target as HTMLElement;
-    const isInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
+    const isInput =
+      target.tagName === "INPUT" ||
+      target.tagName === "TEXTAREA" ||
+      target.isContentEditable;
 
     for (const shortcut of shortcutsRef.current) {
       if (shortcut.ignoreInputs !== false && isInput) continue;

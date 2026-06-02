@@ -17,17 +17,17 @@ export function getFavorites(): Set<string> {
 export function toggleFavorite(taskId: string): boolean {
   const favorites = getFavorites();
   const isFavorite = favorites.has(taskId);
-  
+
   if (isFavorite) {
     favorites.delete(taskId);
   } else {
     favorites.add(taskId);
   }
-  
+
   if (typeof window !== "undefined") {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...favorites]));
   }
-  
+
   return !isFavorite;
 }
 

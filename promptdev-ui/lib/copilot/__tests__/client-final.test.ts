@@ -8,7 +8,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ── Mock CopilotClient ─────────────────────────────────────────
 
-let onCallback: ((event: { type: string; sessionId: string }) => void) | null = null;
+let onCallback: ((event: { type: string; sessionId: string }) => void) | null =
+  null;
 let startCallCount = 0;
 
 const mockClientInstance = {

@@ -60,7 +60,9 @@ describe("sse-service", () => {
 
       sendTaskEvent("task-1", { eventType: "PROGRESS" });
 
-      expect(callback).toHaveBeenCalledWith("task-event", { eventType: "PROGRESS" });
+      expect(callback).toHaveBeenCalledWith("task-event", {
+        eventType: "PROGRESS",
+      });
       unsub();
     });
   });

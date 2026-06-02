@@ -9,7 +9,10 @@ import { Toaster } from "sonner";
 import dynamic from "next/dynamic";
 
 const CommandPalette = dynamic(
-  () => import("@/components/shared/command-palette").then((m) => ({ default: m.CommandPalette })),
+  () =>
+    import("@/components/shared/command-palette").then((m) => ({
+      default: m.CommandPalette,
+    })),
   { ssr: false },
 );
 

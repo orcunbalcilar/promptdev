@@ -36,7 +36,10 @@ import { GET as sessionOperationsGET } from "@/app/api/monitoring/sessions/[sess
 
 const mockRequireAuth = requireAuth as ReturnType<typeof vi.fn>;
 
-function makeRequest(url: string, init?: { method?: string; body?: string; headers?: Record<string, string> }) {
+function makeRequest(
+  url: string,
+  init?: { method?: string; body?: string; headers?: Record<string, string> },
+) {
   return new NextRequest(`http://localhost:3000${url}`, init);
 }
 
@@ -73,7 +76,10 @@ describe("GET /api/monitoring/operations", () => {
   });
 
   it("uses default pagination", async () => {
-    vi.mocked(monitoringService.getOperations).mockResolvedValue({ operations: [], total: 0 });
+    vi.mocked(monitoringService.getOperations).mockResolvedValue({
+      operations: [],
+      total: 0,
+    });
 
     const req = makeRequest("/api/monitoring/operations");
     await operationsGET(req);
@@ -159,7 +165,10 @@ describe("GET /api/monitoring/sessions", () => {
   });
 
   it("uses default pagination (page=0, size=20)", async () => {
-    vi.mocked(monitoringService.getSessions).mockResolvedValue({ sessions: [], total: 0 });
+    vi.mocked(monitoringService.getSessions).mockResolvedValue({
+      sessions: [],
+      total: 0,
+    });
 
     const req = makeRequest("/api/monitoring/sessions");
     await sessionsGET(req);
@@ -214,7 +223,9 @@ describe("DELETE /api/monitoring/sessions/[sessionId]", () => {
   it("ends session and returns 204", async () => {
     vi.mocked(monitoringService.endSession).mockResolvedValue(undefined);
 
-    const req = makeRequest("/api/monitoring/sessions/s-1", { method: "DELETE" });
+    const req = makeRequest("/api/monitoring/sessions/s-1", {
+      method: "DELETE",
+    });
     const res = await sessionDELETE(req, makeSessionParams("s-1"));
 
     expect(res.status).toBe(204);

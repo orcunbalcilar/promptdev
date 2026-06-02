@@ -5,15 +5,25 @@ import { BranchSelector } from "../branch-selector";
 
 // jsdom stubs for Radix Select pointer events
 globalThis.ResizeObserver = class ResizeObserver {
-  observe() { /* noop */ }
-  unobserve() { /* noop */ }
-  disconnect() { /* noop */ }
+  observe() {
+    /* noop */
+  }
+  unobserve() {
+    /* noop */
+  }
+  disconnect() {
+    /* noop */
+  }
 } as unknown as typeof ResizeObserver;
 
-Element.prototype.hasPointerCapture = Element.prototype.hasPointerCapture ?? (() => false);
-Element.prototype.setPointerCapture = Element.prototype.setPointerCapture ?? (() => {});
-Element.prototype.releasePointerCapture = Element.prototype.releasePointerCapture ?? (() => {});
-Element.prototype.scrollIntoView = Element.prototype.scrollIntoView ?? (() => {});
+Element.prototype.hasPointerCapture =
+  Element.prototype.hasPointerCapture ?? (() => false);
+Element.prototype.setPointerCapture =
+  Element.prototype.setPointerCapture ?? (() => {});
+Element.prototype.releasePointerCapture =
+  Element.prototype.releasePointerCapture ?? (() => {});
+Element.prototype.scrollIntoView =
+  Element.prototype.scrollIntoView ?? (() => {});
 
 // createPortal mock for Radix popover
 vi.mock("react-dom", async (importOriginal) => {

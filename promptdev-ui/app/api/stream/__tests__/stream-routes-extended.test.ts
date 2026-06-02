@@ -49,10 +49,12 @@ beforeEach(() => {
 describe("GET /api/stream/tasks - extended", () => {
   it("forwards events from subscribe callback to the SSE stream", async () => {
     let subscribeCb: ((type: string, data: unknown) => void) | undefined;
-    mockSubscribe.mockImplementation((cb: (type: string, data: unknown) => void) => {
-      subscribeCb = cb;
-      return () => {};
-    });
+    mockSubscribe.mockImplementation(
+      (cb: (type: string, data: unknown) => void) => {
+        subscribeCb = cb;
+        return () => {};
+      },
+    );
 
     const req = makeRequest("/api/stream/tasks");
     const res = await tasksStreamGET(req);
@@ -75,10 +77,12 @@ describe("GET /api/stream/tasks - extended", () => {
 
   it("handles enqueue error silently in subscribe callback", async () => {
     let subscribeCb: ((type: string, data: unknown) => void) | undefined;
-    mockSubscribe.mockImplementation((cb: (type: string, data: unknown) => void) => {
-      subscribeCb = cb;
-      return () => {};
-    });
+    mockSubscribe.mockImplementation(
+      (cb: (type: string, data: unknown) => void) => {
+        subscribeCb = cb;
+        return () => {};
+      },
+    );
 
     const req = makeRequest("/api/stream/tasks");
     const res = await tasksStreamGET(req);
@@ -144,10 +148,12 @@ describe("GET /api/stream/tasks - extended", () => {
 describe("GET /api/stream/tasks/[taskId] - extended", () => {
   it("forwards events from subscribe callback to the SSE stream", async () => {
     let subscribeCb: ((_type: string, data: unknown) => void) | undefined;
-    mockSubscribe.mockImplementation((cb: (_type: string, data: unknown) => void) => {
-      subscribeCb = cb;
-      return () => {};
-    });
+    mockSubscribe.mockImplementation(
+      (cb: (_type: string, data: unknown) => void) => {
+        subscribeCb = cb;
+        return () => {};
+      },
+    );
 
     const req = makeRequest("/api/stream/tasks/task-1");
     const res = await taskStreamGET(req, makeParams("task-1"));
@@ -169,10 +175,12 @@ describe("GET /api/stream/tasks/[taskId] - extended", () => {
 
   it("handles enqueue error silently in subscribe callback", async () => {
     let subscribeCb: ((_type: string, data: unknown) => void) | undefined;
-    mockSubscribe.mockImplementation((cb: (_type: string, data: unknown) => void) => {
-      subscribeCb = cb;
-      return () => {};
-    });
+    mockSubscribe.mockImplementation(
+      (cb: (_type: string, data: unknown) => void) => {
+        subscribeCb = cb;
+        return () => {};
+      },
+    );
 
     const req = makeRequest("/api/stream/tasks/task-1");
     const res = await taskStreamGET(req, makeParams("task-1"));
@@ -236,10 +244,12 @@ describe("GET /api/stream/tasks/[taskId] - extended", () => {
 
   it("per-task stream only sends data (no event field) unlike global stream", async () => {
     let subscribeCb: ((_type: string, data: unknown) => void) | undefined;
-    mockSubscribe.mockImplementation((cb: (_type: string, data: unknown) => void) => {
-      subscribeCb = cb;
-      return () => {};
-    });
+    mockSubscribe.mockImplementation(
+      (cb: (_type: string, data: unknown) => void) => {
+        subscribeCb = cb;
+        return () => {};
+      },
+    );
 
     const req = makeRequest("/api/stream/tasks/task-1");
     const res = await taskStreamGET(req, makeParams("task-1"));

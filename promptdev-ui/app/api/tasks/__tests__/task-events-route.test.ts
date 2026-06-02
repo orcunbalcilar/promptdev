@@ -32,10 +32,15 @@ beforeEach(() => {
 describe("Task Events API Route", () => {
   describe("GET /api/tasks/[taskId]/events", () => {
     it("returns 401 when auth fails", async () => {
-      const authError = Response.json({ error: "Unauthorized" }, { status: 401 });
+      const authError = Response.json(
+        { error: "Unauthorized" },
+        { status: 401 },
+      );
       mockRequireAuth.mockResolvedValue({ error: authError });
 
-      const req = new NextRequest("http://localhost:3000/api/tasks/task-1/events");
+      const req = new NextRequest(
+        "http://localhost:3000/api/tasks/task-1/events",
+      );
       const response = await GET(req, makeRouteParams("task-1"));
 
       expect(response.status).toBe(401);
@@ -43,12 +48,24 @@ describe("Task Events API Route", () => {
 
     it("returns events for the given taskId", async () => {
       const mockEvents = [
-        { id: "evt-1", taskId: "task-1", type: "STATUS_CHANGE", data: { status: "IN_PROGRESS" } },
-        { id: "evt-2", taskId: "task-1", type: "LOG", data: { message: "Started execution" } },
+        {
+          id: "evt-1",
+          taskId: "task-1",
+          type: "STATUS_CHANGE",
+          data: { status: "IN_PROGRESS" },
+        },
+        {
+          id: "evt-2",
+          taskId: "task-1",
+          type: "LOG",
+          data: { message: "Started execution" },
+        },
       ];
       mockGetTaskEvents.mockResolvedValue(mockEvents);
 
-      const req = new NextRequest("http://localhost:3000/api/tasks/task-1/events");
+      const req = new NextRequest(
+        "http://localhost:3000/api/tasks/task-1/events",
+      );
       const response = await GET(req, makeRouteParams("task-1"));
       const body = await response.json();
 
@@ -60,7 +77,9 @@ describe("Task Events API Route", () => {
     it("returns empty array when no events exist", async () => {
       mockGetTaskEvents.mockResolvedValue([]);
 
-      const req = new NextRequest("http://localhost:3000/api/tasks/task-1/events");
+      const req = new NextRequest(
+        "http://localhost:3000/api/tasks/task-1/events",
+      );
       const response = await GET(req, makeRouteParams("task-1"));
       const body = await response.json();
 

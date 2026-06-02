@@ -1,12 +1,12 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Badge } from '@/components/ui/badge'
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+} from "@/components/ui/collapsible";
 import {
   CodeBlock,
   CodeBlockHeader,
@@ -14,9 +14,9 @@ import {
   CodeBlockFilename,
   CodeBlockActions,
   CodeBlockCopyButton,
-} from '@/components/ai-elements/code-block'
-import { cn } from '@/lib/utils'
-import type { BundledLanguage } from 'shiki'
+} from "@/components/ai-elements/code-block";
+import { cn } from "@/lib/utils";
+import type { BundledLanguage } from "shiki";
 import {
   ChevronRight,
   FileCode2,
@@ -25,9 +25,9 @@ import {
   FileEdit,
   Plus,
   Minus,
-} from 'lucide-react'
-import type { FileChangeInfo } from './types'
-import { getFileName, inferLanguage } from './types'
+} from "lucide-react";
+import type { FileChangeInfo } from "./types";
+import { getFileName, inferLanguage } from "./types";
 
 // ---------------------------------------------------------------------------
 // SectionHeader
@@ -40,11 +40,11 @@ export function SectionHeader({
   defaultOpen = true,
   children,
 }: Readonly<{
-  icon: React.ComponentType<{ className?: string }>
-  title: string
-  count?: number
-  defaultOpen?: boolean
-  children: React.ReactNode
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  count?: number;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
 }>) {
   return (
     <Collapsible defaultOpen={defaultOpen}>
@@ -62,7 +62,7 @@ export function SectionHeader({
         {children}
       </CollapsibleContent>
     </Collapsible>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -70,30 +70,30 @@ export function SectionHeader({
 // ---------------------------------------------------------------------------
 
 function getDiffLineClass(line: string): string {
-  if (line.startsWith('+') && !line.startsWith('+++'))
-    return 'text-green-400 bg-green-950/30'
-  if (line.startsWith('-') && !line.startsWith('---'))
-    return 'text-red-400 bg-red-950/30'
-  if (line.startsWith('@@')) return 'text-blue-400'
-  return 'text-zinc-400'
+  if (line.startsWith("+") && !line.startsWith("+++"))
+    return "text-green-400 bg-green-950/30";
+  if (line.startsWith("-") && !line.startsWith("---"))
+    return "text-red-400 bg-red-950/30";
+  if (line.startsWith("@@")) return "text-blue-400";
+  return "text-zinc-400";
 }
 
 export function DiffView({ diff }: Readonly<{ diff: string }>) {
-  const lines = diff.split('\n')
+  const lines = diff.split("\n");
   return (
     <div className="rounded-md border bg-zinc-950 text-zinc-100 overflow-auto max-h-96 font-mono text-xs">
       <div className="p-3">
         {lines.map((line) => (
           <div
             key={`${line.slice(0, 40)}-${line.length}`}
-            className={cn('px-1 whitespace-pre-wrap', getDiffLineClass(line))}
+            className={cn("px-1 whitespace-pre-wrap", getDiffLineClass(line))}
           >
-            {line || ' '}
+            {line || " "}
           </div>
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -102,42 +102,40 @@ export function DiffView({ diff }: Readonly<{ diff: string }>) {
 
 export function FileChangeBadge({
   type,
-}: Readonly<{ type: 'added' | 'modified' | 'deleted' }>) {
+}: Readonly<{ type: "added" | "modified" | "deleted" }>) {
   const styles = {
     added:
-      'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+      "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
     modified:
-      'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-    deleted: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  }
+      "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+    deleted: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  };
   const icons = {
     added: FilePlus2,
     modified: FileEdit,
     deleted: FileMinus2,
-  }
-  const Icon = icons[type]
+  };
+  const Icon = icons[type];
   return (
     <Badge
       variant="secondary"
-      className={cn('gap-1 text-[10px] capitalize', styles[type])}
+      className={cn("gap-1 text-[10px] capitalize", styles[type])}
     >
       <Icon className="h-3 w-3" />
       {type}
     </Badge>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
 // FileChangeDetail
 // ---------------------------------------------------------------------------
 
-export function FileChangeDetail({
-  file,
-}: Readonly<{ file: FileChangeInfo }>) {
+export function FileChangeDetail({ file }: Readonly<{ file: FileChangeInfo }>) {
   const hasContent = file.codeSnippet || file.diff;
-  const [expanded, setExpanded] = useState(hasContent ?? false)
+  const [expanded, setExpanded] = useState(hasContent ?? false);
   const lang =
-    (file.language as BundledLanguage) || inferLanguage(file.filePath)
+    (file.language as BundledLanguage) || inferLanguage(file.filePath);
 
   return (
     <div className="border rounded-md">
@@ -145,16 +143,16 @@ export function FileChangeDetail({
         type="button"
         onClick={() => hasContent && setExpanded(!expanded)}
         className={cn(
-          'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors',
-          hasContent && 'hover:bg-muted/50 cursor-pointer',
-          !hasContent && 'cursor-default',
+          "flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors",
+          hasContent && "hover:bg-muted/50 cursor-pointer",
+          !hasContent && "cursor-default",
         )}
       >
         {hasContent && (
           <ChevronRight
             className={cn(
-              'h-3 w-3 text-muted-foreground transition-transform',
-              expanded && 'rotate-90',
+              "h-3 w-3 text-muted-foreground transition-transform",
+              expanded && "rotate-90",
             )}
           />
         )}
@@ -203,7 +201,7 @@ export function FileChangeDetail({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -211,8 +209,7 @@ export function FileChangeDetail({
 // ---------------------------------------------------------------------------
 
 export function getFileTypeIcon(type: string) {
-  if (type === 'added') return <FilePlus2 className="size-4 text-green-500" />
-  if (type === 'deleted')
-    return <FileMinus2 className="size-4 text-red-500" />
-  return <FileEdit className="size-4 text-yellow-500" />
+  if (type === "added") return <FilePlus2 className="size-4 text-green-500" />;
+  if (type === "deleted") return <FileMinus2 className="size-4 text-red-500" />;
+  return <FileEdit className="size-4 text-yellow-500" />;
 }

@@ -65,7 +65,8 @@ describe("encryption – getEncryptionKey", () => {
 
   it("decrypt fails gracefully with wrong key", async () => {
     vi.stubEnv("ENCRYPTION_KEY", "a]Gv#3Bm$Rw!8Fz@pLq&Nk^5Ys*Wc0Hd");
-    const { encrypt, decrypt, deriveKey } = await import("@/lib/services/encryption");
+    const { encrypt, decrypt, deriveKey } =
+      await import("@/lib/services/encryption");
 
     const key1 = deriveKey("a]Gv#3Bm$Rw!8Fz@pLq&Nk^5Ys*Wc0Hd");
     const key2 = deriveKey("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");

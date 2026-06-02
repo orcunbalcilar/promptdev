@@ -14,12 +14,16 @@ vi.mock("../../../monitoring", () => ({
   trackOperation: (...args: unknown[]) => mockTrackOperation(...args),
 }));
 
-let subscriptionCallback: ((event: { type: string; data: unknown }) => void) | null = null;
+let subscriptionCallback:
+  | ((event: { type: string; data: unknown }) => void)
+  | null = null;
 vi.mock("../../client", () => ({
-  subscribeToSession: vi.fn((id: string, cb: (event: { type: string; data: unknown }) => void) => {
-    subscriptionCallback = cb;
-    return vi.fn();
-  }),
+  subscribeToSession: vi.fn(
+    (id: string, cb: (event: { type: string; data: unknown }) => void) => {
+      subscriptionCallback = cb;
+      return vi.fn();
+    },
+  ),
 }));
 
 const mockSendCallback = vi.fn().mockResolvedValue(undefined);
@@ -41,10 +45,13 @@ vi.mock("../pull-request", () => ({
 }));
 
 vi.mock("../file-events", () => ({
-  extractFilePath: vi.fn((input: Record<string, unknown>) => input?.file_path as string | undefined),
+  extractFilePath: vi.fn(
+    (input: Record<string, unknown>) => input?.file_path as string | undefined,
+  ),
   getFileEventLabel: vi.fn((event: string) => event),
   inferFileEventType: vi.fn((toolName: string) => {
-    if (toolName.includes("write") || toolName.includes("create")) return "FILE_CREATED";
+    if (toolName.includes("write") || toolName.includes("create"))
+      return "FILE_CREATED";
     if (toolName.includes("edit")) return "FILE_MODIFIED";
     return null;
   }),
@@ -100,24 +107,38 @@ describe("event-tracking – branch coverage", () => {
   describe("handleAssistantMessage – field name fallbacks", () => {
     it("uses data.text when data.content is absent", async () => {
       const { fireEvent } = setup();
-      fireEvent({ type: "assistant.message", data: { text: "Response via text" } });
+      fireEvent({
+        type: "assistant.message",
+        data: { text: "Response via text" },
+      });
 
       await vi.waitFor(() => {
         expect(mockSendCallback).toHaveBeenCalledWith(
-          "task-1", "LOG",
-          expect.objectContaining({ details: expect.objectContaining({ content: "Response via text" }) }),
+          "task-1",
+          "LOG",
+          expect.objectContaining({
+            details: expect.objectContaining({ content: "Response via text" }),
+          }),
         );
       });
     });
 
     it("uses data.message when data.content and data.text are absent", async () => {
       const { fireEvent } = setup();
-      fireEvent({ type: "assistant.message", data: { message: "Response via message" } });
+      fireEvent({
+        type: "assistant.message",
+        data: { message: "Response via message" },
+      });
 
       await vi.waitFor(() => {
         expect(mockSendCallback).toHaveBeenCalledWith(
-          "task-1", "LOG",
-          expect.objectContaining({ details: expect.objectContaining({ content: "Response via message" }) }),
+          "task-1",
+          "LOG",
+          expect.objectContaining({
+            details: expect.objectContaining({
+              content: "Response via message",
+            }),
+          }),
         );
       });
     });
@@ -128,14 +149,20 @@ describe("event-tracking – branch coverage", () => {
 
       await vi.waitFor(() => {
         expect(mockTrackOperation).toHaveBeenCalledWith(
-          expect.objectContaining({ operationType: "MESSAGE_RECEIVED", message: "" }),
+          expect.objectContaining({
+            operationType: "MESSAGE_RECEIVED",
+            message: "",
+          }),
         );
       });
     });
 
     it("stringifies non-string content", async () => {
       const { fireEvent } = setup();
-      fireEvent({ type: "assistant.message", data: { content: { key: "value" } } });
+      fireEvent({
+        type: "assistant.message",
+        data: { content: { key: "value" } },
+      });
 
       await vi.waitFor(() => {
         expect(mockTrackOperation).toHaveBeenCalledWith(
@@ -152,7 +179,11 @@ describe("event-tracking – branch coverage", () => {
       const { fireEvent } = setup();
       fireEvent({
         type: "tool.execution_start",
-        data: { name: "readFile", id: "tool-id-1", arguments: { path: "/tmp" } },
+        data: {
+          name: "readFile",
+          id: "tool-id-1",
+          arguments: { path: "/tmp" },
+        },
       });
 
       await vi.waitFor(() => {
@@ -166,7 +197,11 @@ describe("event-tracking – branch coverage", () => {
       const { fireEvent } = setup();
       fireEvent({
         type: "tool.execution_start",
-        data: { tool: "writeFile", tool_call_id: "tc-1", params: { content: "..." } },
+        data: {
+          tool: "writeFile",
+          tool_call_id: "tc-1",
+          params: { content: "..." },
+        },
       });
 
       await vi.waitFor(() => {
@@ -207,7 +242,8 @@ describe("event-tracking – branch coverage", () => {
 
       await vi.waitFor(() => {
         expect(mockSendCallback).toHaveBeenCalledWith(
-          "task-1", "AGENT_TOOL_CALL",
+          "task-1",
+          "AGENT_TOOL_CALL",
           expect.objectContaining({ toolInput: { key: "val" } }),
         );
       });
@@ -222,7 +258,8 @@ describe("event-tracking – branch coverage", () => {
 
       await vi.waitFor(() => {
         expect(mockSendCallback).toHaveBeenCalledWith(
-          "task-1", "GIT_COMMIT",
+          "task-1",
+          "GIT_COMMIT",
           expect.objectContaining({ message: "Git commit in progress" }),
         );
       });
@@ -237,7 +274,8 @@ describe("event-tracking – branch coverage", () => {
 
       await vi.waitFor(() => {
         expect(mockSendCallback).toHaveBeenCalledWith(
-          "task-1", "GIT_PUSH",
+          "task-1",
+          "GIT_PUSH",
           expect.objectContaining({ message: "Git push in progress" }),
         );
       });
@@ -266,7 +304,8 @@ describe("event-tracking – branch coverage", () => {
 
       await vi.waitFor(() => {
         expect(mockSendCallback).toHaveBeenCalledWith(
-          "task-1", "AGENT_TOOL_RESULT",
+          "task-1",
+          "AGENT_TOOL_RESULT",
           expect.objectContaining({ toolOutput: "file contents" }),
         );
       });
@@ -289,7 +328,8 @@ describe("event-tracking – branch coverage", () => {
 
       await vi.waitFor(() => {
         expect(mockSendCallback).toHaveBeenCalledWith(
-          "task-1", "ERROR",
+          "task-1",
+          "ERROR",
           expect.objectContaining({ message: "Tool error: File not found" }),
         );
       });
@@ -465,8 +505,11 @@ describe("event-tracking – branch coverage", () => {
 
       await vi.waitFor(() => {
         expect(mockSendCallback).toHaveBeenCalledWith(
-          "task-1", "TASK_FAILED",
-          expect.objectContaining({ message: expect.stringContaining("Fatal error occurred") }),
+          "task-1",
+          "TASK_FAILED",
+          expect.objectContaining({
+            message: expect.stringContaining("Fatal error occurred"),
+          }),
         );
       });
     });
@@ -480,8 +523,11 @@ describe("event-tracking – branch coverage", () => {
 
       await vi.waitFor(() => {
         expect(mockSendCallback).toHaveBeenCalledWith(
-          "task-1", "TASK_FAILED",
-          expect.objectContaining({ message: expect.stringContaining("Session terminated") }),
+          "task-1",
+          "TASK_FAILED",
+          expect.objectContaining({
+            message: expect.stringContaining("Session terminated"),
+          }),
         );
       });
     });
@@ -495,8 +541,11 @@ describe("event-tracking – branch coverage", () => {
 
       await vi.waitFor(() => {
         expect(mockSendCallback).toHaveBeenCalledWith(
-          "task-1", "TASK_FAILED",
-          expect.objectContaining({ message: expect.stringContaining("Session error occurred") }),
+          "task-1",
+          "TASK_FAILED",
+          expect.objectContaining({
+            message: expect.stringContaining("Session error occurred"),
+          }),
         );
       });
     });

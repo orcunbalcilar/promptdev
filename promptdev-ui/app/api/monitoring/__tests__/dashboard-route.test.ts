@@ -31,7 +31,9 @@ function makeDashboard() {
     operationsByType: { SEND_MESSAGE: 30 },
     sessionsByModel: { "gpt-5.2": 8 },
     sessionsBySource: { web: 9 },
-    topTools: [{ toolName: "readFile", executionCount: 15, avgDurationMs: 120 }],
+    topTools: [
+      { toolName: "readFile", executionCount: 15, avgDurationMs: 120 },
+    ],
     dailyOperations: [{ date: "2025-01-15", count: 10 }],
     recentErrors: [],
     recentSessions: [],
@@ -48,7 +50,9 @@ beforeEach(() => {
 
 describe("GET /api/monitoring/dashboard", () => {
   it("should return dashboard metrics", async () => {
-    const req = new NextRequest("http://localhost:3000/api/monitoring/dashboard");
+    const req = new NextRequest(
+      "http://localhost:3000/api/monitoring/dashboard",
+    );
 
     const response = await GET(req);
     const body = await response.json();
@@ -61,7 +65,9 @@ describe("GET /api/monitoring/dashboard", () => {
   });
 
   it("should pass days parameter from query string", async () => {
-    const req = new NextRequest("http://localhost:3000/api/monitoring/dashboard?days=30");
+    const req = new NextRequest(
+      "http://localhost:3000/api/monitoring/dashboard?days=30",
+    );
 
     await GET(req);
 
@@ -69,7 +75,9 @@ describe("GET /api/monitoring/dashboard", () => {
   });
 
   it("should clamp days to max 90", async () => {
-    const req = new NextRequest("http://localhost:3000/api/monitoring/dashboard?days=365");
+    const req = new NextRequest(
+      "http://localhost:3000/api/monitoring/dashboard?days=365",
+    );
 
     await GET(req);
 
@@ -77,7 +85,9 @@ describe("GET /api/monitoring/dashboard", () => {
   });
 
   it("should clamp days to min 1", async () => {
-    const req = new NextRequest("http://localhost:3000/api/monitoring/dashboard?days=-5");
+    const req = new NextRequest(
+      "http://localhost:3000/api/monitoring/dashboard?days=-5",
+    );
 
     await GET(req);
 
@@ -85,7 +95,9 @@ describe("GET /api/monitoring/dashboard", () => {
   });
 
   it("should default to 7 days for invalid input", async () => {
-    const req = new NextRequest("http://localhost:3000/api/monitoring/dashboard?days=abc");
+    const req = new NextRequest(
+      "http://localhost:3000/api/monitoring/dashboard?days=abc",
+    );
 
     await GET(req);
 
@@ -93,10 +105,15 @@ describe("GET /api/monitoring/dashboard", () => {
   });
 
   it("should return 401 when not authenticated", async () => {
-    const errorResponse = new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+    const errorResponse = new Response(
+      JSON.stringify({ error: "Unauthorized" }),
+      { status: 401 },
+    );
     mockRequireAuth.mockResolvedValue({ error: errorResponse });
 
-    const req = new NextRequest("http://localhost:3000/api/monitoring/dashboard");
+    const req = new NextRequest(
+      "http://localhost:3000/api/monitoring/dashboard",
+    );
 
     const response = await GET(req);
 

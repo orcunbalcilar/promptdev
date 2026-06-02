@@ -8,13 +8,31 @@ import type { TaskResponse } from "@/lib/services/task-service";
 // Fields that are nullable in TaskResponse but optional (undefined) in Task.
 // Keep in sync with the Task interface in @/lib/api.
 const NULLABLE_FIELDS = [
-  'projectKey', 'workspacePath', 'modelId', 'copilotSessionId',
-  'pullRequestId', 'pullRequestUrl', 'errorMessage', 'iterative',
-  'maxIterations', 'currentIteration', 'currentStepIndex',
-  'completionCriteria', 'steps', 'scheduledJobId', 'jiraIssueKey',
-  'reviewEnabled', 'reviewModelId', 'resumePrompt', 'resumeCount',
-  'commitMessagePattern', 'bootScript', 'skills', 'additionalRepositories',
-  'systemPrompt', 'completedAt',
+  "projectKey",
+  "workspacePath",
+  "modelId",
+  "copilotSessionId",
+  "pullRequestId",
+  "pullRequestUrl",
+  "errorMessage",
+  "iterative",
+  "maxIterations",
+  "currentIteration",
+  "currentStepIndex",
+  "completionCriteria",
+  "steps",
+  "scheduledJobId",
+  "jiraIssueKey",
+  "reviewEnabled",
+  "reviewModelId",
+  "resumePrompt",
+  "resumeCount",
+  "commitMessagePattern",
+  "bootScript",
+  "skills",
+  "additionalRepositories",
+  "systemPrompt",
+  "completedAt",
 ] as const;
 
 export function adaptTask(t: TaskResponse): Task {

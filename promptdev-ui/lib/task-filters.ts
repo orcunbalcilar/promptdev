@@ -31,7 +31,10 @@ function createStatusPredicate(statuses: TaskStatus[]): FilterPredicate {
   return (task) => statusSet.has(task.status);
 }
 
-function createDateRangePredicate(range: { from: Date; to: Date }): FilterPredicate {
+function createDateRangePredicate(range: {
+  from: Date;
+  to: Date;
+}): FilterPredicate {
   return (task) => {
     const created = new Date(task.createdAt);
     return created >= range.from && created <= range.to;
@@ -42,14 +45,25 @@ export function buildFilterPredicates(filter: TaskFilter): FilterPredicate[] {
   const predicates: FilterPredicate[] = [];
 
   if (filter.search) predicates.push(createSearchPredicate(filter.search));
-  if (filter.statuses?.length) predicates.push(createStatusPredicate(filter.statuses));
-  if (filter.workspaceType) predicates.push((t) => t.workspaceType === filter.workspaceType);
+  if (filter.statuses?.length)
+    predicates.push(createStatusPredicate(filter.statuses));
+  if (filter.workspaceType)
+    predicates.push((t) => t.workspaceType === filter.workspaceType);
   if (filter.modelId) predicates.push((t) => t.modelId === filter.modelId);
-  if (filter.dateRange) predicates.push(createDateRangePredicate(filter.dateRange));
-  if (filter.hasError !== undefined) predicates.push((t) => filter.hasError ? !!t.errorMessage : !t.errorMessage);
-  if (filter.isIterative !== undefined) predicates.push((t) => t.iterative === filter.isIterative);
-  if (filter.hasPullRequest !== undefined) predicates.push((t) => filter.hasPullRequest ? !!t.pullRequestUrl : !t.pullRequestUrl);
-  if (filter.repositorySlug) predicates.push((t) => t.repositorySlug === filter.repositorySlug);
+  if (filter.dateRange)
+    predicates.push(createDateRangePredicate(filter.dateRange));
+  if (filter.hasError !== undefined)
+    predicates.push((t) =>
+      filter.hasError ? !!t.errorMessage : !t.errorMessage,
+    );
+  if (filter.isIterative !== undefined)
+    predicates.push((t) => t.iterative === filter.isIterative);
+  if (filter.hasPullRequest !== undefined)
+    predicates.push((t) =>
+      filter.hasPullRequest ? !!t.pullRequestUrl : !t.pullRequestUrl,
+    );
+  if (filter.repositorySlug)
+    predicates.push((t) => t.repositorySlug === filter.repositorySlug);
 
   return predicates;
 }

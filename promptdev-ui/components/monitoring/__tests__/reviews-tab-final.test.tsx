@@ -38,7 +38,8 @@ describe("ReviewsTab", () => {
           operationType: "CODE_REVIEW",
           timestamp: "2025-01-01T00:00:00Z",
           success: true,
-          message: "Found critical issue, needs fixup; performance concern detected",
+          message:
+            "Found critical issue, needs fixup; performance concern detected",
           errorMessage: null,
           durationMs: 100,
         },

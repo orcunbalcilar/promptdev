@@ -24,7 +24,9 @@ describe("export", () => {
       const tasks = [makeTask()];
       const csv = tasksToCSV(tasks);
       const lines = csv.split("\n");
-      expect(lines[0]).toBe("id,title,status,repositorySlug,workspaceType,sourceBranch,targetBranch,modelId,createdAt,updatedAt,completedAt");
+      expect(lines[0]).toBe(
+        "id,title,status,repositorySlug,workspaceType,sourceBranch,targetBranch,modelId,createdAt,updatedAt,completedAt",
+      );
       expect(lines[1]).toContain("task-1");
       expect(lines[1]).toContain("Test Task");
     });
@@ -101,7 +103,9 @@ describe("export", () => {
       let downloadName = "";
       vi.spyOn(document, "createElement").mockReturnValue({
         set href(_: string) {},
-        set download(v: string) { downloadName = v; },
+        set download(v: string) {
+          downloadName = v;
+        },
         click: vi.fn(),
       } as unknown as HTMLAnchorElement);
       vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:test");

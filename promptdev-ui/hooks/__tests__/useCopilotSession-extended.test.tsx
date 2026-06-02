@@ -44,20 +44,21 @@ function getLatestEventSource() {
   return eventSourceInstances.at(-1);
 }
 
-globalThis.EventSource = vi.fn().mockImplementation(
-  function (this: Record<string, unknown>, url: string) {
-    this.onopen = null;
-    this.onmessage = null;
-    this.onerror = null;
-    this.close = vi.fn();
-    this.addEventListener = vi.fn();
-    this.url = url;
-    eventSourceInstances.push(
-      this as unknown as (typeof eventSourceInstances)[number],
-    );
-    return this;
-  },
-) as unknown as typeof EventSource;
+globalThis.EventSource = vi.fn().mockImplementation(function (
+  this: Record<string, unknown>,
+  url: string,
+) {
+  this.onopen = null;
+  this.onmessage = null;
+  this.onerror = null;
+  this.close = vi.fn();
+  this.addEventListener = vi.fn();
+  this.url = url;
+  eventSourceInstances.push(
+    this as unknown as (typeof eventSourceInstances)[number],
+  );
+  return this;
+}) as unknown as typeof EventSource;
 
 // ── Import after mocks ──────────────────────────────────────────
 
@@ -118,9 +119,9 @@ function setupFetchForSession(sessionResponse = defaultSessionResponse) {
   });
 }
 
-async function createAndConnect(
-  result: { current: ReturnType<typeof useCopilotSession> },
-) {
+async function createAndConnect(result: {
+  current: ReturnType<typeof useCopilotSession>;
+}) {
   await act(async () => {
     await result.current.createSession();
   });
@@ -718,9 +719,7 @@ describe("useCopilotSession - extended coverage", () => {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
       });
 
-      const consoleSpy = vi
-        .spyOn(console, "warn")
-        .mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
       const { result } = renderHook(() => useCopilotSession(), {
         wrapper: createWrapper(),

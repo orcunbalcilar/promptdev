@@ -146,7 +146,8 @@ describe("session-lifecycle.ts branch coverage", () => {
       createPullRequest: vi.fn(),
     }));
 
-    const { handleSessionIdle } = await import("@/lib/copilot/orchestrator/session-lifecycle");
+    const { handleSessionIdle } =
+      await import("@/lib/copilot/orchestrator/session-lifecycle");
     const task = {
       id: "t1",
       iterative: true,
@@ -157,13 +158,31 @@ describe("session-lifecycle.ts branch coverage", () => {
       workspaceType: "BITBUCKET",
     };
     // "working on it" does NOT match completion indicators, so iteration continues
-    const isDone = await handleSessionIdle("t1", "s1", task as never, "working on it", 5, 3);
+    const isDone = await handleSessionIdle(
+      "t1",
+      "s1",
+      task as never,
+      "working on it",
+      5,
+      3,
+    );
     expect(isDone).toBe(false);
     // Should have sent ITERATION_COMPLETED and ITERATION_STARTED callbacks
-    expect(mockSendCallback).toHaveBeenCalledWith("t1", "ITERATION_COMPLETED", expect.anything());
-    expect(mockSendCallback).toHaveBeenCalledWith("t1", "ITERATION_STARTED", expect.anything());
+    expect(mockSendCallback).toHaveBeenCalledWith(
+      "t1",
+      "ITERATION_COMPLETED",
+      expect.anything(),
+    );
+    expect(mockSendCallback).toHaveBeenCalledWith(
+      "t1",
+      "ITERATION_STARTED",
+      expect.anything(),
+    );
     // Should have sent continue message
-    expect(mockSendMessage).toHaveBeenCalledWith("s1", expect.stringContaining("Continue working"));
+    expect(mockSendMessage).toHaveBeenCalledWith(
+      "s1",
+      expect.stringContaining("Continue working"),
+    );
   });
 
   it("line 204: max iterations reached finalizes task", async () => {
@@ -199,7 +218,8 @@ describe("session-lifecycle.ts branch coverage", () => {
       createPullRequest: vi.fn().mockResolvedValue(undefined),
     }));
 
-    const { handleSessionIdle } = await import("@/lib/copilot/orchestrator/session-lifecycle");
+    const { handleSessionIdle } =
+      await import("@/lib/copilot/orchestrator/session-lifecycle");
     const task = {
       id: "t1",
       iterative: true,
@@ -209,7 +229,14 @@ describe("session-lifecycle.ts branch coverage", () => {
       workspaceType: "BITBUCKET",
     };
     // currentIteration 4 + 1 = 5 >= maxIterations 5 → max reached
-    const isDone = await handleSessionIdle("t1", "s1", task as never, "all done", 10, 5);
+    const isDone = await handleSessionIdle(
+      "t1",
+      "s1",
+      task as never,
+      "all done",
+      10,
+      5,
+    );
     expect(isDone).toBe(true);
     expect(mockSendCallback).toHaveBeenCalledWith(
       "t1",

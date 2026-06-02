@@ -13,13 +13,10 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const { error, session } = await requireAuth();
+    const { error } = await requireAuth();
     if (error) return error;
 
-    const userExt = session.user as Record<string, unknown> | undefined;
-    const userToken = userExt?.copilotToken as string | undefined;
-
-    const sessions = await listSDKSessions(userToken);
+    const sessions = await listSDKSessions();
     return NextResponse.json({ sessions });
   } catch (err) {
     console.error("[API] Failed to list session history:", err);

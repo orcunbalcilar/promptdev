@@ -19,15 +19,25 @@ vi.mock("@/lib/monitoring", async (importOriginal) => {
 
 // Mock ai-elements
 vi.mock("@/components/ai-elements/tool", () => ({
-  Tool: ({ children }: { children: React.ReactNode }) => <div data-testid="tool">{children}</div>,
+  Tool: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="tool">{children}</div>
+  ),
   ToolHeader: ({ title }: { title?: string }) => <div>{title}</div>,
-  ToolBody: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  ToolResult: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  ToolBody: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ToolResult: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 vi.mock("@/components/ai-elements/code-block", () => ({
-  CodeBlock: ({ children }: { children: React.ReactNode }) => <pre>{children}</pre>,
-  CodeBlockCode: ({ children }: { children: React.ReactNode }) => <code>{children}</code>,
+  CodeBlock: ({ children }: { children: React.ReactNode }) => (
+    <pre>{children}</pre>
+  ),
+  CodeBlockCode: ({ children }: { children: React.ReactNode }) => (
+    <code>{children}</code>
+  ),
 }));
 
 import { SessionDetail } from "../session-detail";

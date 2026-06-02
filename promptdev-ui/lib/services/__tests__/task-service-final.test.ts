@@ -110,11 +110,17 @@ describe("task-service – uncovered lines", () => {
   describe("createTask with auto-generated branch", () => {
     it("creates branch and updates task when sourceBranch is __AUTO_GENERATED__", async () => {
       const task = makeTask();
-      const event = { id: "ev-1", taskId: task.id, eventType: "TASK_CREATED", message: "Task created successfully", timestamp: NOW };
+      const event = {
+        id: "ev-1",
+        taskId: task.id,
+        eventType: "TASK_CREATED",
+        message: "Task created successfully",
+        timestamp: NOW,
+      };
 
       // insert (task) → returning task
       mockDb.insert.mockReturnValueOnce(chainResult([task]));
-      // update (branch name) 
+      // update (branch name)
       mockDb.update.mockReturnValue(chainResult(undefined));
       // insert (event) → returning event
       mockDb.insert.mockReturnValueOnce(chainResult([event]));
@@ -141,7 +147,13 @@ describe("task-service – uncovered lines", () => {
 
     it("warns but continues when branch creation fails", async () => {
       const task = makeTask();
-      const event = { id: "ev-1", taskId: task.id, eventType: "TASK_CREATED", message: "Task created", timestamp: NOW };
+      const event = {
+        id: "ev-1",
+        taskId: task.id,
+        eventType: "TASK_CREATED",
+        message: "Task created",
+        timestamp: NOW,
+      };
 
       mockDb.insert
         .mockReturnValueOnce(chainResult([task]))
@@ -170,8 +182,16 @@ describe("task-service – uncovered lines", () => {
   describe("cloneTask with auto-generated branch", () => {
     it("creates branch for cloned task", async () => {
       const original = makeTask({ id: "orig-1" });
-      const cloned = makeTask({ id: "clone-1", sourceBranch: "__AUTO_GENERATED__" });
-      const event = { id: "ev-2", taskId: cloned.id, eventType: "TASK_CREATED", message: "Cloned" };
+      const cloned = makeTask({
+        id: "clone-1",
+        sourceBranch: "__AUTO_GENERATED__",
+      });
+      const event = {
+        id: "ev-2",
+        taskId: cloned.id,
+        eventType: "TASK_CREATED",
+        message: "Cloned",
+      };
 
       // select (original task)
       mockDb.select.mockReturnValue(chainResult([original]));
@@ -194,8 +214,16 @@ describe("task-service – uncovered lines", () => {
 
     it("handles clone branch creation failure gracefully", async () => {
       const original = makeTask({ id: "orig-2" });
-      const cloned = makeTask({ id: "clone-2", sourceBranch: "__AUTO_GENERATED__" });
-      const event = { id: "ev-3", taskId: cloned.id, eventType: "TASK_CREATED", message: "Cloned" };
+      const cloned = makeTask({
+        id: "clone-2",
+        sourceBranch: "__AUTO_GENERATED__",
+      });
+      const event = {
+        id: "ev-3",
+        taskId: cloned.id,
+        eventType: "TASK_CREATED",
+        message: "Cloned",
+      };
 
       mockDb.select.mockReturnValue(chainResult([original]));
       mockDb.insert

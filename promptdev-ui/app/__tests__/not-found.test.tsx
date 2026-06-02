@@ -34,7 +34,7 @@ describe("NotFound", () => {
   it("should display a descriptive message", () => {
     render(<NotFound />);
     expect(
-      screen.getByText(/the page you're looking for doesn't exist/i)
+      screen.getByText(/the page you're looking for doesn't exist/i),
     ).toBeInTheDocument();
   });
 

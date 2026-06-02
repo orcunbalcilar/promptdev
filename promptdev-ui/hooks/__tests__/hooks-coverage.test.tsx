@@ -52,7 +52,9 @@ describe("useBackendUser.ts branch coverage", () => {
       provider: "github",
     });
 
-    const { result } = renderHook(() => useBackendUser(), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useBackendUser(), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
       expect(result.current.userId).toBe(uuid);
@@ -62,7 +64,14 @@ describe("useBackendUser.ts branch coverage", () => {
 
   it("lines 47-48: syncs via provider info for non-UUID session ID", async () => {
     mockUseSession.mockReturnValue({
-      data: { user: { id: "12345", name: "GH", email: "gh@test.com", image: "https://img.png" } },
+      data: {
+        user: {
+          id: "12345",
+          name: "GH",
+          email: "gh@test.com",
+          image: "https://img.png",
+        },
+      },
       status: "authenticated",
     });
     mockSyncUser.mockResolvedValue({
@@ -72,7 +81,9 @@ describe("useBackendUser.ts branch coverage", () => {
       provider: "github",
     });
 
-    const { result } = renderHook(() => useBackendUser(), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useBackendUser(), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
       expect(result.current.userId).toBe("new-uuid");
@@ -105,7 +116,9 @@ describe("useUserSync.ts branch coverage", () => {
       provider: "bitbucket",
     });
 
-    const { result } = renderHook(() => useUserSync(), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useUserSync(), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
       expect(result.current.userId).toBe(uuid);
@@ -124,7 +137,9 @@ describe("useUserSync.ts branch coverage", () => {
       provider: "github",
     });
 
-    const { result } = renderHook(() => useUserSync(), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useUserSync(), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
       expect(result.current.userId).toBe("synced-uuid");

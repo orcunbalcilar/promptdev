@@ -8,10 +8,7 @@ vi.mock("@/components/ui/collapsible", () => ({
       {children}
     </div>
   ),
-  CollapsibleContent: ({
-    children,
-    ...props
-  }: React.ComponentProps<"div">) => (
+  CollapsibleContent: ({ children, ...props }: React.ComponentProps<"div">) => (
     <div data-testid="collapsible-content" {...props}>
       {children}
     </div>
@@ -88,7 +85,7 @@ describe("CommitTimestamp", () => {
     render(
       <CommitTimestamp date={new Date()} data-testid="ts">
         2 hours ago
-      </CommitTimestamp>
+      </CommitTimestamp>,
     );
     expect(screen.getByTestId("ts")).toHaveTextContent("2 hours ago");
   });
@@ -102,7 +99,7 @@ describe("CommitActions (line 310)", () => {
         <CommitActions data-testid="actions">
           <button type="button">Copy</button>
         </CommitActions>
-      </button>
+      </button>,
     );
     fireEvent.click(screen.getByTestId("actions"));
     expect(outerClick).not.toHaveBeenCalled();
@@ -115,7 +112,7 @@ describe("CommitActions (line 310)", () => {
         <CommitActions data-testid="actions">
           <button type="button">Copy</button>
         </CommitActions>
-      </button>
+      </button>,
     );
     fireEvent.keyDown(screen.getByTestId("actions"), { key: "Enter" });
     expect(outerKeyDown).not.toHaveBeenCalled();
@@ -136,7 +133,7 @@ describe("CommitCopyButton (line 357)", () => {
     fireEvent.click(screen.getByTestId("button"));
 
     expect(onError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Clipboard API not available" })
+      expect.objectContaining({ message: "Clipboard API not available" }),
     );
 
     Object.defineProperty(navigator, "clipboard", {
@@ -176,7 +173,7 @@ describe("CommitCopyButton (line 357)", () => {
     // Allow microtask to resolve
     await vi.waitFor(() => {
       expect(onError).toHaveBeenCalledWith(
-        expect.objectContaining({ message: "Permission denied" })
+        expect.objectContaining({ message: "Permission denied" }),
       );
     });
   });
@@ -202,7 +199,7 @@ describe("CommitFileAdditions (line 382)", () => {
     render(
       <CommitFileAdditions count={3} data-testid="additions">
         +3 lines
-      </CommitFileAdditions>
+      </CommitFileAdditions>,
     );
     expect(screen.getByTestId("additions")).toHaveTextContent("+3 lines");
   });
@@ -228,7 +225,7 @@ describe("CommitFileDeletions", () => {
     render(
       <CommitFileDeletions count={2} data-testid="deletions">
         -2 lines
-      </CommitFileDeletions>
+      </CommitFileDeletions>,
     );
     expect(screen.getByTestId("deletions")).toHaveTextContent("-2 lines");
   });
@@ -259,7 +256,7 @@ describe("CommitFileStatus", () => {
     render(
       <CommitFileStatus status="added" data-testid="status">
         Added
-      </CommitFileStatus>
+      </CommitFileStatus>,
     );
     expect(screen.getByTestId("status")).toHaveTextContent("Added");
   });

@@ -6,7 +6,10 @@
 import type { TaskData } from "./types";
 import * as taskService from "../../services/task-service";
 import * as workspaceService from "../../services/workspace-service";
-import { getCloneUrl, getBitbucketConfig } from "../../services/bitbucket-service";
+import {
+  getCloneUrl,
+  getBitbucketConfig,
+} from "../../services/bitbucket-service";
 
 export function serializeField(value: unknown): string | undefined {
   if (value == null) return undefined;
@@ -70,7 +73,13 @@ export function cloneRepository(
 ): string {
   const { username, token } = getBitbucketConfig();
   const cloneUrl = getCloneUrl(projectKey, repoSlug);
-  return workspaceService.cloneRepository(taskId, cloneUrl, username, token, sourceBranch);
+  return workspaceService.cloneRepository(
+    taskId,
+    cloneUrl,
+    username,
+    token,
+    sourceBranch,
+  );
 }
 
 export function cleanupWorkspace(taskId: string): void {

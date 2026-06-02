@@ -61,12 +61,18 @@ describe("query-policies", () => {
   });
 
   it("staleTime increases across tiers: realtime < standard < stable", () => {
-    expect(realtimeQueryOptions.staleTime).toBeLessThan(standardQueryOptions.staleTime);
-    expect(standardQueryOptions.staleTime).toBeLessThan(stableQueryOptions.staleTime);
+    expect(realtimeQueryOptions.staleTime).toBeLessThan(
+      standardQueryOptions.staleTime,
+    );
+    expect(standardQueryOptions.staleTime).toBeLessThan(
+      stableQueryOptions.staleTime,
+    );
   });
 
   it("gcTime increases across tiers: realtime < standard < stable", () => {
-    expect(realtimeQueryOptions.gcTime).toBeLessThan(standardQueryOptions.gcTime);
+    expect(realtimeQueryOptions.gcTime).toBeLessThan(
+      standardQueryOptions.gcTime,
+    );
     expect(standardQueryOptions.gcTime).toBeLessThan(stableQueryOptions.gcTime);
   });
 });

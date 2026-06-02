@@ -55,10 +55,25 @@ import { StartSessionDialog } from "@/components/copilot/start-session-dialog";
 import { TokenUsageDisplay } from "@/components/copilot/token-usage-display";
 
 const QUICK_PROMPTS = [
-  { label: "Review my code", prompt: "Review the code in all changed files. Focus on bugs, security, and best practices." },
-  { label: "Explain this project", prompt: "Explain the architecture and key components of this project." },
-  { label: "Write tests", prompt: "Generate comprehensive unit tests for the most recently changed files." },
-  { label: "Find bugs", prompt: "Analyze the codebase for potential bugs, race conditions, and edge cases." },
+  {
+    label: "Review my code",
+    prompt:
+      "Review the code in all changed files. Focus on bugs, security, and best practices.",
+  },
+  {
+    label: "Explain this project",
+    prompt: "Explain the architecture and key components of this project.",
+  },
+  {
+    label: "Write tests",
+    prompt:
+      "Generate comprehensive unit tests for the most recently changed files.",
+  },
+  {
+    label: "Find bugs",
+    prompt:
+      "Analyze the codebase for potential bugs, race conditions, and edge cases.",
+  },
 ];
 
 /**
@@ -130,16 +145,13 @@ export default function CopilotAgentPage() {
     [resumeSession],
   );
 
-  const handleDeleteSession = useCallback(
-    async (sessionId: string) => {
-      try {
-        await fetch(`/api/copilot/sessions/${sessionId}`, { method: "DELETE" });
-      } catch {
-        // Non-critical
-      }
-    },
-    [],
-  );
+  const handleDeleteSession = useCallback(async (sessionId: string) => {
+    try {
+      await fetch(`/api/copilot/sessions/${sessionId}`, { method: "DELETE" });
+    } catch {
+      // Non-critical
+    }
+  }, []);
 
   const handleExport = useCallback(() => {
     const md = exportConversation();
@@ -425,10 +437,7 @@ export default function CopilotAgentPage() {
                 {session && (
                   <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted">
                     <div
-                      className={cn(
-                        "h-2 w-2 rounded-full",
-                        stateColors[state],
-                      )}
+                      className={cn("h-2 w-2 rounded-full", stateColors[state])}
                     />
                     <span className="text-xs font-medium capitalize">
                       {state}
@@ -456,9 +465,7 @@ export default function CopilotAgentPage() {
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {copyFeedback
-                          ? "Copied!"
-                          : "Copy conversation"}
+                        {copyFeedback ? "Copied!" : "Copy conversation"}
                       </TooltipContent>
                     </Tooltip>
                     <Tooltip>
@@ -562,14 +569,21 @@ export default function CopilotAgentPage() {
                   <div className="flex items-center gap-4">
                     <span>
                       Session:{" "}
-                      <span className="font-mono">{session.id.slice(0, 12)}...</span>
+                      <span className="font-mono">
+                        {session.id.slice(0, 12)}...
+                      </span>
                     </span>
-                    <span>Model: <span className="font-medium">{session.model}</span></span>
-                    <span>Messages: <span className="font-medium">{messages.length}</span></span>
+                    <span>
+                      Model:{" "}
+                      <span className="font-medium">{session.model}</span>
+                    </span>
+                    <span>
+                      Messages:{" "}
+                      <span className="font-medium">{messages.length}</span>
+                    </span>
                   </div>
                   <span>
-                    Started:{" "}
-                    {new Date(session.createdAt).toLocaleTimeString()}
+                    Started: {new Date(session.createdAt).toLocaleTimeString()}
                   </span>
                 </div>
               </div>

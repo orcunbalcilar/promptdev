@@ -18,7 +18,9 @@ export interface TaskMetrics {
 }
 
 function getDurationMs(task: Task): number | null {
-  const end = task.completedAt ?? (["FAILED", "CANCELLED"].includes(task.status) ? task.updatedAt : null);
+  const end =
+    task.completedAt ??
+    (["FAILED", "CANCELLED"].includes(task.status) ? task.updatedAt : null);
   if (!end || !task.createdAt) return null;
   return new Date(end).getTime() - new Date(task.createdAt).getTime();
 }
@@ -31,16 +33,19 @@ function percentile(sorted: number[], p: number): number {
 
 export function calculateTaskMetrics(tasks: Task[]): TaskMetrics {
   const completed = tasks.filter((t) => t.status === "COMPLETED");
-  const failed = tasks.filter((t) => ["FAILED", "CANCELLED"].includes(t.status));
-  
+  const failed = tasks.filter((t) =>
+    ["FAILED", "CANCELLED"].includes(t.status),
+  );
+
   const durations = tasks
     .map(getDurationMs)
     .filter((d): d is number => d !== null)
     .sort((a, b) => a - b);
 
-  const avg = durations.length > 0
-    ? durations.reduce((sum, d) => sum + d, 0) / durations.length
-    : 0;
+  const avg =
+    durations.length > 0
+      ? durations.reduce((sum, d) => sum + d, 0) / durations.length
+      : 0;
 
   const tasksByStatus: Record<string, number> = {};
   const tasksByModel: Record<string, number> = {};
@@ -51,7 +56,8 @@ export function calculateTaskMetrics(tasks: Task[]): TaskMetrics {
     if (task.modelId) {
       tasksByModel[task.modelId] = (tasksByModel[task.modelId] ?? 0) + 1;
     }
-    tasksByWorkspace[task.workspaceType] = (tasksByWorkspace[task.workspaceType] ?? 0) + 1;
+    tasksByWorkspace[task.workspaceType] =
+      (tasksByWorkspace[task.workspaceType] ?? 0) + 1;
   }
 
   // Completion trend (tasks completed per day, last 30 days)

@@ -27,7 +27,10 @@ import { POST as runPOST } from "@/app/api/scheduled-jobs/[id]/run/route";
 
 const mockRequireAuth = requireAuth as ReturnType<typeof vi.fn>;
 
-function makeRequest(url: string, init?: { method?: string; body?: string; headers?: Record<string, string> }) {
+function makeRequest(
+  url: string,
+  init?: { method?: string; body?: string; headers?: Record<string, string> },
+) {
   return new NextRequest(`http://localhost:3000${url}`, init);
 }
 
@@ -87,7 +90,9 @@ describe("POST /api/scheduled-jobs/[id]/run", () => {
     vi.mocked(taskService.startTask).mockResolvedValue(undefined);
     vi.mocked(scheduledJobService.markJobRun).mockResolvedValue(undefined);
 
-    const req = makeRequest("/api/scheduled-jobs/job-1/run", { method: "POST" });
+    const req = makeRequest("/api/scheduled-jobs/job-1/run", {
+      method: "POST",
+    });
     const res = await runPOST(req, makeParams("job-1"));
     const body = await res.json();
 
@@ -105,14 +110,19 @@ describe("POST /api/scheduled-jobs/[id]/run", () => {
         maxIterations: 5,
       }),
     );
-    expect(scheduledJobService.markJobRun).toHaveBeenCalledWith("job-1", "task-1");
+    expect(scheduledJobService.markJobRun).toHaveBeenCalledWith(
+      "job-1",
+      "task-1",
+    );
     expect(taskService.startTask).toHaveBeenCalledWith("task-1");
   });
 
   it("returns 401 when not authenticated", async () => {
     mockRequireAuth.mockResolvedValue({ error: authError });
 
-    const req = makeRequest("/api/scheduled-jobs/job-1/run", { method: "POST" });
+    const req = makeRequest("/api/scheduled-jobs/job-1/run", {
+      method: "POST",
+    });
     const res = await runPOST(req, makeParams("job-1"));
 
     expect(res.status).toBe(401);
@@ -123,7 +133,9 @@ describe("POST /api/scheduled-jobs/[id]/run", () => {
       new Error("Job not found"),
     );
 
-    const req = makeRequest("/api/scheduled-jobs/job-1/run", { method: "POST" });
+    const req = makeRequest("/api/scheduled-jobs/job-1/run", {
+      method: "POST",
+    });
     const res = await runPOST(req, makeParams("job-1"));
     const body = await res.json();
 
@@ -145,7 +157,9 @@ describe("POST /api/scheduled-jobs/[id]/run", () => {
     vi.mocked(taskService.startTask).mockResolvedValue(undefined);
     vi.mocked(scheduledJobService.markJobRun).mockResolvedValue(undefined);
 
-    const req = makeRequest("/api/scheduled-jobs/job-1/run", { method: "POST" });
+    const req = makeRequest("/api/scheduled-jobs/job-1/run", {
+      method: "POST",
+    });
     await runPOST(req, makeParams("job-1"));
 
     expect(taskService.createTask).toHaveBeenCalledWith(

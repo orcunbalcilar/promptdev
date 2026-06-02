@@ -106,7 +106,7 @@ describe("InlineCitation — uncovered lines", () => {
     render(
       <CarouselWrapper>
         <InlineCitationCarouselIndex />
-      </CarouselWrapper>
+      </CarouselWrapper>,
     );
 
     // Wait for the setApi microtask to fire
@@ -120,7 +120,7 @@ describe("InlineCitation — uncovered lines", () => {
     // Simulate the "select" event callback
     expect(mockOn).toHaveBeenCalledWith("select", expect.any(Function));
     const selectHandler = mockOn.mock.calls.find(
-      (c: unknown[]) => c[0] === "select"
+      (c: unknown[]) => c[0] === "select",
     )?.[1];
 
     mockSelectedScrollSnap.mockReturnValue(1);
@@ -136,7 +136,7 @@ describe("InlineCitation — uncovered lines", () => {
     const { unmount } = render(
       <CarouselWrapper>
         <InlineCitationCarouselIndex />
-      </CarouselWrapper>
+      </CarouselWrapper>,
     );
 
     await act(async () => {
@@ -153,7 +153,7 @@ describe("InlineCitation — uncovered lines", () => {
     render(
       <CarouselWrapper>
         <InlineCitationCarouselIndex>Custom Index</InlineCitationCarouselIndex>
-      </CarouselWrapper>
+      </CarouselWrapper>,
     );
 
     await act(async () => {
@@ -170,7 +170,7 @@ describe("InlineCitation — uncovered lines", () => {
     render(
       <CarouselWrapper>
         <InlineCitationCarouselPrev />
-      </CarouselWrapper>
+      </CarouselWrapper>,
     );
 
     await act(async () => {
@@ -190,7 +190,7 @@ describe("InlineCitation — uncovered lines", () => {
     render(
       <CarouselWrapper>
         <InlineCitationCarouselNext />
-      </CarouselWrapper>
+      </CarouselWrapper>,
     );
 
     await act(async () => {
@@ -210,7 +210,7 @@ describe("InlineCitation — uncovered lines", () => {
         title="My Source"
         url="https://example.com"
         description="A test description"
-      />
+      />,
     );
 
     expect(screen.getByText("My Source")).toBeInTheDocument();
@@ -230,7 +230,7 @@ describe("InlineCitation — uncovered lines", () => {
     render(
       <InlineCitation>
         <InlineCitationText>Citation text</InlineCitationText>
-      </InlineCitation>
+      </InlineCitation>,
     );
 
     expect(screen.getByText("Citation text")).toBeInTheDocument();

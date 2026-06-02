@@ -7,16 +7,18 @@ import type {
   Repository,
   WorkspaceType,
 } from "@/lib/api";
-import {
-  getBranches,
-  getProjects,
-  getRepositories,
-} from "@/lib/api";
+import { getBranches, getProjects, getRepositories } from "@/lib/api";
 import { DEFAULT_MODEL_ID } from "@/lib/copilot/models";
 import { getDefaultSkillIds, buildInstallScript } from "@/lib/skills";
 import type { ModelInfo } from "@github/copilot-sdk";
 import { useQuery } from "@tanstack/react-query";
-import React, { createContext, use, useCallback, useMemo, useState } from "react";
+import React, {
+  createContext,
+  use,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 
 // ── Form State ──────────────────────────────────────────────────
 
@@ -254,7 +256,11 @@ export function TaskFormProvider({ open, children }: TaskFormProviderProps) {
       const trimmedJiraKey = jiraIssueKey?.trim();
       if (trimmedJiraKey && !commitMessagePattern) {
         effectiveCommitPattern = `[${trimmedJiraKey}] {message}`;
-      } else if (trimmedJiraKey && commitMessagePattern && !commitMessagePattern.includes(trimmedJiraKey)) {
+      } else if (
+        trimmedJiraKey &&
+        commitMessagePattern &&
+        !commitMessagePattern.includes(trimmedJiraKey)
+      ) {
         effectiveCommitPattern = `[${trimmedJiraKey}] ${commitMessagePattern}`;
       }
 

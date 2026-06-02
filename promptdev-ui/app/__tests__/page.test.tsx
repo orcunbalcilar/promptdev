@@ -153,14 +153,15 @@ function buildFilteredResponse(opts?: {
     const q = opts.search.toLowerCase();
     filtered = filtered.filter(
       (t) =>
-        t.title.toLowerCase().includes(q) ||
-        t.prompt.toLowerCase().includes(q),
+        t.title.toLowerCase().includes(q) || t.prompt.toLowerCase().includes(q),
     );
   }
   if (opts?.status && opts.status !== "all") {
     const group = STATUS_GROUPS.find((g) => g.label === opts.status);
     if (group) {
-      filtered = filtered.filter((t) => group.statuses.includes(t.status as never));
+      filtered = filtered.filter((t) =>
+        group.statuses.includes(t.status as never),
+      );
     }
   }
   if (opts?.workspaceType && opts.workspaceType !== "all") {

@@ -4,32 +4,39 @@ import { syncUser, getUserProfile, type UserProfile } from "@/lib/user";
 
 /**
  * Hook to sync NextAuth OAuth session with backend database user.
- * 
+ *
  * After OAuth authentication via NextAuth, we need to:
  * 1. Call /users/sync to find/create the user in our database
  * 2. Get the actual database UUID (not the OAuth provider ID)
  * 3. Use this UUID for all backend API calls
- * 
+ *
  * This hook handles the sync and provides the database user ID and profile.
  */
 export function useBackendUser() {
   const { data: session, status } = useSession();
 
-  const { data: backendUser, isLoading, error } = useQuery<UserProfile>({
+  const {
+    data: backendUser,
+    isLoading,
+    error,
+  } = useQuery<UserProfile>({
     queryKey: ["backendUser", session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) {
         throw new Error("No session available");
       }
 
-      // If the session ID is already a UUID, it means NextAuth has already synced 
+      // If the session ID is already a UUID, it means NextAuth has already synced
       // with the DB (via auth.ts callbacks). We can just fetch the profile.
       // GitHub IDs are integers, Google IDs are numeric strings. UUIDs are distinct.
       /* v8 ignore start -- always truthy after null check on line 22 */
       const userId = session.user.id || "";
       /* v8 ignore stop */
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
-      
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          userId,
+        );
+
       if (isUuid) {
         try {
           return await getUserProfile(session.user.id);
@@ -42,8 +49,8 @@ export function useBackendUser() {
       // Extract OAuth provider info from session
       // NextAuth stores the OAuth user ID in session.user.id (token.sub)
       // We need to determine the provider and provider account ID
-      const sessionWithProvider = session as typeof session & { 
-        user?: typeof session.user & { provider?: string } 
+      const sessionWithProvider = session as typeof session & {
+        user?: typeof session.user & { provider?: string };
       };
       /* v8 ignore start -- defensive fallbacks for always-present session fields */
       const provider = sessionWithProvider.user?.provider || "github"; // fallback to github
@@ -76,7 +83,8 @@ export function useBackendUser() {
   return {
     userId: backendUser?.id,
     profile: backendUser,
-    isLoading: status === "loading" || (status === "authenticated" && isLoading),
+    isLoading:
+      status === "loading" || (status === "authenticated" && isLoading),
     error,
     isAuthenticated: status === "authenticated",
   };

@@ -110,16 +110,16 @@ export function TaskSidebar({
             {task.status.replaceAll("_", " ").toLowerCase()}
           </p>
         </div>
-        {isProcessing && <Loader2 className="h-4 w-4 animate-spin text-blue-600" />}
+        {isProcessing && (
+          <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+        )}
       </div>
 
       {/* Task Progress */}
       <ProgressBar value={getTaskProgress(task.status)}>
         <ProgressBarLabel>
           <span>Task Progress</span>
-          <ProgressBarValue>
-            {getProgressLabel(task.status)}
-          </ProgressBarValue>
+          <ProgressBarValue>{getProgressLabel(task.status)}</ProgressBarValue>
         </ProgressBarLabel>
         <ProgressBarTrack>
           <ProgressBarFill value={getTaskProgress(task.status)} />
@@ -190,10 +190,7 @@ function TaskDetailsCard({ task }: Readonly<{ task: Task }>) {
               <GitBranch className="h-3 w-3 shrink-0" />
             )}
             {task.repositorySlug}
-            <Badge
-              variant="outline"
-              className="ml-auto text-[10px] px-1 py-0"
-            >
+            <Badge variant="outline" className="ml-auto text-[10px] px-1 py-0">
               {task.workspaceType === "LOCAL" ? "Local" : "Bitbucket"}
             </Badge>
           </div>

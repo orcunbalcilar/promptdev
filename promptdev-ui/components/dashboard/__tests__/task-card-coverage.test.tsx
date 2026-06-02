@@ -37,19 +37,25 @@ describe("task-card.tsx branch coverage", () => {
   });
 
   it("line 117: formatRelativeDate returns 'Xh' for hours", () => {
-    const fiveHoursAgo = new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString();
+    const fiveHoursAgo = new Date(
+      Date.now() - 5 * 60 * 60 * 1000,
+    ).toISOString();
     render(<TaskCard task={{ ...baseTask, createdAt: fiveHoursAgo }} />);
     expect(screen.getByText("5h")).toBeInTheDocument();
   });
 
   it("line 119: formatRelativeDate returns 'Xd' for days", () => {
-    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+    const threeDaysAgo = new Date(
+      Date.now() - 3 * 24 * 60 * 60 * 1000,
+    ).toISOString();
     render(<TaskCard task={{ ...baseTask, createdAt: threeDaysAgo }} />);
     expect(screen.getByText("3d")).toBeInTheDocument();
   });
 
   it("line 120: formatRelativeDate returns localized date for >=7 days", () => {
-    const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
+    const tenDaysAgo = new Date(
+      Date.now() - 10 * 24 * 60 * 60 * 1000,
+    ).toISOString();
     render(<TaskCard task={{ ...baseTask, createdAt: tenDaysAgo }} />);
     // Should not show relative time
     expect(screen.queryByText(/\d+[dhm]/)).not.toBeInTheDocument();
@@ -70,11 +76,16 @@ describe("task-card.tsx branch coverage", () => {
   });
 
   it("lines 122-130: renders various status borders", () => {
-    const statuses = ["COMPLETED", "FAILED", "CANCELLED", "REVIEWING", "TRIAGING", "ITERATION_PENDING"] as const;
+    const statuses = [
+      "COMPLETED",
+      "FAILED",
+      "CANCELLED",
+      "REVIEWING",
+      "TRIAGING",
+      "ITERATION_PENDING",
+    ] as const;
     for (const status of statuses) {
-      const { unmount } = render(
-        <TaskCard task={{ ...baseTask, status }} />,
-      );
+      const { unmount } = render(<TaskCard task={{ ...baseTask, status }} />);
       unmount();
     }
   });

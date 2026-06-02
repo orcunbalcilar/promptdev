@@ -77,8 +77,14 @@ describe("sse-client.ts branch coverage", () => {
     });
     const inst = instances[0] as Record<string, ReturnType<typeof vi.fn>>;
     expect(inst).toBeTruthy();
-    expect(inst.addEventListener).toHaveBeenCalledWith("task_update", onMessage);
-    expect(inst.addEventListener).toHaveBeenCalledWith("status_change", onMessage);
+    expect(inst.addEventListener).toHaveBeenCalledWith(
+      "task_update",
+      onMessage,
+    );
+    expect(inst.addEventListener).toHaveBeenCalledWith(
+      "status_change",
+      onMessage,
+    );
   });
 
   it("stops retrying when disposed during error (line 87)", async () => {
@@ -114,9 +120,9 @@ describe("jira.ts branch coverage (line 59 – empty text)", () => {
   });
 
   it("returns empty object for empty response text", async () => {
-    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response("", { status: 200 }),
-    );
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response("", { status: 200 }));
     try {
       const { searchJiraIssues } = await import("@/lib/jira");
       const result = await searchJiraIssues("project=TEST");
@@ -134,16 +140,25 @@ describe("export.ts branch coverage (line 59 – window check)", () => {
     const createObjectURLSpy = vi.fn(() => "blob:url");
     const revokeObjectURLSpy = vi.fn();
     const clickSpy = vi.fn();
-    vi.stubGlobal("URL", { createObjectURL: createObjectURLSpy, revokeObjectURL: revokeObjectURLSpy });
-    
+    vi.stubGlobal("URL", {
+      createObjectURL: createObjectURLSpy,
+      revokeObjectURL: revokeObjectURLSpy,
+    });
+
     const mockA = { href: "", download: "", click: clickSpy };
-    vi.spyOn(document, "createElement").mockReturnValue(mockA as unknown as HTMLElement);
-    
+    vi.spyOn(document, "createElement").mockReturnValue(
+      mockA as unknown as HTMLElement,
+    );
+
     exportTasks(
-      [{ id: "1", title: "Test", status: "COMPLETED" } as Parameters<typeof exportTasks>[0][0]],
+      [
+        { id: "1", title: "Test", status: "COMPLETED" } as Parameters<
+          typeof exportTasks
+        >[0][0],
+      ],
       { format: "json", fields: ["title"] },
     );
-    
+
     expect(clickSpy).toHaveBeenCalled();
     vi.restoreAllMocks();
   });

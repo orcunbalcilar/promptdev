@@ -1,4 +1,8 @@
-import { filterTasks, buildFilterPredicates, getActiveFilterCount } from "@/lib/task-filters";
+import {
+  filterTasks,
+  buildFilterPredicates,
+  getActiveFilterCount,
+} from "@/lib/task-filters";
 import type { Task } from "@/lib/api";
 
 const makeTask = (overrides: Partial<Task> = {}): Task => ({
@@ -19,11 +23,43 @@ const makeTask = (overrides: Partial<Task> = {}): Task => ({
 
 describe("task-filters", () => {
   const tasks = [
-    makeTask({ id: "1", title: "Fix login bug", status: "COMPLETED", modelId: "gpt-4", repositorySlug: "auth-repo" }),
-    makeTask({ id: "2", title: "Add search feature", status: "IN_PROGRESS", modelId: "claude-3", repositorySlug: "search-repo", errorMessage: "timeout" }),
-    makeTask({ id: "3", title: "Refactor DB layer", status: "FAILED", modelId: "gpt-4", repositorySlug: "db-repo", iterative: true }),
-    makeTask({ id: "4", title: "Update docs", status: "PENDING", workspaceType: "BITBUCKET", pullRequestUrl: "https://pr.example.com/1" }),
-    makeTask({ id: "5", title: "Security audit", status: "CANCELLED", repositorySlug: "auth-repo", createdAt: "2024-02-01T10:00:00Z" }),
+    makeTask({
+      id: "1",
+      title: "Fix login bug",
+      status: "COMPLETED",
+      modelId: "gpt-4",
+      repositorySlug: "auth-repo",
+    }),
+    makeTask({
+      id: "2",
+      title: "Add search feature",
+      status: "IN_PROGRESS",
+      modelId: "claude-3",
+      repositorySlug: "search-repo",
+      errorMessage: "timeout",
+    }),
+    makeTask({
+      id: "3",
+      title: "Refactor DB layer",
+      status: "FAILED",
+      modelId: "gpt-4",
+      repositorySlug: "db-repo",
+      iterative: true,
+    }),
+    makeTask({
+      id: "4",
+      title: "Update docs",
+      status: "PENDING",
+      workspaceType: "BITBUCKET",
+      pullRequestUrl: "https://pr.example.com/1",
+    }),
+    makeTask({
+      id: "5",
+      title: "Security audit",
+      status: "CANCELLED",
+      repositorySlug: "auth-repo",
+      createdAt: "2024-02-01T10:00:00Z",
+    }),
   ];
 
   describe("filterTasks", () => {
@@ -89,7 +125,10 @@ describe("task-filters", () => {
     });
 
     it("should combine multiple filters with AND logic", () => {
-      const result = filterTasks(tasks, { modelId: "gpt-4", statuses: ["COMPLETED"] });
+      const result = filterTasks(tasks, {
+        modelId: "gpt-4",
+        statuses: ["COMPLETED"],
+      });
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe("1");
     });
@@ -101,7 +140,10 @@ describe("task-filters", () => {
     });
 
     it("should create predicates for each active filter", () => {
-      const predicates = buildFilterPredicates({ search: "test", modelId: "gpt-4" });
+      const predicates = buildFilterPredicates({
+        search: "test",
+        modelId: "gpt-4",
+      });
       expect(predicates).toHaveLength(2);
     });
   });
@@ -112,7 +154,13 @@ describe("task-filters", () => {
     });
 
     it("should count active filters", () => {
-      expect(getActiveFilterCount({ search: "test", modelId: "gpt-4", hasError: true })).toBe(3);
+      expect(
+        getActiveFilterCount({
+          search: "test",
+          modelId: "gpt-4",
+          hasError: true,
+        }),
+      ).toBe(3);
     });
   });
 });

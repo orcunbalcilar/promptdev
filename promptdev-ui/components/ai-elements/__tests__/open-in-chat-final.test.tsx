@@ -98,15 +98,18 @@ describe("OpenInChat — uncovered lines", () => {
         <OpenInContent>
           <OpenInChatGPT />
         </OpenInContent>
-      </OpenIn>
+      </OpenIn>,
     );
 
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute(
       "href",
-      expect.stringContaining("chatgpt.com")
+      expect.stringContaining("chatgpt.com"),
     );
-    expect(link).toHaveAttribute("href", expect.stringContaining("hello+world"));
+    expect(link).toHaveAttribute(
+      "href",
+      expect.stringContaining("hello+world"),
+    );
     expect(screen.getByText("Open in ChatGPT")).toBeInTheDocument();
   });
 
@@ -116,7 +119,7 @@ describe("OpenInChat — uncovered lines", () => {
         <OpenInContent>
           <OpenInClaude />
         </OpenInContent>
-      </OpenIn>
+      </OpenIn>,
     );
 
     const link = screen.getByRole("link");
@@ -131,7 +134,7 @@ describe("OpenInChat — uncovered lines", () => {
         <OpenInContent>
           <OpenInT3 />
         </OpenInContent>
-      </OpenIn>
+      </OpenIn>,
     );
 
     const link = screen.getByRole("link");
@@ -143,7 +146,7 @@ describe("OpenInChat — uncovered lines", () => {
     render(
       <OpenIn query="test">
         <OpenInTrigger />
-      </OpenIn>
+      </OpenIn>,
     );
 
     expect(screen.getByText("Open in chat")).toBeInTheDocument();
@@ -155,7 +158,7 @@ describe("OpenInChat — uncovered lines", () => {
         <OpenInTrigger>
           <button>Custom Trigger</button>
         </OpenInTrigger>
-      </OpenIn>
+      </OpenIn>,
     );
 
     expect(screen.getByText("Custom Trigger")).toBeInTheDocument();
@@ -169,7 +172,7 @@ describe("OpenInChat — uncovered lines", () => {
           <OpenInSeparator />
           <OpenInItem>Item</OpenInItem>
         </OpenInContent>
-      </OpenIn>
+      </OpenIn>,
     );
 
     expect(screen.getByText("Choose provider")).toBeInTheDocument();

@@ -26,7 +26,7 @@ describe("Snippet — uncovered lines 111-116", () => {
         <SnippetText>$</SnippetText>
         <SnippetInput />
         <SnippetCopyButton onCopy={onCopy} />
-      </Snippet>
+      </Snippet>,
     );
 
     const input = screen.getByDisplayValue("npm install ai");
@@ -37,7 +37,7 @@ describe("Snippet — uncovered lines 111-116", () => {
     await user.click(copyBtn);
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      "npm install ai"
+      "npm install ai",
     );
     expect(onCopy).toHaveBeenCalled();
   });
@@ -55,7 +55,7 @@ describe("Snippet — uncovered lines 111-116", () => {
       <Snippet code="test-command">
         <SnippetInput />
         <SnippetCopyButton />
-      </Snippet>
+      </Snippet>,
     );
 
     const btn = screen.getByRole("button", { name: "Copy" });
@@ -81,12 +81,12 @@ describe("Snippet — uncovered lines 111-116", () => {
       <Snippet code="fail-cmd">
         <SnippetInput />
         <SnippetCopyButton onError={onError} />
-      </Snippet>
+      </Snippet>,
     );
 
     await user.click(screen.getByRole("button", { name: "Copy" }));
     expect(onError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Clipboard API not available" })
+      expect.objectContaining({ message: "Clipboard API not available" }),
     );
 
     Object.defineProperty(navigator, "clipboard", {
@@ -104,7 +104,7 @@ describe("Snippet — uncovered lines 111-116", () => {
           <span>Addon</span>
         </SnippetAddon>
         <SnippetInput />
-      </Snippet>
+      </Snippet>,
     );
 
     expect(screen.getByText("Addon")).toBeInTheDocument();

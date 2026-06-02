@@ -45,7 +45,9 @@ export interface ScheduledJobResponse {
   updatedAt: string | null;
 }
 
-function toResponse(j: typeof scheduledJobs.$inferSelect): ScheduledJobResponse {
+function toResponse(
+  j: typeof scheduledJobs.$inferSelect,
+): ScheduledJobResponse {
   return {
     id: j.id,
     name: j.name,
@@ -76,7 +78,9 @@ function computeNextRun(cronExpression: string): Date {
 
 // ── CRUD ────────────────────────────────────────────────────────
 
-export async function createJob(req: CreateScheduledJobRequest): Promise<ScheduledJobResponse> {
+export async function createJob(
+  req: CreateScheduledJobRequest,
+): Promise<ScheduledJobResponse> {
   const nextRun = computeNextRun(req.cronExpression);
   const now = new Date();
 
@@ -106,7 +110,11 @@ export async function createJob(req: CreateScheduledJobRequest): Promise<Schedul
 }
 
 export async function getJob(id: string): Promise<ScheduledJobResponse> {
-  const [job] = await getDb().select().from(scheduledJobs).where(eq(scheduledJobs.id, id)).limit(1);
+  const [job] = await getDb()
+    .select()
+    .from(scheduledJobs)
+    .where(eq(scheduledJobs.id, id))
+    .limit(1);
   if (!job) throw new Error(`Scheduled job not found: ${id}`);
   return toResponse(job);
 }
@@ -124,7 +132,11 @@ export async function deleteJob(id: string): Promise<void> {
 }
 
 export async function toggleJob(id: string): Promise<ScheduledJobResponse> {
-  const [job] = await getDb().select().from(scheduledJobs).where(eq(scheduledJobs.id, id)).limit(1);
+  const [job] = await getDb()
+    .select()
+    .from(scheduledJobs)
+    .where(eq(scheduledJobs.id, id))
+    .limit(1);
   if (!job) throw new Error(`Scheduled job not found: ${id}`);
 
   const newEnabled = !job.enabled;
@@ -147,10 +159,7 @@ export async function getDueJobs(): Promise<ScheduledJobResponse[]> {
     .select()
     .from(scheduledJobs)
     .where(
-      and(
-        eq(scheduledJobs.enabled, true),
-        lte(scheduledJobs.nextRunAt, now),
-      ),
+      and(eq(scheduledJobs.enabled, true), lte(scheduledJobs.nextRunAt, now)),
     );
   return result.map(toResponse);
 }
@@ -159,7 +168,11 @@ export async function markJobRun(
   jobId: string,
   taskId: string,
 ): Promise<ScheduledJobResponse> {
-  const [job] = await getDb().select().from(scheduledJobs).where(eq(scheduledJobs.id, jobId)).limit(1);
+  const [job] = await getDb()
+    .select()
+    .from(scheduledJobs)
+    .where(eq(scheduledJobs.id, jobId))
+    .limit(1);
   if (!job) throw new Error(`Scheduled job not found: ${jobId}`);
 
   const nextRun = computeNextRun(job.cronExpression);

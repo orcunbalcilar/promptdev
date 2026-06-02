@@ -1,6 +1,12 @@
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -8,24 +14,27 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import {
-  AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-} from 'lucide-react'
+} from "@/components/ui/table";
+import { AlertTriangle, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import {
   type MonitoringDashboard,
   type MonitoringSession,
   type PaginatedResponse,
-} from '@/lib/monitoring'
-import { STATUS_CONFIG, OP_TYPE_CONFIG, formatTokens, formatDuration, formatDate } from './constants'
+} from "@/lib/monitoring";
+import {
+  STATUS_CONFIG,
+  OP_TYPE_CONFIG,
+  formatTokens,
+  formatDuration,
+  formatDate,
+} from "./constants";
 
 // ── Recent Errors ───────────────────────────────────────────────
 
-export function RecentErrorsSection({ errors }: Readonly<{ errors: MonitoringDashboard['recentErrors'] }>) {
-  if (!errors.length) return null
+export function RecentErrorsSection({
+  errors,
+}: Readonly<{ errors: MonitoringDashboard["recentErrors"] }>) {
+  if (!errors.length) return null;
 
   return (
     <Card>
@@ -34,7 +43,9 @@ export function RecentErrorsSection({ errors }: Readonly<{ errors: MonitoringDas
           <AlertTriangle className="h-4 w-4 text-destructive" />
           Recent Errors
         </CardTitle>
-        <CardDescription>Latest error events across all sessions</CardDescription>
+        <CardDescription>
+          Latest error events across all sessions
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -46,7 +57,10 @@ export function RecentErrorsSection({ errors }: Readonly<{ errors: MonitoringDas
               <div className="flex items-center justify-between">
                 <Badge
                   variant="outline"
-                  className={/* v8 ignore start */ OP_TYPE_CONFIG[err.operationType] ?? 'bg-muted' /* v8 ignore stop */}
+                  className={
+                    /* v8 ignore start */ OP_TYPE_CONFIG[err.operationType] ??
+                    "bg-muted" /* v8 ignore stop */
+                  }
                 >
                   {err.operationType}
                 </Badge>
@@ -65,7 +79,7 @@ export function RecentErrorsSection({ errors }: Readonly<{ errors: MonitoringDas
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // ── Pagination ──────────────────────────────────────────────────
@@ -75,9 +89,9 @@ export function PaginationControls({
   totalPages,
   onPageChange,
 }: Readonly<{
-  page: number
-  totalPages: number
-  onPageChange: (page: number) => void
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }>) {
   return (
     <div className="flex items-center justify-between">
@@ -105,7 +119,7 @@ export function PaginationControls({
         </Button>
       </div>
     </div>
-  )
+  );
 }
 
 // ── Sessions Table ──────────────────────────────────────────────
@@ -114,15 +128,15 @@ export function SessionsTable({
   sessions,
   onSelectSession,
 }: Readonly<{
-  sessions: PaginatedResponse<MonitoringSession> | undefined
-  onSelectSession: (session: MonitoringSession) => void
+  sessions: PaginatedResponse<MonitoringSession> | undefined;
+  onSelectSession: (session: MonitoringSession) => void;
 }>) {
   if (!sessions || sessions.empty) {
     return (
       <div className="text-center py-12 text-muted-foreground">
         No sessions recorded yet. Start a task to begin monitoring.
       </div>
-    )
+    );
   }
 
   return (
@@ -143,8 +157,9 @@ export function SessionsTable({
       </TableHeader>
       <TableBody>
         {sessions.content.map((session) => {
-          const statusCfg = STATUS_CONFIG[session.status] ?? STATUS_CONFIG.ENDED
-          const StatusIcon = statusCfg.icon
+          const statusCfg =
+            STATUS_CONFIG[session.status] ?? STATUS_CONFIG.ENDED;
+          const StatusIcon = statusCfg.icon;
           return (
             <TableRow key={session.id}>
               <TableCell>
@@ -159,11 +174,19 @@ export function SessionsTable({
               <TableCell>
                 <Badge variant="secondary">{session.model}</Badge>
               </TableCell>
-              <TableCell className="text-muted-foreground">{session.source}</TableCell>
-              <TableCell className="text-right tabular-nums">{session.messageCount}</TableCell>
-              <TableCell className="text-right tabular-nums">{session.toolExecutionCount}</TableCell>
+              <TableCell className="text-muted-foreground">
+                {session.source}
+              </TableCell>
               <TableCell className="text-right tabular-nums">
-                {formatTokens(session.totalInputTokens + session.totalOutputTokens)}
+                {session.messageCount}
+              </TableCell>
+              <TableCell className="text-right tabular-nums">
+                {session.toolExecutionCount}
+              </TableCell>
+              <TableCell className="text-right tabular-nums">
+                {formatTokens(
+                  session.totalInputTokens + session.totalOutputTokens,
+                )}
               </TableCell>
               <TableCell className="text-right text-muted-foreground">
                 {formatDuration(session.createdAt, session.endedAt)}
@@ -172,14 +195,18 @@ export function SessionsTable({
                 {formatDate(session.createdAt)}
               </TableCell>
               <TableCell>
-                <Button variant="ghost" size="sm" onClick={() => onSelectSession(session)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onSelectSession(session)}
+                >
                   <Eye className="h-4 w-4" />
                 </Button>
               </TableCell>
             </TableRow>
-          )
+          );
         })}
       </TableBody>
     </Table>
-  )
+  );
 }

@@ -39,18 +39,26 @@ describe("useUserSync – coverage", () => {
   });
 
   it("fetches profile for UUID session id (line 22: isUuid=true)", async () => {
-    const profile = { id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", email: "test@example.com" };
+    const profile = {
+      id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      email: "test@example.com",
+    };
     mockGetUserProfile.mockResolvedValue(profile);
 
     const { result } = renderHook(() => useUserSync(), { wrapper });
 
     await waitFor(() => expect(result.current.userId).toBe(profile.id));
-    expect(mockGetUserProfile).toHaveBeenCalledWith("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+    expect(mockGetUserProfile).toHaveBeenCalledWith(
+      "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    );
   });
 
   it("falls back to sync when profile fails for UUID user (line 51)", async () => {
     mockGetUserProfile.mockRejectedValue(new Error("Fail"));
-    const profile = { id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", email: "test@example.com" };
+    const profile = {
+      id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      email: "test@example.com",
+    };
     mockSyncUser.mockResolvedValue(profile);
 
     const { result } = renderHook(() => useUserSync(), { wrapper });
@@ -62,7 +70,12 @@ describe("useUserSync – coverage", () => {
   it("syncs for non-UUID session id", async () => {
     vi.mocked(useSession).mockReturnValue({
       data: {
-        user: { id: "99999", email: "user@example.com", name: "User", image: null },
+        user: {
+          id: "99999",
+          email: "user@example.com",
+          name: "User",
+          image: null,
+        },
         expires: "",
       },
       status: "authenticated",

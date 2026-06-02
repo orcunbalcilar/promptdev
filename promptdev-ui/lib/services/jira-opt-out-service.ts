@@ -23,7 +23,9 @@ function toResponse(o: typeof jiraIssueOptOuts.$inferSelect): OptOutResponse {
   };
 }
 
-export async function getOptOutsForUser(userId: string): Promise<OptOutResponse[]> {
+export async function getOptOutsForUser(
+  userId: string,
+): Promise<OptOutResponse[]> {
   const result = await getDb()
     .select()
     .from(jiraIssueOptOuts)
@@ -47,7 +49,12 @@ export async function createOptOut(
     const [existing] = await getDb()
       .select()
       .from(jiraIssueOptOuts)
-      .where(and(eq(jiraIssueOptOuts.userId, userId), eq(jiraIssueOptOuts.jiraIssueKey, jiraIssueKey)))
+      .where(
+        and(
+          eq(jiraIssueOptOuts.userId, userId),
+          eq(jiraIssueOptOuts.jiraIssueKey, jiraIssueKey),
+        ),
+      )
       .limit(1);
     return toResponse(existing);
   }
@@ -55,19 +62,33 @@ export async function createOptOut(
   return toResponse(optOut);
 }
 
-export async function deleteOptOut(userId: string, jiraIssueKey: string): Promise<void> {
+export async function deleteOptOut(
+  userId: string,
+  jiraIssueKey: string,
+): Promise<void> {
   await getDb()
     .delete(jiraIssueOptOuts)
     .where(
-      and(eq(jiraIssueOptOuts.userId, userId), eq(jiraIssueOptOuts.jiraIssueKey, jiraIssueKey)),
+      and(
+        eq(jiraIssueOptOuts.userId, userId),
+        eq(jiraIssueOptOuts.jiraIssueKey, jiraIssueKey),
+      ),
     );
 }
 
-export async function isOptedOut(userId: string, jiraIssueKey: string): Promise<boolean> {
+export async function isOptedOut(
+  userId: string,
+  jiraIssueKey: string,
+): Promise<boolean> {
   const result = await getDb()
     .select()
     .from(jiraIssueOptOuts)
-    .where(and(eq(jiraIssueOptOuts.userId, userId), eq(jiraIssueOptOuts.jiraIssueKey, jiraIssueKey)))
+    .where(
+      and(
+        eq(jiraIssueOptOuts.userId, userId),
+        eq(jiraIssueOptOuts.jiraIssueKey, jiraIssueKey),
+      ),
+    )
     .limit(1);
   return result.length > 0;
 }

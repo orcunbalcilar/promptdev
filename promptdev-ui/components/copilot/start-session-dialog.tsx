@@ -79,10 +79,7 @@ export function StartSessionDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="start-reasoning">Reasoning Effort</Label>
-            <Select
-              value={reasoningEffort}
-              onValueChange={setReasoningEffort}
-            >
+            <Select value={reasoningEffort} onValueChange={setReasoningEffort}>
               <SelectTrigger id="start-reasoning">
                 <SelectValue placeholder="Select effort" />
               </SelectTrigger>

@@ -27,9 +27,10 @@ export function ModelSelector({
   modelsLoading = false,
 }: Readonly<ModelSelectorProps>) {
   // Auto-select first model if selectedModel is empty or not in the list
-  const effectiveModel = selectedModel && models.some((m) => m.id === selectedModel)
-    ? selectedModel
-    : models[0]?.id ?? "";
+  const effectiveModel =
+    selectedModel && models.some((m) => m.id === selectedModel)
+      ? selectedModel
+      : (models[0]?.id ?? "");
 
   // Sync with parent if auto-selected
   if (effectiveModel && effectiveModel !== selectedModel && models.length > 0) {

@@ -38,7 +38,10 @@ describe("bitbucket-service – coverage", () => {
   it("listProjects fetches projects", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      text: () => Promise.resolve(JSON.stringify({ values: [{ key: "PRJ", name: "Project" }] })),
+      text: () =>
+        Promise.resolve(
+          JSON.stringify({ values: [{ key: "PRJ", name: "Project" }] }),
+        ),
     });
 
     const result = await listProjects();
@@ -52,7 +55,8 @@ describe("bitbucket-service – coverage", () => {
   it("listRepositories fetches repos for a project", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      text: () => Promise.resolve(JSON.stringify({ values: [{ slug: "my-repo" }] })),
+      text: () =>
+        Promise.resolve(JSON.stringify({ values: [{ slug: "my-repo" }] })),
     });
 
     const result = await listRepositories("PRJ");
@@ -67,15 +71,20 @@ describe("bitbucket-service – coverage", () => {
     mockFetch
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(JSON.stringify({ values: [{ key: "P1" }, { key: "P2" }] })),
+        text: () =>
+          Promise.resolve(
+            JSON.stringify({ values: [{ key: "P1" }, { key: "P2" }] }),
+          ),
       })
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(JSON.stringify({ values: [{ slug: "repo1" }] })),
+        text: () =>
+          Promise.resolve(JSON.stringify({ values: [{ slug: "repo1" }] })),
       })
       .mockResolvedValueOnce({
         ok: true,
-        text: () => Promise.resolve(JSON.stringify({ values: [{ slug: "repo2" }] })),
+        text: () =>
+          Promise.resolve(JSON.stringify({ values: [{ slug: "repo2" }] })),
       });
 
     const result = await listAllRepositories();
@@ -95,7 +104,8 @@ describe("bitbucket-service – coverage", () => {
   it("getDefaultBranch fetches default branch", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      text: () => Promise.resolve(JSON.stringify({ displayId: "main", isDefault: true })),
+      text: () =>
+        Promise.resolve(JSON.stringify({ displayId: "main", isDefault: true })),
     });
 
     const result = await getDefaultBranch("PRJ", "my-repo");
@@ -125,16 +135,28 @@ describe("bitbucket-service – coverage", () => {
     await createBranch("PRJ", "my-repo", "feature/x", "main");
     const [, opts] = mockFetch.mock.calls[0];
     expect(opts.method).toBe("POST");
-    expect(JSON.parse(opts.body)).toEqual({ name: "feature/x", startPoint: "main" });
+    expect(JSON.parse(opts.body)).toEqual({
+      name: "feature/x",
+      startPoint: "main",
+    });
   });
 
   it("createPullRequest sends POST with correct body", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      text: () => Promise.resolve(JSON.stringify({ id: 1, title: "PR", state: "OPEN" })),
+      text: () =>
+        Promise.resolve(JSON.stringify({ id: 1, title: "PR", state: "OPEN" })),
     });
 
-    await createPullRequest("PRJ", "repo", "PR Title", "Description", "feature", "main", ["reviewer1"]);
+    await createPullRequest(
+      "PRJ",
+      "repo",
+      "PR Title",
+      "Description",
+      "feature",
+      "main",
+      ["reviewer1"],
+    );
     const [, opts] = mockFetch.mock.calls[0];
     expect(opts.method).toBe("POST");
     const body = JSON.parse(opts.body);
@@ -155,7 +177,9 @@ describe("bitbucket-service – coverage", () => {
   it("throws when BITBUCKET_URL is not set", async () => {
     const origUrl = process.env.BITBUCKET_URL;
     delete process.env.BITBUCKET_URL;
-    await expect(listProjects()).rejects.toThrow("BITBUCKET_URL is not configured");
+    await expect(listProjects()).rejects.toThrow(
+      "BITBUCKET_URL is not configured",
+    );
     process.env.BITBUCKET_URL = origUrl;
   });
 
@@ -172,12 +196,12 @@ describe("bitbucket-service – coverage", () => {
   it("handles no auth token", async () => {
     const origToken = process.env.BITBUCKET_TOKEN;
     delete process.env.BITBUCKET_TOKEN;
-    
+
     await listProjects();
-    
+
     const [, opts] = mockFetch.mock.calls[0];
     expect(opts.headers.Authorization).toBeUndefined();
-    
+
     process.env.BITBUCKET_TOKEN = origToken;
   });
 });

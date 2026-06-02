@@ -17,8 +17,12 @@ export default function Error({
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-8">
-      <h2 className="text-xl font-semibold text-destructive">Something went wrong</h2>
-      <p className="text-muted-foreground text-center max-w-md">{error.message}</p>
+      <h2 className="text-xl font-semibold text-destructive">
+        Something went wrong
+      </h2>
+      <p className="text-muted-foreground text-center max-w-md">
+        {error.message}
+      </p>
       <Button onClick={reset} variant="outline">
         <RefreshCw className="h-4 w-4 mr-2" />
         Try again

@@ -82,7 +82,12 @@ describe("job-card.tsx branch coverage", () => {
 
   it("line 140: renders history items when available", async () => {
     mockGetScheduledJobHistory.mockResolvedValue([
-      { id: "t1", title: "Task 1", status: "COMPLETED", createdAt: new Date().toISOString() },
+      {
+        id: "t1",
+        title: "Task 1",
+        status: "COMPLETED",
+        createdAt: new Date().toISOString(),
+      },
     ]);
 
     renderWith(<JobCard job={baseJob} />);

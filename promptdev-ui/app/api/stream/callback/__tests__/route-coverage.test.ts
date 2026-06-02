@@ -12,7 +12,13 @@ describe("stream/callback route – coverage (line 10)", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns task on success", async () => {
-    vi.mocked(taskService.processAgentCallback).mockResolvedValue({ id: "t1" } as ReturnType<typeof taskService.processAgentCallback> extends Promise<infer T> ? T : never);
+    vi.mocked(taskService.processAgentCallback).mockResolvedValue({
+      id: "t1",
+    } as ReturnType<typeof taskService.processAgentCallback> extends Promise<
+      infer T
+    >
+      ? T
+      : never);
     const req = new NextRequest("http://localhost/api/stream/callback", {
       method: "POST",
       body: JSON.stringify({ taskId: "t1" }),
@@ -23,7 +29,9 @@ describe("stream/callback route – coverage (line 10)", () => {
   });
 
   it("returns 400 with Error message", async () => {
-    vi.mocked(taskService.processAgentCallback).mockRejectedValue(new Error("bad"));
+    vi.mocked(taskService.processAgentCallback).mockRejectedValue(
+      new Error("bad"),
+    );
     const req = new NextRequest("http://localhost/api/stream/callback", {
       method: "POST",
       body: JSON.stringify({}),
@@ -36,7 +44,9 @@ describe("stream/callback route – coverage (line 10)", () => {
   });
 
   it("returns 400 with fallback message for non-Error (line 10)", async () => {
-    vi.mocked(taskService.processAgentCallback).mockRejectedValue("string error");
+    vi.mocked(taskService.processAgentCallback).mockRejectedValue(
+      "string error",
+    );
     const req = new NextRequest("http://localhost/api/stream/callback", {
       method: "POST",
       body: JSON.stringify({}),

@@ -8,40 +8,90 @@ import type { Task, TaskEvent } from "@/lib/api";
 
 // Mock ai-elements components used by TaskChangesSummary
 vi.mock("@/components/ai-elements/file-tree", () => ({
-  FileTree: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  FileTreeFile: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  FileTreeFolder: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  FileTree: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  FileTreeFile: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  FileTreeFolder: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 vi.mock("@/components/ai-elements/commit", () => ({
-  Commit: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CommitHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CommitHash: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CommitMessage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CommitInfo: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CommitMetadata: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CommitTimestamp: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CommitContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CommitFiles: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CommitFile: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CommitFileInfo: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CommitFileStatus: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  Commit: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CommitHeader: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CommitHash: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CommitMessage: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CommitInfo: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CommitMetadata: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CommitTimestamp: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CommitContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CommitFiles: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CommitFile: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CommitFileInfo: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CommitFileStatus: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
   CommitFileIcon: () => <span />,
-  CommitFilePath: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  CommitFilePath: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 vi.mock("@/components/ai-elements/package-info", () => ({
-  PackageInfo: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PackageInfo: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 vi.mock("@/components/ai-elements/terminal", () => ({
-  Terminal: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  Terminal: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 vi.mock("@/components/ai-elements/test", () => ({
-  TestResults: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  TestResultsHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  TestResultsContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  TestResultEntry: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  TestResultName: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  TestResultStatus: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  TestResultDuration: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  TestResults: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  TestResultsHeader: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  TestResultsContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  TestResultEntry: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  TestResultName: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  TestResultStatus: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  TestResultDuration: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 import { TaskChangesSummary } from "../task-changes-summary";

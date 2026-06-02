@@ -15,8 +15,12 @@ export interface BranchSelectorProps {
   setSelectedSourceBranch: (v: string) => void;
   selectedTargetBranch: string;
   setSelectedTargetBranch: (v: string) => void;
-  branches: ReadonlyArray<{ id: string; displayId: string; isDefault: boolean }>;
-  
+  branches: ReadonlyArray<{
+    id: string;
+    displayId: string;
+    isDefault: boolean;
+  }>;
+
   // Optional: For "Create new branch" option
   allowCreateBranch?: boolean;
   effectiveProjectKey?: string;
@@ -34,7 +38,9 @@ export function BranchSelector({
   taskIdPlaceholder = "{task-id}",
 }: Readonly<BranchSelectorProps>) {
   /* v8 ignore start — ternary for project key display */
-  const projectLabel = effectiveProjectKey ? effectiveProjectKey.toLowerCase() : "promptdev";
+  const projectLabel = effectiveProjectKey
+    ? effectiveProjectKey.toLowerCase()
+    : "promptdev";
   /* v8 ignore stop */
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -54,8 +60,7 @@ export function BranchSelector({
                   <span className="flex items-center gap-2">
                     <Plus className="h-4 w-4 text-muted-foreground" />
                     <span className="font-medium text-primary">
-                      Create:{" "}
-                      {projectLabel}/{taskIdPlaceholder}
+                      Create: {projectLabel}/{taskIdPlaceholder}
                     </span>
                   </span>
                 </SelectItem>

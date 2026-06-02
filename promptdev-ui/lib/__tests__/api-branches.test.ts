@@ -24,7 +24,13 @@ function jsonResponse(data: unknown) {
   };
 }
 
-const emptyPage = { content: [], totalElements: 0, totalPages: 0, number: 0, size: 20 };
+const emptyPage = {
+  content: [],
+  totalElements: 0,
+  totalPages: 0,
+  number: 0,
+  size: 20,
+};
 
 describe("api – getTasks filter branches", () => {
   beforeEach(() => {

@@ -37,19 +37,13 @@ vi.mock("@/lib/services/sse-service", () => ({
 vi.mock("@/lib/services/bitbucket-service", () => ({
   createBranch: vi.fn(),
   createPullRequest: vi.fn().mockResolvedValue({ id: 42, title: "PR" }),
-  getPullRequestWebUrl: vi
-    .fn()
-    .mockReturnValue("https://bb.example.com/pr/42"),
+  getPullRequestWebUrl: vi.fn().mockReturnValue("https://bb.example.com/pr/42"),
 }));
 vi.mock("@/lib/services/workspace-service", () => ({
   resolveIncrementedPath: vi.fn((p: string) => `${p}-1`),
 }));
 
-import {
-  createTask,
-  getTask,
-  getTaskEvents,
-} from "../task-service";
+import { createTask, getTask, getTaskEvents } from "../task-service";
 import { broadcastTaskUpdate } from "../sse-service";
 
 const NOW = new Date("2025-01-15T10:00:00Z");

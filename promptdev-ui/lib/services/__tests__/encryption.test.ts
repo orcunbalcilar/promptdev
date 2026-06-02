@@ -92,8 +92,11 @@ describe("encryption service", () => {
       delete process.env.ENCRYPTION_KEY;
       // getEncryptionKey caches, so we need a fresh module
       vi.resetModules();
-      const { getEncryptionKey: freshGetKey, encrypt: freshEncrypt, decrypt: freshDecrypt } =
-        await import("../encryption");
+      const {
+        getEncryptionKey: freshGetKey,
+        encrypt: freshEncrypt,
+        decrypt: freshDecrypt,
+      } = await import("../encryption");
       const key = freshGetKey();
       expect(key).toBeInstanceOf(Buffer);
       expect(key.length).toBe(32);

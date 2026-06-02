@@ -2,9 +2,15 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 // Mock ResizeObserver
 globalThis.ResizeObserver = class ResizeObserver {
-  observe() { /* noop */ }
-  unobserve() { /* noop */ }
-  disconnect() { /* noop */ }
+  observe() {
+    /* noop */
+  }
+  unobserve() {
+    /* noop */
+  }
+  disconnect() {
+    /* noop */
+  }
 } as unknown as typeof ResizeObserver;
 
 Element.prototype.scrollIntoView = vi.fn();

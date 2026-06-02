@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button'
-import { Ban, Play, RotateCcw } from 'lucide-react'
-import { ACTIVE_STATUSES } from './task-helpers'
+import { Button } from "@/components/ui/button";
+import { Ban, Play, RotateCcw } from "lucide-react";
+import { ACTIVE_STATUSES } from "./task-helpers";
 
 export function TaskHeaderActions({
   task,
@@ -10,15 +10,20 @@ export function TaskHeaderActions({
   onCancel,
   onStart,
 }: Readonly<{
-  task: { id: string; status: string; resumeCount?: number | null; jiraIssueKey?: string | null }
-  showResumeForm: boolean
-  setShowResumeForm: (v: boolean) => void
-  onRetry: () => void
-  onCancel: () => void
-  onStart: () => void
+  task: {
+    id: string;
+    status: string;
+    resumeCount?: number | null;
+    jiraIssueKey?: string | null;
+  };
+  showResumeForm: boolean;
+  setShowResumeForm: (v: boolean) => void;
+  onRetry: () => void;
+  onCancel: () => void;
+  onStart: () => void;
 }>) {
   // For PENDING Jira tasks, the refinement form handles the Start action
-  const showStartButton = task.status === 'PENDING' && !task.jiraIssueKey
+  const showStartButton = task.status === "PENDING" && !task.jiraIssueKey;
 
   return (
     <div className="flex items-center gap-2">
@@ -28,18 +33,18 @@ export function TaskHeaderActions({
           Start Task
         </Button>
       )}
-      {(task.status === 'COMPLETED' || task.status === 'FAILED') && (
+      {(task.status === "COMPLETED" || task.status === "FAILED") && (
         <Button
           variant="outline"
           size="sm"
           onClick={() => setShowResumeForm(!showResumeForm)}
         >
           <RotateCcw className="h-4 w-4 mr-2" />
-          {task.status === 'COMPLETED' ? 'Continue' : 'Resume'}
-          {task.resumeCount ? ` (${task.resumeCount})` : ''}
+          {task.status === "COMPLETED" ? "Continue" : "Resume"}
+          {task.resumeCount ? ` (${task.resumeCount})` : ""}
         </Button>
       )}
-      {(task.status === 'FAILED' || task.status === 'CANCELLED') && (
+      {(task.status === "FAILED" || task.status === "CANCELLED") && (
         <Button variant="outline" size="sm" onClick={onRetry}>
           <Play className="h-4 w-4 mr-2" />
           Retry
@@ -52,5 +57,5 @@ export function TaskHeaderActions({
         </Button>
       )}
     </div>
-  )
+  );
 }

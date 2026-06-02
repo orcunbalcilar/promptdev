@@ -7,9 +7,7 @@ vi.mock("@/components/ui/tooltip", () => ({
   TooltipProvider: ({ children }: { children?: React.ReactNode }) => (
     <>{children}</>
   ),
-  Tooltip: ({ children }: { children?: React.ReactNode }) => (
-    <>{children}</>
-  ),
+  Tooltip: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   TooltipTrigger: ({
     children,
     ...props
@@ -24,8 +22,16 @@ vi.mock("@/components/ui/tooltip", () => ({
 
 // Mock Streamdown and plugins
 vi.mock("streamdown", () => ({
-  Streamdown: ({ children, className }: { children?: React.ReactNode; className?: string }) => (
-    <div data-testid="streamdown" className={className}>{children}</div>
+  Streamdown: ({
+    children,
+    className,
+  }: {
+    children?: React.ReactNode;
+    className?: string;
+  }) => (
+    <div data-testid="streamdown" className={className}>
+      {children}
+    </div>
   ),
 }));
 vi.mock("@streamdown/cjk", () => ({ cjk: {} }));
@@ -70,7 +76,7 @@ describe("Message — uncovered lines", () => {
             <span>📋</span>
           </MessageAction>
         </MessageActions>
-      </Message>
+      </Message>,
     );
 
     const button = screen.getByRole("button", { name: /Copy/ });
@@ -90,7 +96,7 @@ describe("Message — uncovered lines", () => {
             <span>✏</span>
           </MessageAction>
         </MessageActions>
-      </Message>
+      </Message>,
     );
 
     expect(screen.getByRole("button", { name: /Edit/ })).toBeInTheDocument();
@@ -105,7 +111,7 @@ describe("Message — uncovered lines", () => {
           <span>Left side</span>
           <span>Right side</span>
         </MessageToolbar>
-      </Message>
+      </Message>,
     );
 
     expect(screen.getByText("Left side")).toBeInTheDocument();
@@ -117,7 +123,7 @@ describe("Message — uncovered lines", () => {
     const { container } = render(
       <Message from="user">
         <MessageContent>User message</MessageContent>
-      </Message>
+      </Message>,
     );
 
     const messageDiv = container.firstChild as HTMLElement;
@@ -129,7 +135,7 @@ describe("Message — uncovered lines", () => {
     const { container } = render(
       <Message from="assistant">
         <MessageContent>Assistant response</MessageContent>
-      </Message>
+      </Message>,
     );
 
     const messageDiv = container.firstChild as HTMLElement;
@@ -154,7 +160,7 @@ describe("Message — uncovered lines", () => {
             <MessageBranchNext />
           </MessageBranchSelector>
         </MessageBranch>
-      </Message>
+      </Message>,
     );
 
     // Click next
@@ -173,7 +179,7 @@ describe("Message — uncovered lines", () => {
         <MessageContent>
           <MessageResponse>Hello **world**</MessageResponse>
         </MessageContent>
-      </Message>
+      </Message>,
     );
 
     expect(screen.getByTestId("streamdown")).toBeInTheDocument();
@@ -187,8 +193,8 @@ describe("Message — uncovered lines", () => {
           <MessageContent>
             <MessageBranchContent index={0}>Hello</MessageBranchContent>
           </MessageContent>
-        </Message>
-      )
+        </Message>,
+      ),
     ).toThrow("MessageBranch components must be used within MessageBranch");
   });
 
@@ -199,7 +205,7 @@ describe("Message — uncovered lines", () => {
         <MessageContent>
           <MessageResponse>Same content</MessageResponse>
         </MessageContent>
-      </Message>
+      </Message>,
     );
 
     // Re-render with same children
@@ -208,7 +214,7 @@ describe("Message — uncovered lines", () => {
         <MessageContent>
           <MessageResponse>Same content</MessageResponse>
         </MessageContent>
-      </Message>
+      </Message>,
     );
 
     expect(screen.getByTestId("streamdown")).toHaveTextContent("Same content");
@@ -221,7 +227,7 @@ describe("Message — uncovered lines", () => {
         <MessageContent>
           <MessageResponse>Content A</MessageResponse>
         </MessageContent>
-      </Message>
+      </Message>,
     );
 
     rerender(
@@ -229,7 +235,7 @@ describe("Message — uncovered lines", () => {
         <MessageContent>
           <MessageResponse>Content B</MessageResponse>
         </MessageContent>
-      </Message>
+      </Message>,
     );
 
     expect(screen.getByTestId("streamdown")).toHaveTextContent("Content B");
@@ -242,7 +248,7 @@ describe("Message — uncovered lines", () => {
         <MessageToolbar>
           <button type="button">Like</button>
         </MessageToolbar>
-      </Message>
+      </Message>,
     );
 
     expect(screen.getByText("Like")).toBeInTheDocument();
@@ -269,7 +275,7 @@ describe("Message — uncovered lines", () => {
             <MessageBranchNext />
           </MessageBranchSelector>
         </MessageBranch>
-      </Message>
+      </Message>,
     );
 
     // Starting at branch 0 — click Previous to wrap to last (2)
@@ -295,7 +301,7 @@ describe("Message — uncovered lines", () => {
             <MessageBranchNext />
           </MessageBranchSelector>
         </MessageBranch>
-      </Message>
+      </Message>,
     );
 
     // Click Next to go to branch 1 (last)
@@ -316,7 +322,7 @@ describe("Message — uncovered lines", () => {
             <div>Only branch content</div>
           </MessageBranchContent>
         </MessageBranch>
-      </Message>
+      </Message>,
     );
 
     // Single child is wrapped in array internally

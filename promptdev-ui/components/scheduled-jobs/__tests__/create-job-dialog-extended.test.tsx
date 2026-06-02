@@ -19,9 +19,7 @@ vi.mock("../create-job", () => ({
     onClose: () => void;
   }) => <div data-open={open}>{children}</div>,
   useJobForm: (...args: unknown[]) => mockUseJobForm(...args),
-  WorkspaceSection: () => (
-    <div data-testid="workspace-section">Workspace</div>
-  ),
+  WorkspaceSection: () => <div data-testid="workspace-section">Workspace</div>,
   BranchSection: () => <div data-testid="branch-section">Branch</div>,
   ModelSection: () => <div data-testid="model-section">Model</div>,
   AdvancedOptionsSection: () => (

@@ -32,7 +32,8 @@ describe("parseFileChanges", () => {
 
   it("parses git-style text format (line 82: statusMap fallback to 'modified')", () => {
     // Line 82: statusMap[statusChar] ?? "modified" — unknown status chars default to modified
-    const text = "A src/new.ts\nM src/old.ts\nD src/removed.ts\nX src/unknown.ts";
+    const text =
+      "A src/new.ts\nM src/old.ts\nD src/removed.ts\nX src/unknown.ts";
     const result = parseFileChanges(text);
     expect(result).toEqual([
       { path: "src/new.ts", status: "added" },
@@ -264,8 +265,6 @@ describe("getReviewStatusText", () => {
   });
 
   it("returns 'Reviewing code changes...' when neither", () => {
-    expect(getReviewStatusText(false, false)).toBe(
-      "Reviewing code changes...",
-    );
+    expect(getReviewStatusText(false, false)).toBe("Reviewing code changes...");
   });
 });

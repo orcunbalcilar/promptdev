@@ -12,8 +12,17 @@ interface ExportOptions {
 }
 
 const DEFAULT_FIELDS: (keyof Task)[] = [
-  "id", "title", "status", "repositorySlug", "workspaceType",
-  "sourceBranch", "targetBranch", "modelId", "createdAt", "updatedAt", "completedAt",
+  "id",
+  "title",
+  "status",
+  "repositorySlug",
+  "workspaceType",
+  "sourceBranch",
+  "targetBranch",
+  "modelId",
+  "createdAt",
+  "updatedAt",
+  "completedAt",
 ];
 
 function escapeCSV(value: unknown): string {
@@ -24,10 +33,13 @@ function escapeCSV(value: unknown): string {
   return str;
 }
 
-export function tasksToCSV(tasks: Task[], fields: (keyof Task)[] = DEFAULT_FIELDS): string {
+export function tasksToCSV(
+  tasks: Task[],
+  fields: (keyof Task)[] = DEFAULT_FIELDS,
+): string {
   const header = fields.join(",");
   const rows = tasks.map((task) =>
-    fields.map((field) => escapeCSV(task[field])).join(",")
+    fields.map((field) => escapeCSV(task[field])).join(","),
   );
   return [header, ...rows].join("\n");
 }
@@ -47,15 +59,16 @@ export function tasksToJSON(tasks: Task[], fields?: (keyof Task)[]): string {
 
 export function exportTasks(tasks: Task[], options: ExportOptions): void {
   const { format, fields } = options;
-  const filename = options.filename ?? `tasks-export-${new Date().toISOString().split("T")[0]}`;
-  
-  const content = format === "csv"
-    ? tasksToCSV(tasks, fields)
-    : tasksToJSON(tasks, fields);
-  
+  const filename =
+    options.filename ??
+    `tasks-export-${new Date().toISOString().split("T")[0]}`;
+
+  const content =
+    format === "csv" ? tasksToCSV(tasks, fields) : tasksToJSON(tasks, fields);
+
   const mimeType = format === "csv" ? "text/csv" : "application/json";
   const extension = format === "csv" ? ".csv" : ".json";
-  
+
   if (typeof window !== "undefined") {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);

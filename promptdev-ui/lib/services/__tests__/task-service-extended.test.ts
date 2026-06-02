@@ -211,7 +211,10 @@ describe("task-service - extended coverage", () => {
 
   describe("getTaskEvents", () => {
     it("should return events for a task", async () => {
-      const events = [makeEvent(), makeEvent({ id: "event-2", eventType: "PROGRESS" })];
+      const events = [
+        makeEvent(),
+        makeEvent({ id: "event-2", eventType: "PROGRESS" }),
+      ];
       mockDb.select.mockReturnValue(chainResult(events));
 
       const result = await getTaskEvents("task-1");
@@ -305,10 +308,7 @@ describe("task-service - extended coverage", () => {
   // ── processAgentCallback - additional event types ─────────────
 
   describe("processAgentCallback - additional event types", () => {
-    function setupForCallback(
-      taskOverrides = {},
-      updatedOverrides = {},
-    ) {
+    function setupForCallback(taskOverrides = {}, updatedOverrides = {}) {
       const task = makeTask(taskOverrides);
       const updated = makeTask(updatedOverrides);
       mockDb.select
@@ -319,10 +319,7 @@ describe("task-service - extended coverage", () => {
     }
 
     it("should handle CODE_GENERATED event", async () => {
-      setupForCallback(
-        { status: "IN_PROGRESS" },
-        { status: "CODE_GENERATED" },
-      );
+      setupForCallback({ status: "IN_PROGRESS" }, { status: "CODE_GENERATED" });
 
       const result = await processAgentCallback({
         taskId: "task-1",
@@ -333,10 +330,7 @@ describe("task-service - extended coverage", () => {
     });
 
     it("should not change status for CODE_GENERATED when terminal", async () => {
-      setupForCallback(
-        { status: "COMPLETED" },
-        { status: "COMPLETED" },
-      );
+      setupForCallback({ status: "COMPLETED" }, { status: "COMPLETED" });
 
       const result = await processAgentCallback({
         taskId: "task-1",
@@ -347,10 +341,7 @@ describe("task-service - extended coverage", () => {
     });
 
     it("should handle REVIEWING_STARTED event", async () => {
-      setupForCallback(
-        { status: "CODE_GENERATED" },
-        { status: "REVIEWING" },
-      );
+      setupForCallback({ status: "CODE_GENERATED" }, { status: "REVIEWING" });
 
       const result = await processAgentCallback({
         taskId: "task-1",
@@ -361,10 +352,7 @@ describe("task-service - extended coverage", () => {
     });
 
     it("should handle REVIEWING_COMPLETED event", async () => {
-      setupForCallback(
-        { status: "REVIEWING" },
-        { status: "COMMITTING" },
-      );
+      setupForCallback({ status: "REVIEWING" }, { status: "COMMITTING" });
 
       const result = await processAgentCallback({
         taskId: "task-1",
@@ -375,10 +363,7 @@ describe("task-service - extended coverage", () => {
     });
 
     it("should handle REVIEWING_FAILED event", async () => {
-      setupForCallback(
-        { status: "REVIEWING" },
-        { status: "FAILED" },
-      );
+      setupForCallback({ status: "REVIEWING" }, { status: "FAILED" });
 
       const result = await processAgentCallback({
         taskId: "task-1",
@@ -390,10 +375,7 @@ describe("task-service - extended coverage", () => {
     });
 
     it("should handle TRIAGING_STARTED event", async () => {
-      setupForCallback(
-        { status: "IN_PROGRESS" },
-        { status: "TRIAGING" },
-      );
+      setupForCallback({ status: "IN_PROGRESS" }, { status: "TRIAGING" });
 
       const result = await processAgentCallback({
         taskId: "task-1",
@@ -404,10 +386,7 @@ describe("task-service - extended coverage", () => {
     });
 
     it("should handle TRIAGING_COMPLETED event", async () => {
-      setupForCallback(
-        { status: "TRIAGING" },
-        { status: "IN_PROGRESS" },
-      );
+      setupForCallback({ status: "TRIAGING" }, { status: "IN_PROGRESS" });
 
       const result = await processAgentCallback({
         taskId: "task-1",
@@ -418,10 +397,7 @@ describe("task-service - extended coverage", () => {
     });
 
     it("should handle GIT_COMMIT event", async () => {
-      setupForCallback(
-        { status: "CODE_GENERATED" },
-        { status: "COMMITTING" },
-      );
+      setupForCallback({ status: "CODE_GENERATED" }, { status: "COMMITTING" });
 
       const result = await processAgentCallback({
         taskId: "task-1",
@@ -432,10 +408,7 @@ describe("task-service - extended coverage", () => {
     });
 
     it("should handle GIT_PUSH event", async () => {
-      setupForCallback(
-        { status: "COMMITTING" },
-        { status: "PUSHING" },
-      );
+      setupForCallback({ status: "COMMITTING" }, { status: "PUSHING" });
 
       const result = await processAgentCallback({
         taskId: "task-1",
@@ -448,7 +421,11 @@ describe("task-service - extended coverage", () => {
     it("should handle PR_CREATED event with PR data", async () => {
       setupForCallback(
         { status: "PUSHING" },
-        { status: "CREATING_PR", pullRequestId: 99, pullRequestUrl: "https://bb/pr/99" },
+        {
+          status: "CREATING_PR",
+          pullRequestId: 99,
+          pullRequestUrl: "https://bb/pr/99",
+        },
       );
 
       const result = await processAgentCallback({
@@ -478,10 +455,7 @@ describe("task-service - extended coverage", () => {
     });
 
     it("should handle RETRY_SCHEDULED event", async () => {
-      setupForCallback(
-        { status: "FAILED" },
-        { status: "PENDING" },
-      );
+      setupForCallback({ status: "FAILED" }, { status: "PENDING" });
 
       const result = await processAgentCallback({
         taskId: "task-1",
@@ -536,10 +510,7 @@ describe("task-service - extended coverage", () => {
     });
 
     it("should handle TASK_QUEUED event", async () => {
-      setupForCallback(
-        { status: "PENDING" },
-        { status: "QUEUED" },
-      );
+      setupForCallback({ status: "PENDING" }, { status: "QUEUED" });
 
       const result = await processAgentCallback({
         taskId: "task-1",
@@ -550,10 +521,7 @@ describe("task-service - extended coverage", () => {
     });
 
     it("should handle unknown event type (no status change)", async () => {
-      setupForCallback(
-        { status: "IN_PROGRESS" },
-        { status: "IN_PROGRESS" },
-      );
+      setupForCallback({ status: "IN_PROGRESS" }, { status: "IN_PROGRESS" });
 
       const result = await processAgentCallback({
         taskId: "task-1",
@@ -576,7 +544,10 @@ describe("task-service - extended coverage", () => {
 
   describe("createTask - branch auto-generation", () => {
     it("should auto-generate branch when sourceBranch is __AUTO_GENERATED__", async () => {
-      const task = makeTask({ id: "task-auto", sourceBranch: "__AUTO_GENERATED__" });
+      const task = makeTask({
+        id: "task-auto",
+        sourceBranch: "__AUTO_GENERATED__",
+      });
       mockDb.insert.mockReturnValue(chainResult([task]));
       mockDb.update.mockReturnValue(chainResult([]));
       mockDb.select.mockReturnValue(chainResult([]));

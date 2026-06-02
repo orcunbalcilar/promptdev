@@ -30,7 +30,8 @@ const mockGetSession = vi.fn();
 const mockListAvailableModels = vi.fn();
 const mockSendMessage = vi.fn().mockResolvedValue(undefined);
 vi.mock("@/lib/copilot/client", () => ({
-  createCopilotSession: (...args: unknown[]) => mockCreateCopilotSession(...args),
+  createCopilotSession: (...args: unknown[]) =>
+    mockCreateCopilotSession(...args),
   destroySession: (...args: unknown[]) => mockDestroySession(...args),
   getSession: (...args: unknown[]) => mockGetSession(...args),
   listAvailableModels: (...args: unknown[]) => mockListAvailableModels(...args),
@@ -172,7 +173,10 @@ describe("orchestrator – uncovered lines", () => {
       const result = await executeTask("task-1");
 
       expect(result.success).toBe(true);
-      expect(transitionJiraIssue).toHaveBeenCalledWith("PROJ-42", "In Progress");
+      expect(transitionJiraIssue).toHaveBeenCalledWith(
+        "PROJ-42",
+        "In Progress",
+      );
       expect(addJiraComment).toHaveBeenCalledWith(
         "PROJ-42",
         expect.stringContaining("PromptDev AI agent started"),
@@ -222,7 +226,10 @@ describe("orchestrator – uncovered lines", () => {
     it("passes reasoningEffort 'high' when model supports it", async () => {
       mockCreateWorkspace.mockResolvedValue("/tmp/ws");
       mockListAvailableModels.mockResolvedValue([
-        { id: "gpt-4.1", capabilities: { supports: { reasoningEffort: true } } },
+        {
+          id: "gpt-4.1",
+          capabilities: { supports: { reasoningEffort: true } },
+        },
       ]);
 
       await executeTask("task-1");
@@ -236,7 +243,10 @@ describe("orchestrator – uncovered lines", () => {
     it("passes undefined reasoningEffort when model doesn't support it", async () => {
       mockCreateWorkspace.mockResolvedValue("/tmp/ws");
       mockListAvailableModels.mockResolvedValue([
-        { id: "gpt-4.1", capabilities: { supports: { reasoningEffort: false } } },
+        {
+          id: "gpt-4.1",
+          capabilities: { supports: { reasoningEffort: false } },
+        },
       ]);
 
       await executeTask("task-1");
@@ -250,7 +260,10 @@ describe("orchestrator – uncovered lines", () => {
     it("passes undefined when model is not found in models list", async () => {
       mockCreateWorkspace.mockResolvedValue("/tmp/ws");
       mockListAvailableModels.mockResolvedValue([
-        { id: "other-model", capabilities: { supports: { reasoningEffort: true } } },
+        {
+          id: "other-model",
+          capabilities: { supports: { reasoningEffort: true } },
+        },
       ]);
 
       await executeTask("task-1");
@@ -279,7 +292,11 @@ describe("orchestrator – uncovered lines", () => {
     it("passes byokProvider to session creation", async () => {
       mockCreateWorkspace.mockResolvedValue("/tmp/ws");
 
-      const byok = { type: "openai", apiKey: "sk-123", baseUrl: "https://api.openai.com" };
+      const byok = {
+        type: "openai",
+        apiKey: "sk-123",
+        baseUrl: "https://api.openai.com",
+      };
       await executeTask("task-1", undefined, byok as never);
 
       expect(mockCreateCopilotSession).toHaveBeenCalledWith(

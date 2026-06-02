@@ -1,4 +1,8 @@
-import { calculateTaskMetrics, formatDuration, compareModels } from "@/lib/analytics";
+import {
+  calculateTaskMetrics,
+  formatDuration,
+  compareModels,
+} from "@/lib/analytics";
 import type { Task } from "@/lib/api";
 
 const makeTask = (overrides: Partial<Task> = {}): Task => ({
@@ -171,17 +175,13 @@ describe("analytics", () => {
     });
 
     it("handles tasks without modelId in tasksByModel", () => {
-      const tasks = [
-        makeTask({ modelId: undefined }),
-      ];
+      const tasks = [makeTask({ modelId: undefined })];
       const metrics = calculateTaskMetrics(tasks);
       expect(Object.keys(metrics.tasksByModel)).toHaveLength(0);
     });
 
     it("handles completed tasks without completedAt in completionTrend", () => {
-      const tasks = [
-        makeTask({ status: "COMPLETED", completedAt: undefined }),
-      ];
+      const tasks = [makeTask({ status: "COMPLETED", completedAt: undefined })];
       const metrics = calculateTaskMetrics(tasks);
       expect(metrics.completionTrend).toEqual([]);
     });

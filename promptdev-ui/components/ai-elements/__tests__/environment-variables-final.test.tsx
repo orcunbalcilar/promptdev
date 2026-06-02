@@ -87,7 +87,7 @@ describe("EnvironmentVariables — uncovered lines", () => {
             <EnvironmentVariableValue />
           </EnvironmentVariable>
         </EnvironmentVariablesContent>
-      </EnvironmentVariables>
+      </EnvironmentVariables>,
     );
 
     expect(screen.getByText("•".repeat(9))).toBeInTheDocument();
@@ -109,7 +109,7 @@ describe("EnvironmentVariables — uncovered lines", () => {
             <EnvironmentVariableValue />
           </EnvironmentVariable>
         </EnvironmentVariablesContent>
-      </EnvironmentVariables>
+      </EnvironmentVariables>,
     );
 
     expect(screen.getByText("•".repeat(13))).toBeInTheDocument();
@@ -124,7 +124,7 @@ describe("EnvironmentVariables — uncovered lines", () => {
             <EnvironmentVariableValue />
           </EnvironmentVariable>
         </EnvironmentVariablesContent>
-      </EnvironmentVariables>
+      </EnvironmentVariables>,
     );
 
     expect(screen.getByText("actual-value")).toBeInTheDocument();
@@ -148,7 +148,7 @@ describe("EnvironmentVariables — uncovered lines", () => {
             <EnvironmentVariableCopyButton onCopy={onCopy} />
           </EnvironmentVariable>
         </EnvironmentVariablesContent>
-      </EnvironmentVariables>
+      </EnvironmentVariables>,
     );
 
     await user.click(screen.getByRole("button"));
@@ -175,14 +175,14 @@ describe("EnvironmentVariables — uncovered lines", () => {
             <EnvironmentVariableCopyButton copyFormat="export" />
           </EnvironmentVariable>
         </EnvironmentVariablesContent>
-      </EnvironmentVariables>
+      </EnvironmentVariables>,
     );
 
     await user.click(screen.getByRole("button"));
 
     await waitFor(() => {
       expect(writeText).toHaveBeenCalledWith(
-        'export DB_URL="postgres://localhost"'
+        'export DB_URL="postgres://localhost"',
       );
     });
   });
@@ -203,7 +203,7 @@ describe("EnvironmentVariables — uncovered lines", () => {
             <EnvironmentVariableCopyButton copyFormat="name" />
           </EnvironmentVariable>
         </EnvironmentVariablesContent>
-      </EnvironmentVariables>
+      </EnvironmentVariables>,
     );
 
     await user.click(screen.getByRole("button"));
@@ -225,7 +225,7 @@ describe("EnvironmentVariables — uncovered lines", () => {
             </EnvironmentVariableGroup>
           </EnvironmentVariable>
         </EnvironmentVariablesContent>
-      </EnvironmentVariables>
+      </EnvironmentVariables>,
     );
 
     expect(screen.getByText("Required")).toBeInTheDocument();
@@ -238,7 +238,7 @@ describe("EnvironmentVariables — uncovered lines", () => {
         <EnvironmentVariablesContent>
           <EnvironmentVariable name="AUTO_VAR" value="auto-value" />
         </EnvironmentVariablesContent>
-      </EnvironmentVariables>
+      </EnvironmentVariables>,
     );
 
     expect(screen.getByText("AUTO_VAR")).toBeInTheDocument();
@@ -266,12 +266,12 @@ describe("EnvironmentVariables — uncovered lines", () => {
             </EnvironmentVariableGroup>
           </EnvironmentVariable>
         </EnvironmentVariablesContent>
-      </EnvironmentVariables>
+      </EnvironmentVariables>,
     );
 
     await user.click(screen.getByRole("button"));
     expect(onError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Clipboard API not available" })
+      expect.objectContaining({ message: "Clipboard API not available" }),
     );
 
     Object.defineProperty(navigator, "clipboard", {
@@ -302,14 +302,14 @@ describe("EnvironmentVariables — uncovered lines", () => {
             </EnvironmentVariableGroup>
           </EnvironmentVariable>
         </EnvironmentVariablesContent>
-      </EnvironmentVariables>
+      </EnvironmentVariables>,
     );
 
     await user.click(screen.getByRole("button"));
     expect(onError).toHaveBeenCalledWith(expect.any(Error));
   });
 
-  // EnvironmentVariableCopyButton with copyFormat="export" 
+  // EnvironmentVariableCopyButton with copyFormat="export"
   it("copies in export format", async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);
@@ -329,7 +329,7 @@ describe("EnvironmentVariables — uncovered lines", () => {
             </EnvironmentVariableGroup>
           </EnvironmentVariable>
         </EnvironmentVariablesContent>
-      </EnvironmentVariables>
+      </EnvironmentVariables>,
     );
 
     await user.click(screen.getByRole("button"));
@@ -338,7 +338,7 @@ describe("EnvironmentVariables — uncovered lines", () => {
     });
   });
 
-  // EnvironmentVariableCopyButton with copyFormat="name" 
+  // EnvironmentVariableCopyButton with copyFormat="name"
   it("copies in name format", async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);
@@ -358,7 +358,7 @@ describe("EnvironmentVariables — uncovered lines", () => {
             </EnvironmentVariableGroup>
           </EnvironmentVariable>
         </EnvironmentVariablesContent>
-      </EnvironmentVariables>
+      </EnvironmentVariables>,
     );
 
     await user.click(screen.getByRole("button"));
@@ -388,7 +388,7 @@ describe("EnvironmentVariables — uncovered lines", () => {
             </EnvironmentVariableGroup>
           </EnvironmentVariable>
         </EnvironmentVariablesContent>
-      </EnvironmentVariables>
+      </EnvironmentVariables>,
     );
 
     await user.click(screen.getByRole("button"));

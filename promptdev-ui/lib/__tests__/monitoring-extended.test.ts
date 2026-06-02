@@ -71,18 +71,22 @@ describe("registerMonitoringSession", () => {
 
   it("handles API failure gracefully without throwing", async () => {
     mockFetch.mockResolvedValue(mockErrorResponse(500));
-    await expect(registerMonitoringSession({
-      sdkSessionId: "sdk-fail",
-      model: "gpt-5-mini",
-    })).resolves.toBeUndefined();
+    await expect(
+      registerMonitoringSession({
+        sdkSessionId: "sdk-fail",
+        model: "gpt-5-mini",
+      }),
+    ).resolves.toBeUndefined();
   });
 
   it("handles network failure gracefully", async () => {
     mockFetch.mockRejectedValue(new Error("Network error"));
-    await expect(registerMonitoringSession({
-      sdkSessionId: "sdk-net",
-      model: "gpt-5-mini",
-    })).resolves.toBeUndefined();
+    await expect(
+      registerMonitoringSession({
+        sdkSessionId: "sdk-net",
+        model: "gpt-5-mini",
+      }),
+    ).resolves.toBeUndefined();
   });
 });
 

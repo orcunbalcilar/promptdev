@@ -117,7 +117,11 @@ describe("monitoring-service – branch coverage", () => {
   describe("endSession – errorCount ?? 0 fallback", () => {
     it("handles null errorCount correctly when ending with error", async () => {
       const session = makeSession({ errorCount: null });
-      const ended = makeSession({ status: "FAILED", errorCount: 1, endedAt: NOW });
+      const ended = makeSession({
+        status: "FAILED",
+        errorCount: 1,
+        endedAt: NOW,
+      });
       mockDb.select.mockReturnValueOnce(chainResult([session]));
       mockDb.update.mockReturnValue(chainResult([ended]));
 
@@ -176,15 +180,17 @@ describe("monitoring-service – branch coverage", () => {
       mockDb.insert.mockReturnValue(chainResult([op]));
       // updateSessionAggregates: select for aggregates + update
       mockDb.select.mockReturnValue(
-        chainResult([{
-          totalOps: 5,
-          totalInput: 500,
-          totalOutput: 250,
-          totalDur: 2500,
-          msgCount: 3,
-          toolCount: 2,
-          errCount: 0,
-        }]),
+        chainResult([
+          {
+            totalOps: 5,
+            totalInput: 500,
+            totalOutput: 250,
+            totalDur: 2500,
+            msgCount: 3,
+            toolCount: 2,
+            errCount: 0,
+          },
+        ]),
       );
       mockDb.update.mockReturnValue(chainResult([]));
 
@@ -224,10 +230,17 @@ describe("monitoring-service – branch coverage", () => {
       const ops = [makeOp({ id: "op-1" }), makeOp({ id: "op-2" })];
       mockDb.insert.mockReturnValue(chainResult(ops));
       mockDb.select.mockReturnValue(
-        chainResult([{
-          totalOps: 2, totalInput: 200, totalOutput: 100,
-          totalDur: 1000, msgCount: 2, toolCount: 0, errCount: 0,
-        }]),
+        chainResult([
+          {
+            totalOps: 2,
+            totalInput: 200,
+            totalOutput: 100,
+            totalDur: 1000,
+            msgCount: 2,
+            toolCount: 0,
+            errCount: 0,
+          },
+        ]),
       );
       mockDb.update.mockReturnValue(chainResult([]));
 
@@ -250,27 +263,30 @@ describe("monitoring-service – branch coverage", () => {
     }) {
       let callIdx = 0;
       const defaultResults = [
-        [{ count: 5 }],                   // totalSessions
-        [{ count: 1 }],                   // activeSessions
-        [{ count: 20 }],                  // totalOps
-        [makeSession()],                  // recentSessions
+        [{ count: 5 }], // totalSessions
+        [{ count: 1 }], // activeSessions
+        [{ count: 20 }], // totalOps
+        [makeSession()], // recentSessions
         [{ totalInput: 1000, totalOutput: 500 }], // tokenAgg
-        [{ count: 2 }],                   // errorCount
-        [{ type: "SEND_MESSAGE", count: 15 }],    // opsByType
-        [{ model: "gpt-5.2", count: 5 }],         // sessionsByModel
-        overrides?.sessionsBySource ??            // sessionsBySource
-          [{ source: "web", count: 3 }, { source: null, count: 1 }],
+        [{ count: 2 }], // errorCount
+        [{ type: "SEND_MESSAGE", count: 15 }], // opsByType
+        [{ model: "gpt-5.2", count: 5 }], // sessionsByModel
+        overrides?.sessionsBySource ?? [ // sessionsBySource
+          { source: "web", count: 3 },
+          { source: null, count: 1 },
+        ],
         [{ toolName: "readFile", executionCount: 10, avgDurationMs: 120 }], // topTools
-        [{ date: "2025-01-15", count: 8 }],       // dailyOps
-        overrides?.recentErrors ??                // recentErrors
-          [makeOp({
+        [{ date: "2025-01-15", count: 8 }], // dailyOps
+        overrides?.recentErrors ?? [ // recentErrors
+          makeOp({
             id: "err-1",
             operationType: "ERROR",
-            message: null,           // triggers ?? ""
-            errorMessage: null,      // triggers ?? ""
-            sessionId: null,         // triggers ?? ""
+            message: null, // triggers ?? ""
+            errorMessage: null, // triggers ?? ""
+            sessionId: null, // triggers ?? ""
             success: false,
-          })],
+          }),
+        ],
       ];
 
       mockDb.select.mockImplementation(() => {
@@ -293,14 +309,16 @@ describe("monitoring-service – branch coverage", () => {
 
     it("handles non-null message, errorMessage, sessionId in recent errors", async () => {
       setupDashboardMocks({
-        recentErrors: [makeOp({
-          id: "err-2",
-          operationType: "ERROR",
-          message: "Something went wrong",
-          errorMessage: "Connection timeout",
-          sessionId: "sess-99",
-          success: false,
-        })],
+        recentErrors: [
+          makeOp({
+            id: "err-2",
+            operationType: "ERROR",
+            message: "Something went wrong",
+            errorMessage: "Connection timeout",
+            sessionId: "sess-99",
+            success: false,
+          }),
+        ],
       });
 
       const result = await getDashboardMetrics(7);

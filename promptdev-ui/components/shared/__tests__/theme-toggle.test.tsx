@@ -18,7 +18,9 @@ describe("ThemeToggle", () => {
 
   it("renders the toggle button", () => {
     render(<ThemeToggle />);
-    expect(screen.getByRole("button", { name: /toggle theme/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /toggle theme/i }),
+    ).toBeInTheDocument();
   });
 
   it("renders with accessible screen reader text", () => {

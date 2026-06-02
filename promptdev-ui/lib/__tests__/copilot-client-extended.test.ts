@@ -9,7 +9,6 @@
  * - sendAndWait with timeout
  * - abortSession for nonexistent session
  * - getAccountQuota success/failure
- * - getUserCopilotClient token cache key generation
  * - Event subscriber error handling
  */
 
@@ -85,7 +84,6 @@ vi.mock("../services/task-service", () => ({
 
 import {
   getCopilotClient,
-  getUserCopilotClient,
   createCopilotSession,
   subscribeToSession,
   sendAndWait,
@@ -104,8 +102,8 @@ function createMockSDKSession() {
     send: mockSend,
     sendAndWait: mockSendAndWait,
     abort: mockAbort,
-    destroy: mockDestroy,
-    getMessages: mockGetMessages,
+    disconnect: mockDestroy,
+    getEvents: mockGetMessages,
     workspacePath: "/tmp/workspace",
   };
 }
@@ -446,7 +444,9 @@ describe("Copilot Client – Extended Coverage", () => {
       const eventHandler = mockOn.mock.calls[0][0];
 
       // Should not throw
-      expect(() => eventHandler({ type: "session.idle", data: {} })).not.toThrow();
+      expect(() =>
+        eventHandler({ type: "session.idle", data: {} }),
+      ).not.toThrow();
       expect(errorSpy).toHaveBeenCalledWith(
         "[Copilot] Error in event subscriber:",
         expect.any(Error),
@@ -458,7 +458,10 @@ describe("Copilot Client – Extended Coverage", () => {
   // ── updateSessionState ──────────────────────────────────────────
 
   describe("updateSessionState – all branches", () => {
-    async function fireEventAndGetState(eventType: string, data?: Record<string, unknown>) {
+    async function fireEventAndGetState(
+      eventType: string,
+      data?: Record<string, unknown>,
+    ) {
       const eventHandler = mockOn.mock.calls[0][0];
       eventHandler({ type: eventType, data: data ?? {} });
       return getSession("ext-session-id")?.state;
@@ -473,12 +476,16 @@ describe("Copilot Client – Extended Coverage", () => {
     });
 
     it("session.compaction_start → processing", async () => {
-      expect(await fireEventAndGetState("session.compaction_start")).toBe("processing");
+      expect(await fireEventAndGetState("session.compaction_start")).toBe(
+        "processing",
+      );
     });
 
     it("session.compaction_complete → idle", async () => {
       await fireEventAndGetState("session.compaction_start");
-      expect(await fireEventAndGetState("session.compaction_complete")).toBe("idle");
+      expect(await fireEventAndGetState("session.compaction_complete")).toBe(
+        "idle",
+      );
     });
 
     it("subagent.started → processing", async () => {
@@ -505,7 +512,9 @@ describe("Copilot Client – Extended Coverage", () => {
     });
 
     it("session.title_changed updates title", async () => {
-      await fireEventAndGetState("session.title_changed", { title: "New Title" });
+      await fireEventAndGetState("session.title_changed", {
+        title: "New Title",
+      });
       const session = getSession("ext-session-id");
       expect(session?.title).toBe("New Title");
     });
@@ -517,27 +526,42 @@ describe("Copilot Client – Extended Coverage", () => {
     });
 
     it("session.error → error", async () => {
-      expect(await fireEventAndGetState("session.error", { errorType: "fatal", message: "boom" })).toBe("error");
+      expect(
+        await fireEventAndGetState("session.error", {
+          errorType: "fatal",
+          message: "boom",
+        }),
+      ).toBe("error");
     });
 
     it("error → error", async () => {
-      expect(await fireEventAndGetState("error", { message: "oops" })).toBe("error");
+      expect(await fireEventAndGetState("error", { message: "oops" })).toBe(
+        "error",
+      );
     });
 
     it("assistant.message_delta → streaming", async () => {
-      expect(await fireEventAndGetState("assistant.message_delta")).toBe("streaming");
+      expect(await fireEventAndGetState("assistant.message_delta")).toBe(
+        "streaming",
+      );
     });
 
     it("assistant.reasoning_delta → streaming", async () => {
-      expect(await fireEventAndGetState("assistant.reasoning_delta")).toBe("streaming");
+      expect(await fireEventAndGetState("assistant.reasoning_delta")).toBe(
+        "streaming",
+      );
     });
 
     it("tool.execution_start → processing", async () => {
-      expect(await fireEventAndGetState("tool.execution_start")).toBe("processing");
+      expect(await fireEventAndGetState("tool.execution_start")).toBe(
+        "processing",
+      );
     });
 
     it("tool.execution_complete → processing", async () => {
-      expect(await fireEventAndGetState("tool.execution_complete")).toBe("processing");
+      expect(await fireEventAndGetState("tool.execution_complete")).toBe(
+        "processing",
+      );
     });
   });
 
@@ -588,23 +612,12 @@ describe("Copilot Client – Extended Coverage", () => {
       // Force rpc.call to reject by recreating with error mock
       // We need to get the client and override its rpc
       const client = await getCopilotClient();
-      (client as unknown as { rpc: { call: ReturnType<typeof vi.fn> } }).rpc.call =
-        vi.fn().mockRejectedValue(new Error("Quota unavailable"));
+      (
+        client as unknown as { rpc: { call: ReturnType<typeof vi.fn> } }
+      ).rpc.call = vi.fn().mockRejectedValue(new Error("Quota unavailable"));
 
       const result = await getAccountQuota();
       expect(result).toBeNull();
-    });
-  });
-
-  // ── getUserCopilotClient caching ────────────────────────────────
-
-  describe("getUserCopilotClient – token caching", () => {
-    it("caches clients by token hash (different tokens = different clients)", async () => {
-      const client1 = await getUserCopilotClient("gho_aaaa1234567890bb");
-      const client2 = await getUserCopilotClient("gho_cccc9876543210dd");
-      expect(client1).not.toBe(client2);
-      // Each user client calls start() once
-      expect(mockStart).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -684,7 +697,9 @@ describe("Copilot Client – Extended Coverage", () => {
 
     it("includes mcpServers when specified", async () => {
       await createCopilotSession({
-        mcpServers: [{ type: "stdio", command: "node", args: ["server.js"] }] as unknown as import("@github/copilot-sdk").MCPServerConfig[],
+        mcpServers: [
+          { type: "stdio", command: "node", args: ["server.js"] },
+        ] as unknown as import("@github/copilot-sdk").MCPServerConfig[],
       });
       const config = mockCreateSession.mock.calls[0][0];
       expect(config.mcpServers).toHaveLength(1);
@@ -692,7 +707,9 @@ describe("Copilot Client – Extended Coverage", () => {
 
     it("includes agents when specified", async () => {
       await createCopilotSession({
-        agents: [{ name: "test-agent", description: "A test agent" }] as unknown as import("@github/copilot-sdk").CustomAgentConfig[],
+        agents: [
+          { name: "test-agent", description: "A test agent" },
+        ] as unknown as import("@github/copilot-sdk").CustomAgentConfig[],
       });
       const config = mockCreateSession.mock.calls[0][0];
       expect(config.agents).toHaveLength(1);

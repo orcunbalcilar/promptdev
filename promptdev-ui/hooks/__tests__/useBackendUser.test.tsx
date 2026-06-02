@@ -141,12 +141,12 @@ describe("useBackendUser", () => {
 
     // Initially no userId
     expect(result.current.userId).toBeUndefined();
-    
+
     // Verify syncUser was called
     await waitFor(() => {
       expect(userLib.syncUser).toHaveBeenCalled();
     });
-    
+
     // userId should remain undefined after error
     expect(result.current.userId).toBeUndefined();
   });
@@ -192,7 +192,7 @@ describe("useBackendUser", () => {
     expect(userLib.syncUser).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: "github",
-      })
+      }),
     );
   });
 
@@ -254,7 +254,7 @@ describe("useBackendUser", () => {
 
     // Verify getUserProfile was called with the UUID
     expect(userLib.getUserProfile).toHaveBeenCalledWith(mockUuid);
-    
+
     // syncUser should NOT be called
     expect(userLib.syncUser).not.toHaveBeenCalled();
 

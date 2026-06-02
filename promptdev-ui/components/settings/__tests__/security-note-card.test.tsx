@@ -27,8 +27,6 @@ describe("SecurityNoteCard", () => {
 
   it("mentions boolean indicator for token status", () => {
     render(<SecurityNoteCard />);
-    expect(
-      screen.getByText(/boolean indicator/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/boolean indicator/i)).toBeInTheDocument();
   });
 });

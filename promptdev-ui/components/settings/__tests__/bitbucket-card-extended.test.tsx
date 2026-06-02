@@ -59,13 +59,9 @@ describe("BitbucketCard - error handling", () => {
     mockUpdateSettings.mockRejectedValueOnce(error);
 
     const user = userEvent.setup();
-    renderWithProviders(
-      <BitbucketCard userId="u1" profile={makeProfile()} />,
-    );
+    renderWithProviders(<BitbucketCard userId="u1" profile={makeProfile()} />);
 
-    await user.click(
-      screen.getByRole("button", { name: /save bitbucket/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /save bitbucket/i }));
 
     await waitFor(() => {
       expect(mockShowErrorToast).toHaveBeenCalledWith(
@@ -92,22 +88,15 @@ describe("BitbucketCard - shows token set indicator", () => {
 describe("BitbucketCard - sends all fields on save", () => {
   it("sends all four Bitbucket fields", async () => {
     const user = userEvent.setup();
-    renderWithProviders(
-      <BitbucketCard userId="u1" profile={makeProfile()} />,
-    );
+    renderWithProviders(<BitbucketCard userId="u1" profile={makeProfile()} />);
 
     await user.type(
       screen.getByLabelText("Bitbucket Server URL"),
       "https://bb.co",
     );
-    await user.type(
-      screen.getByLabelText(/default project key/i),
-      "PRJ",
-    );
+    await user.type(screen.getByLabelText(/default project key/i), "PRJ");
     await user.type(screen.getByLabelText("Username"), "admin");
-    await user.click(
-      screen.getByRole("button", { name: /save bitbucket/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /save bitbucket/i }));
 
     expect(mockUpdateSettings).toHaveBeenCalledWith(
       "u1",
@@ -124,18 +113,12 @@ describe("BitbucketCard - success toast and token reset", () => {
   it("shows success toast and resets token field on save", async () => {
     const { toast } = await import("sonner");
     const user = userEvent.setup();
-    renderWithProviders(
-      <BitbucketCard userId="u1" profile={makeProfile()} />,
-    );
+    renderWithProviders(<BitbucketCard userId="u1" profile={makeProfile()} />);
 
-    await user.click(
-      screen.getByRole("button", { name: /save bitbucket/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /save bitbucket/i }));
 
     await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith(
-        "Bitbucket settings saved",
-      );
+      expect(toast.success).toHaveBeenCalledWith("Bitbucket settings saved");
     });
   });
 });

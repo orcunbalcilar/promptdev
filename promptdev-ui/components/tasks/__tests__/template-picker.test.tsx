@@ -2,10 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  SDLC_TEMPLATES,
-  SDLC_CATEGORIES,
-} from "@/lib/sdlc";
+import { SDLC_TEMPLATES, SDLC_CATEGORIES } from "@/lib/sdlc";
 
 // Mock the form context
 const mockSetTitle = vi.fn();
@@ -26,9 +23,7 @@ function renderWithProviders(ui: React.ReactElement) {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  return render(
-    <QueryClientProvider client={qc}>{ui}</QueryClientProvider>,
-  );
+  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
 }
 
 describe("TemplatePicker", () => {
@@ -97,7 +92,9 @@ describe("TemplatePicker", () => {
 
     expect(mockSetTitle).toHaveBeenCalledWith(firstTemplate.name);
     expect(mockSetPrompt).toHaveBeenCalledWith(firstTemplate.promptTemplate);
-    expect(mockSetSystemPrompt).toHaveBeenCalledWith(firstTemplate.systemMessage);
+    expect(mockSetSystemPrompt).toHaveBeenCalledWith(
+      firstTemplate.systemMessage,
+    );
   });
 
   it("shows Clear button after selecting a template", async () => {

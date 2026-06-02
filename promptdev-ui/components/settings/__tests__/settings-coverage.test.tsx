@@ -13,7 +13,13 @@ import type { UserProfile } from "@/lib/user";
 
 vi.mock("next-auth/react", () => ({
   useSession: () => ({
-    data: { user: { name: "Test", email: "test@test.com", image: "https://img.com/avatar.png" } },
+    data: {
+      user: {
+        name: "Test",
+        email: "test@test.com",
+        image: "https://img.com/avatar.png",
+      },
+    },
     status: "authenticated",
   }),
 }));
@@ -43,7 +49,11 @@ describe("profile-card.tsx branch coverage", () => {
       <ProfileCard
         profile={baseProfile}
         session={{
-          user: { name: "User", email: "user@test.com", image: "https://img.com/fallback.png" },
+          user: {
+            name: "User",
+            email: "user@test.com",
+            image: "https://img.com/fallback.png",
+          },
         }}
       />,
     );
@@ -61,12 +71,7 @@ describe("profile-card.tsx branch coverage", () => {
   });
 
   it("line 56: session is null", () => {
-    renderWith(
-      <ProfileCard
-        profile={baseProfile}
-        session={null}
-      />,
-    );
+    renderWith(<ProfileCard profile={baseProfile} session={null} />);
     expect(screen.getByText("User")).toBeInTheDocument();
     expect(screen.getByText("bitbucket")).toBeInTheDocument();
   });

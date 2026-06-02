@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  COPILOT_COMMANDS,
-  REASONING_EFFORTS,
-  stateColors,
-} from "../constants";
+import { COPILOT_COMMANDS, REASONING_EFFORTS, stateColors } from "../constants";
 
 describe("COPILOT_COMMANDS", () => {
   it("is an array with at least 5 commands", () => {

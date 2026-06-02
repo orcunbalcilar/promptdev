@@ -49,7 +49,7 @@ function createEventQueue() {
       const task = queue.shift()!;
       try {
         await task();
-      /* v8 ignore start — safety net: routeEvent has its own try/catch so this catch is unreachable in normal flow */
+        /* v8 ignore start — safety net: routeEvent has its own try/catch so this catch is unreachable in normal flow */
       } catch (err) {
         console.error("[Orchestrator] Event queue error:", err);
       }

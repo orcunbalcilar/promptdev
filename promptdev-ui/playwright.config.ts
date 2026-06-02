@@ -1,33 +1,33 @@
-import { defineConfig, devices } from '@playwright/test'
+import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: "./e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  reporter: "html",
   use: {
-    baseURL: 'http://localhost:3030',
-    trace: 'on-first-retry',
+    baseURL: "http://localhost:3030",
+    trace: "on-first-retry",
   },
   projects: [
     {
-      name: 'setup',
+      name: "setup",
       testMatch: /auth\.setup\.ts/,
     },
     {
-      name: 'chromium',
+      name: "chromium",
       use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'e2e/.auth/user.json',
+        ...devices["Desktop Chrome"],
+        storageState: "e2e/.auth/user.json",
       },
-      dependencies: ['setup'],
+      dependencies: ["setup"],
     },
   ],
   webServer: {
-    command: 'pnpm dev',
-    url: 'http://localhost:3030',
+    command: "pnpm dev",
+    url: "http://localhost:3030",
     reuseExistingServer: !process.env.CI,
   },
-})
+});

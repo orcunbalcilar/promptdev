@@ -60,11 +60,32 @@ export const SKILL_CATEGORIES: Record<
   SkillCategory,
   { label: string; order: number; description: string }
 > = {
-  development: { label: "Development", order: 0, description: "Frameworks, patterns, and best practices for building software" },
-  testing: { label: "Testing & QA", order: 1, description: "Automated testing, browser testing, and quality assurance" },
-  design: { label: "Design & UI", order: 2, description: "UI design guidelines, accessibility, and frontend design" },
-  devops: { label: "DevOps & Tools", order: 3, description: "Deployment, MCP servers, and developer tooling" },
-  documents: { label: "Documents", order: 4, description: "Document generation, skills authoring" },
+  development: {
+    label: "Development",
+    order: 0,
+    description:
+      "Frameworks, patterns, and best practices for building software",
+  },
+  testing: {
+    label: "Testing & QA",
+    order: 1,
+    description: "Automated testing, browser testing, and quality assurance",
+  },
+  design: {
+    label: "Design & UI",
+    order: 2,
+    description: "UI design guidelines, accessibility, and frontend design",
+  },
+  devops: {
+    label: "DevOps & Tools",
+    order: 3,
+    description: "Deployment, MCP servers, and developer tooling",
+  },
+  documents: {
+    label: "Documents",
+    order: 4,
+    description: "Document generation, skills authoring",
+  },
 };
 
 export const SKILLS: Skill[] = [
@@ -72,7 +93,8 @@ export const SKILLS: Skill[] = [
   {
     id: "vercel-react-best-practices",
     label: "React Best Practices",
-    description: "40+ rules across 8 categories for React & Next.js performance optimization from Vercel Engineering. Covers waterfalls, bundle size, SSR, re-renders, and more.",
+    description:
+      "40+ rules across 8 categories for React & Next.js performance optimization from Vercel Engineering. Covers waterfalls, bundle size, SSR, re-renders, and more.",
     category: "development",
     defaultSelected: true,
     source: "official",
@@ -84,7 +106,8 @@ export const SKILLS: Skill[] = [
   {
     id: "vercel-composition-patterns",
     label: "Composition Patterns",
-    description: "React composition patterns that scale. Compound components, state lifting, and internal composition to avoid boolean prop proliferation.",
+    description:
+      "React composition patterns that scale. Compound components, state lifting, and internal composition to avoid boolean prop proliferation.",
     category: "development",
     defaultSelected: false,
     source: "official",
@@ -96,7 +119,8 @@ export const SKILLS: Skill[] = [
   {
     id: "frontend-design",
     label: "Frontend Design",
-    description: "Creates polished, accessible UI components with modern CSS, responsive layouts, animation, and design system integration.",
+    description:
+      "Creates polished, accessible UI components with modern CSS, responsive layouts, animation, and design system integration.",
     category: "design",
     defaultSelected: false,
     source: "official",
@@ -108,7 +132,8 @@ export const SKILLS: Skill[] = [
   {
     id: "web-design-guidelines",
     label: "Web Design Guidelines",
-    description: "100+ rules covering accessibility, performance, and UX. Audits for aria-labels, semantic HTML, focus states, forms, animation, typography, and more.",
+    description:
+      "100+ rules covering accessibility, performance, and UX. Audits for aria-labels, semantic HTML, focus states, forms, animation, typography, and more.",
     category: "design",
     defaultSelected: true,
     source: "official",
@@ -120,7 +145,8 @@ export const SKILLS: Skill[] = [
   {
     id: "react-native-guidelines",
     label: "React Native",
-    description: "React Native best practices for AI agents. 16 rules across 7 sections covering performance, layout, animation, images, state, and platform patterns.",
+    description:
+      "React Native best practices for AI agents. 16 rules across 7 sections covering performance, layout, animation, images, state, and platform patterns.",
     category: "development",
     defaultSelected: false,
     source: "official",
@@ -132,7 +158,8 @@ export const SKILLS: Skill[] = [
   {
     id: "remotion-best-practices",
     label: "Remotion",
-    description: "Best practices for building video with React using Remotion. Covers composition, rendering, performance, and deployment.",
+    description:
+      "Best practices for building video with React using Remotion. Covers composition, rendering, performance, and deployment.",
     category: "development",
     defaultSelected: false,
     source: "community",
@@ -145,7 +172,8 @@ export const SKILLS: Skill[] = [
   {
     id: "webapp-testing",
     label: "Web App Testing",
-    description: "Automated browser testing using Playwright. E2E flows, visual regression, API testing, Page Object Model, and CI integration.",
+    description:
+      "Automated browser testing using Playwright. E2E flows, visual regression, API testing, Page Object Model, and CI integration.",
     category: "testing",
     defaultSelected: false,
     source: "official",
@@ -158,7 +186,8 @@ export const SKILLS: Skill[] = [
   {
     id: "mcp-builder",
     label: "MCP Server Builder",
-    description: "Build Model Context Protocol (MCP) servers that expose tools, resources, and prompts to AI agents following the standard.",
+    description:
+      "Build Model Context Protocol (MCP) servers that expose tools, resources, and prompts to AI agents following the standard.",
     category: "devops",
     defaultSelected: false,
     source: "official",
@@ -170,7 +199,8 @@ export const SKILLS: Skill[] = [
   {
     id: "vercel-deploy-claimable",
     label: "Vercel Deploy",
-    description: "Deploy applications to Vercel instantly. Auto-detects 40+ frameworks, returns preview URL and claim URL for ownership transfer.",
+    description:
+      "Deploy applications to Vercel instantly. Auto-detects 40+ frameworks, returns preview URL and claim URL for ownership transfer.",
     category: "devops",
     defaultSelected: false,
     source: "official",
@@ -183,7 +213,8 @@ export const SKILLS: Skill[] = [
   {
     id: "doc-coauthoring",
     label: "Doc Co-Authoring",
-    description: "Collaborative document writing and editing. Structure, refine, and polish technical documents, PRDs, ADRs, and documentation.",
+    description:
+      "Collaborative document writing and editing. Structure, refine, and polish technical documents, PRDs, ADRs, and documentation.",
     category: "documents",
     defaultSelected: false,
     source: "official",
@@ -195,7 +226,8 @@ export const SKILLS: Skill[] = [
   {
     id: "find-skills",
     label: "Find Skills",
-    description: "Discover and install new agent skills. Helps you find the right skill for any task from the skills.sh ecosystem.",
+    description:
+      "Discover and install new agent skills. Helps you find the right skill for any task from the skills.sh ecosystem.",
     category: "documents",
     defaultSelected: false,
     source: "official",
@@ -207,7 +239,8 @@ export const SKILLS: Skill[] = [
   {
     id: "skill-creator",
     label: "Skill Creator",
-    description: "Create new Agent Skills from scratch. Generates SKILL.md files with proper frontmatter, instructions, and optional scripts.",
+    description:
+      "Create new Agent Skills from scratch. Generates SKILL.md files with proper frontmatter, instructions, and optional scripts.",
     category: "documents",
     defaultSelected: false,
     source: "official",
@@ -244,8 +277,7 @@ export function getSkillsByCategory(): Array<{
     }))
     .sort(
       (a, b) =>
-        SKILL_CATEGORIES[a.category].order -
-        SKILL_CATEGORIES[b.category].order,
+        SKILL_CATEGORIES[a.category].order - SKILL_CATEGORIES[b.category].order,
     );
 }
 

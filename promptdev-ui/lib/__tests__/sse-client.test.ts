@@ -25,7 +25,10 @@ class MockEventSource {
 
   removeEventListener(type: string, listener: EventListener) {
     const existing = this.listeners.get(type) ?? [];
-    this.listeners.set(type, existing.filter((l) => l !== listener));
+    this.listeners.set(
+      type,
+      existing.filter((l) => l !== listener),
+    );
   }
 
   close = vi.fn();
@@ -102,7 +105,10 @@ describe("createSseSubscription", () => {
     });
 
     MockEventSource.instances[0].simulateOpen();
-    MockEventSource.instances[0].simulateMessage('{"status":"done"}', "task-update");
+    MockEventSource.instances[0].simulateMessage(
+      '{"status":"done"}',
+      "task-update",
+    );
 
     expect(onMessage).toHaveBeenCalledTimes(1);
     expect(onMessage.mock.calls[0][0].data).toBe('{"status":"done"}');
@@ -296,10 +302,10 @@ describe("createSseSubscription", () => {
 
     // First connection created, trigger error
     MockEventSource.instances[0].simulateError();
-    
+
     // Dispose
     cleanup();
-    
+
     // onerror guard: after dispose, should not schedule retry
     vi.advanceTimersByTime(10000);
     expect(MockEventSource.instances).toHaveLength(1);

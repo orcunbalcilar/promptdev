@@ -6,9 +6,15 @@ vi.mock("@/components/ai-elements/progress-bar", () => ({
   ProgressBar: ({ children }: { children?: ReactNode }) => (
     <div data-testid="progress-bar">{children}</div>
   ),
-  ProgressBarLabel: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
-  ProgressBarValue: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
-  ProgressBarTrack: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
+  ProgressBarLabel: ({ children }: { children?: ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ProgressBarValue: ({ children }: { children?: ReactNode }) => (
+    <div>{children}</div>
+  ),
+  ProgressBarTrack: ({ children }: { children?: ReactNode }) => (
+    <div>{children}</div>
+  ),
   ProgressBarFill: () => <div data-testid="progress-fill" />,
 }));
 
@@ -17,10 +23,16 @@ vi.mock("@/components/ui/badge", () => ({
 }));
 
 vi.mock("@/components/ui/card", () => ({
-  Card: ({ children }: { children?: ReactNode }) => <section>{children}</section>,
-  CardHeader: ({ children }: { children?: ReactNode }) => <header>{children}</header>,
+  Card: ({ children }: { children?: ReactNode }) => (
+    <section>{children}</section>
+  ),
+  CardHeader: ({ children }: { children?: ReactNode }) => (
+    <header>{children}</header>
+  ),
   CardTitle: ({ children }: { children?: ReactNode }) => <h3>{children}</h3>,
-  CardContent: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
+  CardContent: ({ children }: { children?: ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 vi.mock("@/app/tasks/_components/index", () => ({

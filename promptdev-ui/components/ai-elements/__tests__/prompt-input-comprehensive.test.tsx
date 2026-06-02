@@ -3,9 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import React from "react";
 
-// Fix React 19 act() compatibility 
-vi.mock('react-dom', async () => {
-  const actual = await vi.importActual('react-dom');
+// Fix React 19 act() compatibility
+vi.mock("react-dom", async () => {
+  const actual = await vi.importActual("react-dom");
   return { ...actual, createPortal: (children: React.ReactNode) => children };
 });
 
@@ -17,51 +17,127 @@ vi.mock("nanoid", () => ({
 // Mock Radix portals to render inline
 vi.mock("@/components/ui/tooltip", () => ({
   Tooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  TooltipTrigger: React.forwardRef<HTMLSpanElement, React.PropsWithChildren<Record<string, unknown>>>(function TooltipTriggerMock({ children, ...props }, ref) {
-    return <span ref={ref} {...props}>{children}</span>;
+  TooltipTrigger: React.forwardRef<
+    HTMLSpanElement,
+    React.PropsWithChildren<Record<string, unknown>>
+  >(function TooltipTriggerMock({ children, ...props }, ref) {
+    return (
+      <span ref={ref} {...props}>
+        {children}
+      </span>
+    );
   }),
-  TooltipContent: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
-  TooltipProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  TooltipContent: ({ children }: { children: React.ReactNode }) => (
+    <span>{children}</span>
+  ),
+  TooltipProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
 vi.mock("@/components/ui/hover-card", () => ({
   HoverCard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  HoverCardTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  HoverCardContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  HoverCardTrigger: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+  HoverCardContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 vi.mock("@/components/ui/command", () => ({
-  Command: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
-  CommandInput: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
-  CommandList: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
-  CommandEmpty: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
-  CommandGroup: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
-  CommandItem: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
-  CommandSeparator: (props: React.HTMLAttributes<HTMLDivElement>) => <hr {...props} />,
+  Command: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+    <div {...props}>{children}</div>
+  ),
+  CommandInput: (props: React.InputHTMLAttributes<HTMLInputElement>) => (
+    <input {...props} />
+  ),
+  CommandList: ({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
+  CommandEmpty: ({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
+  CommandGroup: ({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
+  CommandItem: ({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
+  CommandSeparator: (props: React.HTMLAttributes<HTMLDivElement>) => (
+    <hr {...props} />
+  ),
 }));
 
 vi.mock("@/components/ui/select", () => ({
   Select: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  SelectTrigger: ({ children, ...props }: React.HTMLAttributes<HTMLButtonElement>) => <button {...props}>{children}</button>,
-  SelectContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  SelectItem: ({ children, value, ...props }: React.HTMLAttributes<HTMLDivElement> & { value?: string }) => <div data-value={value} {...props}>{children}</div>,
-  SelectValue: (props: React.HTMLAttributes<HTMLSpanElement>) => <span {...props} />,
+  SelectTrigger: ({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLButtonElement>) => (
+    <button {...props}>{children}</button>
+  ),
+  SelectContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  SelectItem: ({
+    children,
+    value,
+    ...props
+  }: React.HTMLAttributes<HTMLDivElement> & { value?: string }) => (
+    <div data-value={value} {...props}>
+      {children}
+    </div>
+  ),
+  SelectValue: (props: React.HTMLAttributes<HTMLSpanElement>) => (
+    <span {...props} />
+  ),
 }));
 
 vi.mock("@/components/ui/dropdown-menu", () => ({
-  DropdownMenu: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  DropdownMenuContent: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
-  DropdownMenuItem: ({ children, onSelect, ...props }: React.HTMLAttributes<HTMLDivElement> & { onSelect?: (e: Event) => void }) => (
-    <button type="button" role="menuitem" onClick={() => onSelect?.(new Event("select"))} {...props}>{children}</button>
+  DropdownMenu: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+  DropdownMenuContent: ({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
+  DropdownMenuItem: ({
+    children,
+    onSelect,
+    ...props
+  }: React.HTMLAttributes<HTMLDivElement> & {
+    onSelect?: (e: Event) => void;
+  }) => (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={() => onSelect?.(new Event("select"))}
+      {...props}
+    >
+      {children}
+    </button>
   ),
 }));
 
 // ResizeObserver mock
 globalThis.ResizeObserver = class ResizeObserver {
-  observe() { /* noop */ }
-  unobserve() { /* noop */ }
-  disconnect() { /* noop */ }
+  observe() {
+    /* noop */
+  }
+  unobserve() {
+    /* noop */
+  }
+  disconnect() {
+    /* noop */
+  }
 } as unknown as typeof ResizeObserver;
 
 Element.prototype.scrollIntoView = vi.fn();
@@ -111,9 +187,11 @@ describe("PromptInput wrapper components", () => {
           <PromptInputSelectValue />
         </PromptInputSelectTrigger>
         <PromptInputSelectContent className="content-class">
-          <PromptInputSelectItem value="a" className="item-class">A</PromptInputSelectItem>
+          <PromptInputSelectItem value="a" className="item-class">
+            A
+          </PromptInputSelectItem>
         </PromptInputSelectContent>
-      </PromptInputSelect>
+      </PromptInputSelect>,
     );
     expect(screen.getByText("A")).toBeInTheDocument();
   });
@@ -122,8 +200,10 @@ describe("PromptInput wrapper components", () => {
     render(
       <PromptInputHoverCard openDelay={100} closeDelay={100}>
         <PromptInputHoverCardTrigger>Trigger</PromptInputHoverCardTrigger>
-        <PromptInputHoverCardContent align="start" className="hover-class">Content</PromptInputHoverCardContent>
-      </PromptInputHoverCard>
+        <PromptInputHoverCardContent align="start" className="hover-class">
+          Content
+        </PromptInputHoverCardContent>
+      </PromptInputHoverCard>,
     );
     expect(screen.getByText("Trigger")).toBeInTheDocument();
     expect(screen.getByText("Content")).toBeInTheDocument();
@@ -138,7 +218,7 @@ describe("PromptInput wrapper components", () => {
             <PromptInputTabItem className="item">Item</PromptInputTabItem>
           </PromptInputTabBody>
         </PromptInputTab>
-      </PromptInputTabsList>
+      </PromptInputTabsList>,
     );
     expect(screen.getByText("Label")).toBeInTheDocument();
     expect(screen.getByText("Item")).toBeInTheDocument();
@@ -149,31 +229,35 @@ describe("PromptInput wrapper components", () => {
       <PromptInputCommand className="cmd">
         <PromptInputCommandInput className="input" />
         <PromptInputCommandList className="list">
-          <PromptInputCommandEmpty className="empty">No results</PromptInputCommandEmpty>
+          <PromptInputCommandEmpty className="empty">
+            No results
+          </PromptInputCommandEmpty>
           <PromptInputCommandGroup className="group">
-            <PromptInputCommandItem className="item">Item 1</PromptInputCommandItem>
+            <PromptInputCommandItem className="item">
+              Item 1
+            </PromptInputCommandItem>
           </PromptInputCommandGroup>
           <PromptInputCommandSeparator className="sep" />
         </PromptInputCommandList>
-      </PromptInputCommand>
+      </PromptInputCommand>,
     );
     expect(screen.getByText("No results")).toBeInTheDocument();
     expect(screen.getByText("Item 1")).toBeInTheDocument();
   });
 
   it("renders PromptInputToggle and Button with tooltip", () => {
-    render(
-      <PromptInputButton tooltip="Help text">Click me</PromptInputButton>
-    );
+    render(<PromptInputButton tooltip="Help text">Click me</PromptInputButton>);
     expect(screen.getByText("Click me")).toBeInTheDocument();
     expect(screen.getByText("Help text")).toBeInTheDocument();
   });
 
   it("renders PromptInputButton with object tooltip", () => {
     render(
-      <PromptInputButton tooltip={{ content: "Rich tip", shortcut: "Ctrl+K", side: "bottom" }}>
+      <PromptInputButton
+        tooltip={{ content: "Rich tip", shortcut: "Ctrl+K", side: "bottom" }}
+      >
         Button
-      </PromptInputButton>
+      </PromptInputButton>,
     );
     expect(screen.getByText("Rich tip")).toBeInTheDocument();
     expect(screen.getByText("Ctrl+K")).toBeInTheDocument();
@@ -187,11 +271,15 @@ describe("PromptInput wrapper components", () => {
   it("renders action menu components", () => {
     render(
       <PromptInputActionMenu>
-        <PromptInputActionMenuTrigger className="trigger">Menu</PromptInputActionMenuTrigger>
+        <PromptInputActionMenuTrigger className="trigger">
+          Menu
+        </PromptInputActionMenuTrigger>
         <PromptInputActionMenuContent className="content">
-          <PromptInputActionMenuItem className="item">Option</PromptInputActionMenuItem>
+          <PromptInputActionMenuItem className="item">
+            Option
+          </PromptInputActionMenuItem>
         </PromptInputActionMenuContent>
-      </PromptInputActionMenu>
+      </PromptInputActionMenu>,
     );
     expect(screen.getByText("Menu")).toBeInTheDocument();
     expect(screen.getByText("Option")).toBeInTheDocument();
@@ -203,7 +291,7 @@ describe("PromptInputSubmit", () => {
     render(
       <PromptInput onSubmit={vi.fn()}>
         <PromptInputSubmit />
-      </PromptInput>
+      </PromptInput>,
     );
     expect(screen.getByRole("button", { name: /submit/i })).toBeInTheDocument();
   });
@@ -212,7 +300,7 @@ describe("PromptInputSubmit", () => {
     render(
       <PromptInput onSubmit={vi.fn()}>
         <PromptInputSubmit status="submitted" />
-      </PromptInput>
+      </PromptInput>,
     );
     expect(screen.getByRole("button", { name: /stop/i })).toBeInTheDocument();
   });
@@ -221,7 +309,7 @@ describe("PromptInputSubmit", () => {
     render(
       <PromptInput onSubmit={vi.fn()}>
         <PromptInputSubmit status="streaming" onStop={vi.fn()} />
-      </PromptInput>
+      </PromptInput>,
     );
     expect(screen.getByRole("button", { name: /stop/i })).toBeInTheDocument();
   });
@@ -232,7 +320,7 @@ describe("PromptInputSubmit", () => {
     render(
       <PromptInput onSubmit={vi.fn()}>
         <PromptInputSubmit status="streaming" onStop={onStop} />
-      </PromptInput>
+      </PromptInput>,
     );
     await user.click(screen.getByRole("button", { name: /stop/i }));
     expect(onStop).toHaveBeenCalledTimes(1);
@@ -242,7 +330,7 @@ describe("PromptInputSubmit", () => {
     render(
       <PromptInput onSubmit={vi.fn()}>
         <PromptInputSubmit status="error" />
-      </PromptInput>
+      </PromptInput>,
     );
     expect(screen.getByRole("button", { name: /submit/i })).toBeInTheDocument();
   });
@@ -255,7 +343,7 @@ describe("Context hooks throw outside provider", () => {
       return null;
     };
     expect(() => render(<Comp />)).toThrow(
-      "Wrap your component inside <PromptInputProvider>"
+      "Wrap your component inside <PromptInputProvider>",
     );
   });
 
@@ -265,7 +353,7 @@ describe("Context hooks throw outside provider", () => {
       return null;
     };
     expect(() => render(<Comp />)).toThrow(
-      "Wrap your component inside <PromptInputProvider>"
+      "Wrap your component inside <PromptInputProvider>",
     );
   });
 
@@ -275,7 +363,7 @@ describe("Context hooks throw outside provider", () => {
       return null;
     };
     expect(() => render(<Comp />)).toThrow(
-      "usePromptInputAttachments must be used within"
+      "usePromptInputAttachments must be used within",
     );
   });
 
@@ -285,7 +373,7 @@ describe("Context hooks throw outside provider", () => {
       return null;
     };
     expect(() => render(<Comp />)).toThrow(
-      "usePromptInputReferencedSources must be used within"
+      "usePromptInputReferencedSources must be used within",
     );
   });
 });
@@ -299,7 +387,7 @@ describe("PromptInputProvider", () => {
     render(
       <PromptInputProvider initialInput="hello">
         <Consumer />
-      </PromptInputProvider>
+      </PromptInputProvider>,
     );
     expect(screen.getByTestId("value")).toHaveTextContent("hello");
   });
@@ -310,7 +398,13 @@ describe("PromptInputProvider", () => {
       return (
         <div>
           <span data-testid="count">{att.files.length}</span>
-          <button onClick={() => att.add([new File(["x"], "f.txt", { type: "text/plain" })])}>Add</button>
+          <button
+            onClick={() =>
+              att.add([new File(["x"], "f.txt", { type: "text/plain" })])
+            }
+          >
+            Add
+          </button>
           <button onClick={() => att.clear()}>Clear</button>
         </div>
       );
@@ -319,7 +413,7 @@ describe("PromptInputProvider", () => {
     render(
       <PromptInputProvider>
         <Consumer />
-      </PromptInputProvider>
+      </PromptInputProvider>,
     );
     expect(screen.getByTestId("count")).toHaveTextContent("0");
     await user.click(screen.getByText("Add"));
@@ -336,7 +430,7 @@ describe("PromptInputProvider", () => {
     render(
       <PromptInputProvider>
         <Consumer />
-      </PromptInputProvider>
+      </PromptInputProvider>,
     );
     // Just verify it doesn't throw
     fireEvent.click(screen.getByText("Open"));
@@ -345,7 +439,10 @@ describe("PromptInputProvider", () => {
 
 // Helper: fire change on hidden file input with specific files (bypasses browser accept filtering)
 function fireFileChange(fileInput: Element, files: File[]) {
-  Object.defineProperty(fileInput, 'files', { value: files, configurable: true });
+  Object.defineProperty(fileInput, "files", {
+    value: files,
+    configurable: true,
+  });
   fireEvent.change(fileInput, { target: { files } });
 }
 
@@ -355,13 +452,13 @@ describe("PromptInput file validation", () => {
     render(
       <PromptInput accept="image/*" onError={onError} onSubmit={vi.fn()}>
         <PromptInputTextarea />
-      </PromptInput>
+      </PromptInput>,
     );
     const fileInput = document.querySelector('input[type="file"]')!;
     const file = new File(["content"], "doc.pdf", { type: "application/pdf" });
     fireFileChange(fileInput, [file]);
     expect(onError).toHaveBeenCalledWith(
-      expect.objectContaining({ code: "accept" })
+      expect.objectContaining({ code: "accept" }),
     );
   });
 
@@ -371,13 +468,13 @@ describe("PromptInput file validation", () => {
     render(
       <PromptInput maxFileSize={10} onError={onError} onSubmit={vi.fn()}>
         <PromptInputTextarea />
-      </PromptInput>
+      </PromptInput>,
     );
     const fileInput = document.querySelector('input[type="file"]')!;
     const file = new File(["a".repeat(100)], "big.txt", { type: "text/plain" });
     await user.upload(fileInput as HTMLInputElement, file);
     expect(onError).toHaveBeenCalledWith(
-      expect.objectContaining({ code: "max_file_size" })
+      expect.objectContaining({ code: "max_file_size" }),
     );
   });
 
@@ -387,7 +484,7 @@ describe("PromptInput file validation", () => {
     render(
       <PromptInput maxFiles={1} multiple onError={onError} onSubmit={vi.fn()}>
         <PromptInputTextarea />
-      </PromptInput>
+      </PromptInput>,
     );
     const fileInput = document.querySelector('input[type="file"]')!;
     const files = [
@@ -396,7 +493,7 @@ describe("PromptInput file validation", () => {
     ];
     await user.upload(fileInput as HTMLInputElement, files);
     expect(onError).toHaveBeenCalledWith(
-      expect.objectContaining({ code: "max_files" })
+      expect.objectContaining({ code: "max_files" }),
     );
   });
 });
@@ -409,9 +506,11 @@ describe("PromptInput form submission", () => {
       <PromptInput onSubmit={onSubmit}>
         <PromptInputTextarea />
         <PromptInputSubmit />
-      </PromptInput>
+      </PromptInput>,
     );
-    const textarea = screen.getByPlaceholderText("What would you like to know?");
+    const textarea = screen.getByPlaceholderText(
+      "What would you like to know?",
+    );
     await user.type(textarea, "hello{Enter}");
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
   });
@@ -425,9 +524,11 @@ describe("PromptInput form submission", () => {
           <PromptInputTextarea />
           <PromptInputSubmit />
         </PromptInput>
-      </PromptInputProvider>
+      </PromptInputProvider>,
     );
-    const textarea = screen.getByPlaceholderText("What would you like to know?");
+    const textarea = screen.getByPlaceholderText(
+      "What would you like to know?",
+    );
     await user.type(textarea, "provider text{Enter}");
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
   });
@@ -439,9 +540,11 @@ describe("PromptInput form submission", () => {
       <PromptInput onSubmit={onSubmit}>
         <PromptInputTextarea />
         <PromptInputSubmit />
-      </PromptInput>
+      </PromptInput>,
     );
-    const textarea = screen.getByPlaceholderText("What would you like to know?");
+    const textarea = screen.getByPlaceholderText(
+      "What would you like to know?",
+    );
     await user.type(textarea, "error text{Enter}");
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
   });
@@ -453,15 +556,17 @@ describe("PromptInput keyboard handling", () => {
     render(
       <PromptInput onSubmit={vi.fn()}>
         <PromptInputTextarea />
-      </PromptInput>
+      </PromptInput>,
     );
     // Add a file first
     const fileInput = document.querySelector('input[type="file"]')!;
     const file = new File(["a"], "a.txt", { type: "text/plain" });
     await user.upload(fileInput as HTMLInputElement, file);
-    
+
     // Press backspace in empty textarea
-    const textarea = screen.getByPlaceholderText("What would you like to know?");
+    const textarea = screen.getByPlaceholderText(
+      "What would you like to know?",
+    );
     await user.click(textarea);
     await user.keyboard("{Backspace}");
   });
@@ -470,14 +575,14 @@ describe("PromptInput keyboard handling", () => {
     render(
       <PromptInput onSubmit={vi.fn()}>
         <PromptInputTextarea />
-      </PromptInput>
+      </PromptInput>,
     );
-    const textarea = screen.getByPlaceholderText("What would you like to know?");
+    const textarea = screen.getByPlaceholderText(
+      "What would you like to know?",
+    );
     const file = new File(["img"], "img.png", { type: "image/png" });
     const clipboardData = {
-      items: [
-        { kind: "file", getAsFile: () => file },
-      ],
+      items: [{ kind: "file", getAsFile: () => file }],
     };
     fireEvent.paste(textarea, { clipboardData });
   });
@@ -486,9 +591,11 @@ describe("PromptInput keyboard handling", () => {
     render(
       <PromptInput onSubmit={vi.fn()}>
         <PromptInputTextarea />
-      </PromptInput>
+      </PromptInput>,
     );
-    const textarea = screen.getByPlaceholderText("What would you like to know?");
+    const textarea = screen.getByPlaceholderText(
+      "What would you like to know?",
+    );
     fireEvent.compositionEnd(textarea);
   });
 
@@ -499,9 +606,11 @@ describe("PromptInput keyboard handling", () => {
       <PromptInput onSubmit={onSubmit}>
         <PromptInputTextarea />
         <PromptInputSubmit />
-      </PromptInput>
+      </PromptInput>,
     );
-    const textarea = screen.getByPlaceholderText("What would you like to know?");
+    const textarea = screen.getByPlaceholderText(
+      "What would you like to know?",
+    );
     await user.type(textarea, "text");
     await user.keyboard("{Shift>}{Enter}{/Shift}");
     expect(onSubmit).not.toHaveBeenCalled();
@@ -518,7 +627,7 @@ describe("PromptInput drag and drop", () => {
     render(
       <PromptInput onSubmit={vi.fn()} globalDrop={false}>
         <PromptInputTextarea />
-      </PromptInput>
+      </PromptInput>,
     );
     const form = document.querySelector("form")!;
     const file = new File(["a"], "a.txt", { type: "text/plain" });
@@ -531,7 +640,7 @@ describe("PromptInput drag and drop", () => {
     render(
       <PromptInput onSubmit={vi.fn()} globalDrop={true}>
         <PromptInputTextarea />
-      </PromptInput>
+      </PromptInput>,
     );
     const file = new File(["a"], "a.txt", { type: "text/plain" });
     const dt = makeDt([file]);
@@ -545,10 +654,12 @@ describe("PromptInput syncHiddenInput", () => {
     render(
       <PromptInput onSubmit={vi.fn()} syncHiddenInput>
         <PromptInputTextarea />
-      </PromptInput>
+      </PromptInput>,
     );
     // syncHiddenInput effect runs when files.length === 0
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const fileInput = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
     expect(fileInput.value).toBe("");
   });
 });
@@ -558,15 +669,23 @@ describe("PromptInput with provider file validation", () => {
     const onError = vi.fn();
     render(
       <PromptInputProvider>
-        <PromptInput accept="image/*" maxFiles={1} maxFileSize={10} onError={onError} onSubmit={vi.fn()}>
+        <PromptInput
+          accept="image/*"
+          maxFiles={1}
+          maxFileSize={10}
+          onError={onError}
+          onSubmit={vi.fn()}
+        >
           <PromptInputTextarea />
         </PromptInput>
-      </PromptInputProvider>
+      </PromptInputProvider>,
     );
     const fileInput = document.querySelector('input[type="file"]')!;
     const file = new File(["x"], "doc.pdf", { type: "application/pdf" });
     fireFileChange(fileInput, [file]);
-    expect(onError).toHaveBeenCalledWith(expect.objectContaining({ code: "accept" }));
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ code: "accept" }),
+    );
   });
 });
 
@@ -580,7 +699,7 @@ describe("PromptInputActionAddAttachments", () => {
             <PromptInputActionAddAttachments label="Upload" />
           </PromptInputActionMenuContent>
         </PromptInputActionMenu>
-      </PromptInput>
+      </PromptInput>,
     );
     await user.click(screen.getByRole("menuitem"));
   });
@@ -590,20 +709,25 @@ describe("convertBlobUrlToDataUrl via submit", () => {
   it("converts blob URLs to data URLs on submit", async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();
-    
+
     // Mock fetch to return a blob
     const mockBlob = new Blob(["test"], { type: "text/plain" });
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
       blob: () => Promise.resolve(mockBlob),
     } as Response);
-    
+
     // Mock URL.createObjectURL to return blob: URL
     const origCreateObjectURL = URL.createObjectURL;
     URL.createObjectURL = vi.fn(() => "blob:http://localhost/test-id");
-    
+
     // Mock FileReader
     const origFileReader = globalThis.FileReader;
-    globalThis.FileReader = function (this: { onloadend: (() => void) | null; onerror: (() => void) | null; result: string; readAsDataURL: (b: Blob) => void }) {
+    globalThis.FileReader = function (this: {
+      onloadend: (() => void) | null;
+      onerror: (() => void) | null;
+      result: string;
+      readAsDataURL: (b: Blob) => void;
+    }) {
       this.onloadend = null;
       this.onerror = null;
       this.result = "data:text/plain;base64,dGVzdA==";
@@ -611,25 +735,27 @@ describe("convertBlobUrlToDataUrl via submit", () => {
         setTimeout(() => this.onloadend?.(), 0);
       };
     } as unknown as typeof FileReader;
-    
+
     render(
       <PromptInput onSubmit={onSubmit}>
         <PromptInputTextarea />
         <PromptInputSubmit />
-      </PromptInput>
+      </PromptInput>,
     );
-    
+
     // Add file via change event
     const fileInput = document.querySelector('input[type="file"]')!;
     const file = new File(["test"], "test.txt", { type: "text/plain" });
     fireFileChange(fileInput, [file]);
-    
+
     // Type and submit
-    const textarea = screen.getByPlaceholderText("What would you like to know?");
+    const textarea = screen.getByPlaceholderText(
+      "What would you like to know?",
+    );
     await user.type(textarea, "submit with files{Enter}");
-    
+
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
-    
+
     // Clean up
     URL.createObjectURL = origCreateObjectURL;
     globalThis.FileReader = origFileReader;
@@ -638,29 +764,33 @@ describe("convertBlobUrlToDataUrl via submit", () => {
   it("handles convertBlobUrlToDataUrl fetch error", async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();
-    
+
     // Mock fetch to throw
-    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("fetch failed"));
-    
+    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(
+      new Error("fetch failed"),
+    );
+
     const origCreateObjectURL = URL.createObjectURL;
     URL.createObjectURL = vi.fn(() => "blob:http://localhost/test-id-2");
-    
+
     render(
       <PromptInput onSubmit={onSubmit}>
         <PromptInputTextarea />
         <PromptInputSubmit />
-      </PromptInput>
+      </PromptInput>,
     );
-    
+
     const fileInput = document.querySelector('input[type="file"]')!;
     const file = new File(["test"], "test.txt", { type: "text/plain" });
     fireFileChange(fileInput, [file]);
-    
-    const textarea = screen.getByPlaceholderText("What would you like to know?");
+
+    const textarea = screen.getByPlaceholderText(
+      "What would you like to know?",
+    );
     await user.type(textarea, "submit{Enter}");
-    
+
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
-    
+
     URL.createObjectURL = origCreateObjectURL;
   });
 });
@@ -677,8 +807,20 @@ describe("PromptInputProvider remove and clear", () => {
               Remove {f.filename}
             </button>
           ))}
-          <button onClick={() => att.add([new File(["x"], "one.txt", { type: "text/plain" })])}>Add1</button>
-          <button onClick={() => att.add([new File(["y"], "two.txt", { type: "text/plain" })])}>Add2</button>
+          <button
+            onClick={() =>
+              att.add([new File(["x"], "one.txt", { type: "text/plain" })])
+            }
+          >
+            Add1
+          </button>
+          <button
+            onClick={() =>
+              att.add([new File(["y"], "two.txt", { type: "text/plain" })])
+            }
+          >
+            Add2
+          </button>
         </div>
       );
     };
@@ -686,7 +828,7 @@ describe("PromptInputProvider remove and clear", () => {
     render(
       <PromptInputProvider>
         <Consumer />
-      </PromptInputProvider>
+      </PromptInputProvider>,
     );
     await user.click(screen.getByText("Add1"));
     await user.click(screen.getByText("Add2"));
@@ -704,12 +846,14 @@ describe("PromptInput provider maxFileSize validation", () => {
         <PromptInput maxFileSize={5} onError={onError} onSubmit={vi.fn()}>
           <PromptInputTextarea />
         </PromptInput>
-      </PromptInputProvider>
+      </PromptInputProvider>,
     );
     const fileInput = document.querySelector('input[type="file"]')!;
     const file = new File(["a".repeat(100)], "big.txt", { type: "text/plain" });
     fireFileChange(fileInput, [file]);
-    expect(onError).toHaveBeenCalledWith(expect.objectContaining({ code: "max_file_size" }));
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ code: "max_file_size" }),
+    );
   });
 
   it("rejects excess files through provider maxFiles", () => {
@@ -719,7 +863,7 @@ describe("PromptInput provider maxFileSize validation", () => {
         <PromptInput maxFiles={1} multiple onError={onError} onSubmit={vi.fn()}>
           <PromptInputTextarea />
         </PromptInput>
-      </PromptInputProvider>
+      </PromptInputProvider>,
     );
     const fileInput = document.querySelector('input[type="file"]')!;
     const files = [
@@ -727,7 +871,9 @@ describe("PromptInput provider maxFileSize validation", () => {
       new File(["b"], "b.txt", { type: "text/plain" }),
     ];
     fireFileChange(fileInput, files);
-    expect(onError).toHaveBeenCalledWith(expect.objectContaining({ code: "max_files" }));
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ code: "max_files" }),
+    );
   });
 });
 
@@ -741,9 +887,11 @@ describe("PromptInput submit clears input with provider", () => {
           <PromptInputTextarea />
           <PromptInputSubmit />
         </PromptInput>
-      </PromptInputProvider>
+      </PromptInputProvider>,
     );
-    const textarea = screen.getByPlaceholderText("What would you like to know?");
+    const textarea = screen.getByPlaceholderText(
+      "What would you like to know?",
+    );
     await user.type(textarea, "{Enter}");
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
   });

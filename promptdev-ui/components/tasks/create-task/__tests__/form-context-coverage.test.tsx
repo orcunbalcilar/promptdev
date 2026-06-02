@@ -640,9 +640,7 @@ describe("TaskFormProvider / useTaskForm – uncovered paths", () => {
   });
 
   it("effectiveProjectKey falls back to empty when repo has no project key (line 178)", async () => {
-    mockGetRepositories.mockResolvedValue([
-      { slug: "bare-repo" },
-    ]);
+    mockGetRepositories.mockResolvedValue([{ slug: "bare-repo" }]);
 
     let captured: ReturnType<typeof useTaskForm> | null = null;
 

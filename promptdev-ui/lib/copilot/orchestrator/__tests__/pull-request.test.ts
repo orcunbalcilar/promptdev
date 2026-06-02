@@ -71,7 +71,10 @@ describe("pull-request", () => {
         url: "https://example.com/pr/1",
       });
 
-      const task = { ...BASE_TASK, sourceBranch: undefined as unknown as string };
+      const task = {
+        ...BASE_TASK,
+        sourceBranch: undefined as unknown as string,
+      };
       await createPullRequest("task-99", task);
 
       expect(taskService.createPullRequestForTask).toHaveBeenCalledWith(
@@ -89,7 +92,10 @@ describe("pull-request", () => {
         url: "",
       });
 
-      const task = { ...BASE_TASK, targetBranch: undefined as unknown as string };
+      const task = {
+        ...BASE_TASK,
+        targetBranch: undefined as unknown as string,
+      };
       await createPullRequest("task-1", task);
 
       expect(taskService.createPullRequestForTask).toHaveBeenCalledWith(
@@ -158,8 +164,9 @@ describe("pull-request", () => {
     });
 
     it("should send ERROR callback after all retries exhausted", async () => {
-      vi.mocked(taskService.createPullRequestForTask)
-        .mockRejectedValue(new Error("Service unavailable"));
+      vi.mocked(taskService.createPullRequestForTask).mockRejectedValue(
+        new Error("Service unavailable"),
+      );
 
       const promise = createPullRequest("task-1", BASE_TASK);
 
@@ -176,8 +183,9 @@ describe("pull-request", () => {
     });
 
     it("should stringify non-Error objects in error callback", async () => {
-      vi.mocked(taskService.createPullRequestForTask)
-        .mockRejectedValue("string error");
+      vi.mocked(taskService.createPullRequestForTask).mockRejectedValue(
+        "string error",
+      );
 
       const promise = createPullRequest("task-1", BASE_TASK);
 

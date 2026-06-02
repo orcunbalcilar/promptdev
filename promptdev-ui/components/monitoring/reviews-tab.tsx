@@ -1,9 +1,15 @@
-'use client'
+"use client";
 
-import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -11,73 +17,75 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
   AlertTriangle,
   CheckCircle2,
   Loader2,
   Shield,
   XCircle,
-} from 'lucide-react'
+} from "lucide-react";
 import {
   getMonitoringOperations,
   type MonitoringOperation,
   type PaginatedResponse,
-} from '@/lib/monitoring'
-import { MetricCard } from './metric-card'
-import { formatDate } from './constants'
+} from "@/lib/monitoring";
+import { MetricCard } from "./metric-card";
+import { formatDate } from "./constants";
 
 export function ReviewsTab({ days }: Readonly<{ days: number }>) {
-  const { data: operations, isLoading } = useQuery<PaginatedResponse<MonitoringOperation>>({
-    queryKey: ['monitoring-review-operations', days],
+  const { data: operations, isLoading } = useQuery<
+    PaginatedResponse<MonitoringOperation>
+  >({
+    queryKey: ["monitoring-review-operations", days],
     queryFn: () => getMonitoringOperations(0, 200),
     refetchInterval: 15000,
-  })
+  });
 
   const reviewOps = useMemo(() => {
-    if (!operations?.content) return []
+    if (!operations?.content) return [];
     return operations.content.filter(
       (op) =>
-        op.operationType.includes('REVIEW') ||
-        op.operationType === 'CODE_REVIEW'
-    )
-  }, [operations])
+        op.operationType.includes("REVIEW") ||
+        op.operationType === "CODE_REVIEW",
+    );
+  }, [operations]);
 
   const stats = useMemo(() => {
-    let passed = 0
-    let failed = 0
-    const issueMap = new Map<string, number>()
+    let passed = 0;
+    let failed = 0;
+    const issueMap = new Map<string, number>();
 
     for (const op of reviewOps) {
       if (op.success === false || op.errorMessage) {
-        failed++
+        failed++;
       } else {
-        passed++
+        passed++;
       }
       if (op.message) {
         const words = op.message
           .split(/[,;.!?]+/)
           .map((w) => w.trim())
-          .filter((w) => w.length > 3 && w.length < 80)
+          .filter((w) => w.length > 3 && w.length < 80);
         for (const word of words.slice(0, 3)) {
-          issueMap.set(word, (issueMap.get(word) ?? 0) + 1)
+          issueMap.set(word, (issueMap.get(word) ?? 0) + 1);
         }
       }
     }
 
     const topIssues = Array.from(issueMap.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
+      .slice(0, 10);
 
-    return { passed, failed, total: passed + failed, topIssues }
-  }, [reviewOps])
+    return { passed, failed, total: passed + failed, topIssues };
+  }, [reviewOps]);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   return (
@@ -88,7 +96,11 @@ export function ReviewsTab({ days }: Readonly<{ days: number }>) {
         <MetricCard
           title="Passed"
           value={stats.passed}
-          subtitle={stats.total > 0 ? `${Math.round((stats.passed / stats.total) * 100)}% pass rate` : undefined}
+          subtitle={
+            stats.total > 0
+              ? `${Math.round((stats.passed / stats.total) * 100)}% pass rate`
+              : undefined
+          }
           icon={CheckCircle2}
         />
         <MetricCard title="Failed" value={stats.failed} icon={XCircle} />
@@ -108,7 +120,8 @@ export function ReviewsTab({ days }: Readonly<{ days: number }>) {
         <CardContent>
           {reviewOps.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              No review operations recorded yet. Enable review on a task to start.
+              No review operations recorded yet. Enable review on a task to
+              start.
             </div>
           ) : (
             <Table>
@@ -124,26 +137,35 @@ export function ReviewsTab({ days }: Readonly<{ days: number }>) {
               </TableHeader>
               <TableBody>
                 {reviewOps.slice(0, 50).map((op) => {
-                  const hasFailed = op.success === false || !!op.errorMessage
+                  const hasFailed = op.success === false || !!op.errorMessage;
                   /* v8 ignore start — JSX fallback chains */
-                  const opMessage = op.message || op.errorMessage || '—'
-                  const opModel = op.model || '—'
-                  const opDuration = op.durationMs == null ? '—' : `${op.durationMs}ms`
+                  const opMessage = op.message || op.errorMessage || "—";
+                  const opModel = op.model || "—";
+                  const opDuration =
+                    op.durationMs == null ? "—" : `${op.durationMs}ms`;
                   /* v8 ignore stop */
                   return (
                     <TableRow key={op.id}>
                       <TableCell>
                         <Badge
                           variant="outline"
-                          className={hasFailed
-                            ? 'bg-red-500/10 text-red-700 border-red-200'
-                            : 'bg-green-500/10 text-green-700 border-green-200'
+                          className={
+                            hasFailed
+                              ? "bg-red-500/10 text-red-700 border-red-200"
+                              : "bg-green-500/10 text-green-700 border-green-200"
                           }
                         >
-                          {hasFailed
-                            ? <><XCircle className="h-3 w-3 mr-1" />Failed</>
-                            : <><CheckCircle2 className="h-3 w-3 mr-1" />Passed</>
-                          }
+                          {hasFailed ? (
+                            <>
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Failed
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Passed
+                            </>
+                          )}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -164,7 +186,7 @@ export function ReviewsTab({ days }: Readonly<{ days: number }>) {
                         {formatDate(op.timestamp)}
                       </TableCell>
                     </TableRow>
-                  )
+                  );
                 })}
               </TableBody>
             </Table>
@@ -200,5 +222,5 @@ export function ReviewsTab({ days }: Readonly<{ days: number }>) {
         </Card>
       )}
     </div>
-  )
+  );
 }

@@ -72,8 +72,12 @@ describe("templates", () => {
     });
 
     it("should replace multiple variables", () => {
-      const template = BUILT_IN_TEMPLATES.find((t) => t.id === "bugfix-investigate")!;
-      const result = interpolateTemplate(template, { description: "Login fails on mobile" });
+      const template = BUILT_IN_TEMPLATES.find(
+        (t) => t.id === "bugfix-investigate",
+      )!;
+      const result = interpolateTemplate(template, {
+        description: "Login fails on mobile",
+      });
       expect(result).toContain("Login fails on mobile");
     });
 

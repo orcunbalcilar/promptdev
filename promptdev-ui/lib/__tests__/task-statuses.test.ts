@@ -10,7 +10,13 @@ describe("task-statuses", () => {
 
     it("has expected group labels", () => {
       const labels = STATUS_GROUPS.map((g) => g.label);
-      expect(labels).toEqual(["Pending", "In Progress", "Review", "Completed", "Failed"]);
+      expect(labels).toEqual([
+        "Pending",
+        "In Progress",
+        "Review",
+        "Completed",
+        "Failed",
+      ]);
     });
 
     it("Pending group has PENDING, QUEUED, TRIAGING", () => {
@@ -20,7 +26,11 @@ describe("task-statuses", () => {
 
     it("In Progress group has IN_PROGRESS, VALIDATING, ITERATION_PENDING", () => {
       const inProgress = STATUS_GROUPS.find((g) => g.label === "In Progress");
-      expect(inProgress?.statuses).toEqual(["IN_PROGRESS", "VALIDATING", "ITERATION_PENDING"]);
+      expect(inProgress?.statuses).toEqual([
+        "IN_PROGRESS",
+        "VALIDATING",
+        "ITERATION_PENDING",
+      ]);
     });
 
     it("Review group has REVIEWING, CODE_GENERATED, COMMITTING, PUSHING, CREATING_PR", () => {

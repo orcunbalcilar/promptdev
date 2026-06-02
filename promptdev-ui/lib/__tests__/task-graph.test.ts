@@ -20,18 +20,23 @@ const makeTask = (overrides: Partial<Task> = {}): Task => ({
 describe("task-graph", () => {
   describe("buildTaskGraph", () => {
     it("should create nodes for each task", () => {
-      const tasks = [
-        makeTask({ id: "1" }),
-        makeTask({ id: "2" }),
-      ];
+      const tasks = [makeTask({ id: "1" }), makeTask({ id: "2" })];
       const graph = buildTaskGraph(tasks);
       expect(graph.nodes).toHaveLength(2);
     });
 
     it("should create edges between tasks in same repo", () => {
       const tasks = [
-        makeTask({ id: "1", repositorySlug: "repo-a", createdAt: "2024-01-01T00:00:00Z" }),
-        makeTask({ id: "2", repositorySlug: "repo-a", createdAt: "2024-01-02T00:00:00Z" }),
+        makeTask({
+          id: "1",
+          repositorySlug: "repo-a",
+          createdAt: "2024-01-01T00:00:00Z",
+        }),
+        makeTask({
+          id: "2",
+          repositorySlug: "repo-a",
+          createdAt: "2024-01-02T00:00:00Z",
+        }),
       ];
       const graph = buildTaskGraph(tasks);
       expect(graph.edges).toHaveLength(1);
@@ -50,8 +55,16 @@ describe("task-graph", () => {
 
     it("should sort tasks by creation date within repo", () => {
       const tasks = [
-        makeTask({ id: "2", repositorySlug: "repo-a", createdAt: "2024-01-02T00:00:00Z" }),
-        makeTask({ id: "1", repositorySlug: "repo-a", createdAt: "2024-01-01T00:00:00Z" }),
+        makeTask({
+          id: "2",
+          repositorySlug: "repo-a",
+          createdAt: "2024-01-02T00:00:00Z",
+        }),
+        makeTask({
+          id: "1",
+          repositorySlug: "repo-a",
+          createdAt: "2024-01-01T00:00:00Z",
+        }),
       ];
       const graph = buildTaskGraph(tasks);
       expect(graph.edges[0].source).toBe("1");
@@ -78,8 +91,16 @@ describe("task-graph", () => {
   describe("getGraphStats", () => {
     it("should calculate correct stats", () => {
       const graph = buildTaskGraph([
-        makeTask({ id: "1", repositorySlug: "repo-a", createdAt: "2024-01-01T00:00:00Z" }),
-        makeTask({ id: "2", repositorySlug: "repo-a", createdAt: "2024-01-02T00:00:00Z" }),
+        makeTask({
+          id: "1",
+          repositorySlug: "repo-a",
+          createdAt: "2024-01-01T00:00:00Z",
+        }),
+        makeTask({
+          id: "2",
+          repositorySlug: "repo-a",
+          createdAt: "2024-01-02T00:00:00Z",
+        }),
         makeTask({ id: "3", repositorySlug: "repo-b" }),
       ]);
       const stats = getGraphStats(graph);

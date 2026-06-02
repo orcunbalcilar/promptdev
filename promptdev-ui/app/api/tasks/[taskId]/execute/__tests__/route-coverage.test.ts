@@ -2,7 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
 vi.mock("@/lib/auth-guard", () => ({
-  requireAuth: vi.fn().mockResolvedValue({ session: { user: { id: "u1" } }, error: null }),
+  requireAuth: vi
+    .fn()
+    .mockResolvedValue({ session: { user: { id: "u1" } }, error: null }),
   requireTaskOwnership: vi.fn().mockResolvedValue(null),
 }));
 
@@ -31,7 +33,9 @@ describe("execute route – coverage (lines 105-107, 132-134)", () => {
   it("POST returns 409 when task is already running", async () => {
     mockIsTaskRunning.mockReturnValue(true);
     mockGetTaskSessionId.mockReturnValue("sess-1");
-    const req = new NextRequest("http://localhost/api/tasks/task-1/execute", { method: "POST" });
+    const req = new NextRequest("http://localhost/api/tasks/task-1/execute", {
+      method: "POST",
+    });
     const res = await POST(req, routeParams);
     expect(res.status).toBe(409);
   });
@@ -62,14 +66,18 @@ describe("execute route – coverage (lines 105-107, 132-134)", () => {
 
   it("POST handles empty body gracefully", async () => {
     mockExecuteTask.mockResolvedValue({ success: true, sessionId: "s1" });
-    const req = new NextRequest("http://localhost/api/tasks/task-1/execute", { method: "POST" });
+    const req = new NextRequest("http://localhost/api/tasks/task-1/execute", {
+      method: "POST",
+    });
     const res = await POST(req, routeParams);
     expect(res.status).toBe(200);
   });
 
   it("POST catches exception (lines 73-76)", async () => {
     mockExecuteTask.mockRejectedValue(new Error("boom"));
-    const req = new NextRequest("http://localhost/api/tasks/task-1/execute", { method: "POST" });
+    const req = new NextRequest("http://localhost/api/tasks/task-1/execute", {
+      method: "POST",
+    });
     const res = await POST(req, routeParams);
     expect(res.status).toBe(500);
   });
@@ -77,14 +85,18 @@ describe("execute route – coverage (lines 105-107, 132-134)", () => {
   it("DELETE cancels running task", async () => {
     mockIsTaskRunning.mockReturnValue(true);
     mockCancelTaskSession.mockResolvedValue(undefined);
-    const req = new NextRequest("http://localhost/api/tasks/task-1/execute", { method: "DELETE" });
+    const req = new NextRequest("http://localhost/api/tasks/task-1/execute", {
+      method: "DELETE",
+    });
     const res = await DELETE(req, routeParams);
     expect(res.status).toBe(200);
   });
 
   it("DELETE returns 404 when task not running", async () => {
     mockIsTaskRunning.mockReturnValue(false);
-    const req = new NextRequest("http://localhost/api/tasks/task-1/execute", { method: "DELETE" });
+    const req = new NextRequest("http://localhost/api/tasks/task-1/execute", {
+      method: "DELETE",
+    });
     const res = await DELETE(req, routeParams);
     expect(res.status).toBe(404);
   });
@@ -92,7 +104,9 @@ describe("execute route – coverage (lines 105-107, 132-134)", () => {
   it("DELETE catches exception (lines 105-107)", async () => {
     mockIsTaskRunning.mockReturnValue(true);
     mockCancelTaskSession.mockRejectedValue(new Error("cancel failed"));
-    const req = new NextRequest("http://localhost/api/tasks/task-1/execute", { method: "DELETE" });
+    const req = new NextRequest("http://localhost/api/tasks/task-1/execute", {
+      method: "DELETE",
+    });
     const res = await DELETE(req, routeParams);
     expect(res.status).toBe(500);
     const data = await res.json();
@@ -111,7 +125,9 @@ describe("execute route – coverage (lines 105-107, 132-134)", () => {
   });
 
   it("GET catches exception (lines 132-134)", async () => {
-    mockIsTaskRunning.mockImplementation(() => { throw new Error("check failed"); });
+    mockIsTaskRunning.mockImplementation(() => {
+      throw new Error("check failed");
+    });
     const req = new NextRequest("http://localhost/api/tasks/task-1/execute");
     const res = await GET(req, routeParams);
     expect(res.status).toBe(500);

@@ -40,7 +40,10 @@ beforeEach(() => {
 describe("Tasks API Route", () => {
   describe("GET /api/tasks", () => {
     it("returns 401 when auth fails", async () => {
-      const authError = Response.json({ error: "Unauthorized" }, { status: 401 });
+      const authError = Response.json(
+        { error: "Unauthorized" },
+        { status: 401 },
+      );
       mockRequireAuth.mockResolvedValue({ error: authError });
 
       const req = new NextRequest("http://localhost:3000/api/tasks");
@@ -69,7 +72,9 @@ describe("Tasks API Route", () => {
     it("passes custom page and size params", async () => {
       mockGetAllTasks.mockResolvedValue({ data: [], total: 0 });
 
-      const req = new NextRequest("http://localhost:3000/api/tasks?page=2&size=10");
+      const req = new NextRequest(
+        "http://localhost:3000/api/tasks?page=2&size=10",
+      );
       await GET(req);
 
       expect(mockGetAllTasks).toHaveBeenCalledWith(2, 10, {
@@ -82,7 +87,9 @@ describe("Tasks API Route", () => {
     it("filters by status group label", async () => {
       mockGetAllTasks.mockResolvedValue({ data: [], total: 0 });
 
-      const req = new NextRequest("http://localhost:3000/api/tasks?status=Active");
+      const req = new NextRequest(
+        "http://localhost:3000/api/tasks?status=Active",
+      );
       await GET(req);
 
       expect(mockGetAllTasks).toHaveBeenCalledWith(0, 20, {
@@ -95,7 +102,9 @@ describe("Tasks API Route", () => {
     it("filters by comma-separated statuses when not a group label", async () => {
       mockGetAllTasks.mockResolvedValue({ data: [], total: 0 });
 
-      const req = new NextRequest("http://localhost:3000/api/tasks?status=COMPLETED,FAILED");
+      const req = new NextRequest(
+        "http://localhost:3000/api/tasks?status=COMPLETED,FAILED",
+      );
       await GET(req);
 
       expect(mockGetAllTasks).toHaveBeenCalledWith(0, 20, {
@@ -121,7 +130,9 @@ describe("Tasks API Route", () => {
     it("filters by search query", async () => {
       mockGetAllTasks.mockResolvedValue({ data: [], total: 0 });
 
-      const req = new NextRequest("http://localhost:3000/api/tasks?search=fix+bug");
+      const req = new NextRequest(
+        "http://localhost:3000/api/tasks?search=fix+bug",
+      );
       await GET(req);
 
       expect(mockGetAllTasks).toHaveBeenCalledWith(0, 20, {
@@ -134,7 +145,9 @@ describe("Tasks API Route", () => {
     it("filters by workspaceType", async () => {
       mockGetAllTasks.mockResolvedValue({ data: [], total: 0 });
 
-      const req = new NextRequest("http://localhost:3000/api/tasks?workspaceType=github");
+      const req = new NextRequest(
+        "http://localhost:3000/api/tasks?workspaceType=github",
+      );
       await GET(req);
 
       expect(mockGetAllTasks).toHaveBeenCalledWith(0, 20, {
@@ -147,7 +160,9 @@ describe("Tasks API Route", () => {
     it("treats workspaceType=all as undefined", async () => {
       mockGetAllTasks.mockResolvedValue({ data: [], total: 0 });
 
-      const req = new NextRequest("http://localhost:3000/api/tasks?workspaceType=all");
+      const req = new NextRequest(
+        "http://localhost:3000/api/tasks?workspaceType=all",
+      );
       await GET(req);
 
       expect(mockGetAllTasks).toHaveBeenCalledWith(0, 20, {
@@ -160,7 +175,10 @@ describe("Tasks API Route", () => {
 
   describe("POST /api/tasks", () => {
     it("returns 401 when auth fails", async () => {
-      const authError = Response.json({ error: "Unauthorized" }, { status: 401 });
+      const authError = Response.json(
+        { error: "Unauthorized" },
+        { status: 401 },
+      );
       mockRequireAuth.mockResolvedValue({ error: authError });
 
       const req = new NextRequest("http://localhost:3000/api/tasks", {
@@ -180,7 +198,10 @@ describe("Tasks API Route", () => {
       const req = new NextRequest("http://localhost:3000/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "New Task", repoUrl: "https://github.com/test/repo" }),
+        body: JSON.stringify({
+          title: "New Task",
+          repoUrl: "https://github.com/test/repo",
+        }),
       });
       const response = await POST(req);
       const body = await response.json();

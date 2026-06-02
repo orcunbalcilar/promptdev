@@ -16,12 +16,17 @@ const mockAbortSession = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("@/lib/copilot/client", () => ({
   getSession: (...args: unknown[]) => mockGetSession(...args),
-  resumeCopilotSession: (...args: unknown[]) => mockResumeCopilotSession(...args),
+  resumeCopilotSession: (...args: unknown[]) =>
+    mockResumeCopilotSession(...args),
   destroySession: (...args: unknown[]) => mockDestroySession(...args),
   abortSession: (...args: unknown[]) => mockAbortSession(...args),
 }));
 
-import { GET, DELETE, POST } from "@/app/api/copilot/sessions/[sessionId]/route";
+import {
+  GET,
+  DELETE,
+  POST,
+} from "@/app/api/copilot/sessions/[sessionId]/route";
 import { requireAuth } from "@/lib/auth-guard";
 
 const mockRequireAuth = requireAuth as ReturnType<typeof vi.fn>;
@@ -30,7 +35,10 @@ function makeParams(sessionId: string) {
   return { params: Promise.resolve({ sessionId }) };
 }
 
-function makeRequest(url: string, init?: { method?: string; body?: string; headers?: Record<string, string> }) {
+function makeRequest(
+  url: string,
+  init?: { method?: string; body?: string; headers?: Record<string, string> },
+) {
   return new NextRequest(`http://localhost:3000${url}`, init);
 }
 
@@ -71,10 +79,7 @@ describe("GET /api/copilot/sessions/[sessionId]", () => {
 
     expect(res.status).toBe(200);
     expect(body.id).toBe("session-123");
-    expect(mockResumeCopilotSession).toHaveBeenCalledWith(
-      "session-123",
-      "gho_abc123",
-    );
+    expect(mockResumeCopilotSession).toHaveBeenCalledWith("session-123");
   });
 
   it("returns 404 when session not in memory and SDK resume fails", async () => {
@@ -90,10 +95,13 @@ describe("GET /api/copilot/sessions/[sessionId]", () => {
   });
 
   it("returns 401 when not authenticated", async () => {
-    const errorResponse = new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "content-type": "application/json" },
-    });
+    const errorResponse = new Response(
+      JSON.stringify({ error: "Unauthorized" }),
+      {
+        status: 401,
+        headers: { "content-type": "application/json" },
+      },
+    );
     mockRequireAuth.mockResolvedValue({ error: errorResponse });
 
     const req = makeRequest("/api/copilot/sessions/session-123");
@@ -102,7 +110,7 @@ describe("GET /api/copilot/sessions/[sessionId]", () => {
     expect(res.status).toBe(401);
   });
 
-  it("passes undefined copilotToken when user has none", async () => {
+  it("uses shared client regardless of user token", async () => {
     mockRequireAuth.mockResolvedValue({
       session: { user: { id: "user-1" } },
     });
@@ -112,10 +120,7 @@ describe("GET /api/copilot/sessions/[sessionId]", () => {
     const req = makeRequest("/api/copilot/sessions/session-123");
     await GET(req, makeParams("session-123"));
 
-    expect(mockResumeCopilotSession).toHaveBeenCalledWith(
-      "session-123",
-      undefined,
-    );
+    expect(mockResumeCopilotSession).toHaveBeenCalledWith("session-123");
   });
 });
 

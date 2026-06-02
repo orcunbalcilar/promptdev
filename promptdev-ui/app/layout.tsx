@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "PromptDev - AI-Powered Development Platform",
-  description: "Build features with AI agents. Create tasks, select repositories, and get automated pull requests.",
+  description:
+    "Build features with AI agents. Create tasks, select repositories, and get automated pull requests.",
   icons: {
     icon: "/favicon.svg",
     apple: "/favicon.svg",
@@ -33,9 +34,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>
-          {children}
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

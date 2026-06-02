@@ -21,7 +21,8 @@ const mockSubscribe = vi.fn(
   },
 );
 vi.mock("@/lib/copilot/client", () => ({
-  subscribeToSession: (...args: unknown[]) => mockSubscribe(...(args as [string, (e: Record<string, unknown>) => void])),
+  subscribeToSession: (...args: unknown[]) =>
+    mockSubscribe(...(args as [string, (e: Record<string, unknown>) => void])),
 }));
 
 vi.mock("../types", async (importOriginal) => {
@@ -34,7 +35,8 @@ vi.mock("../types", async (importOriginal) => {
 const mockSendCallback = vi.fn().mockResolvedValue(undefined);
 vi.mock("../service-bridge", () => ({
   sendCallback: (...args: unknown[]) => mockSendCallback(...args),
-  serializeField: (v: unknown) => (typeof v === "string" ? v : JSON.stringify(v)),
+  serializeField: (v: unknown) =>
+    typeof v === "string" ? v : JSON.stringify(v),
 }));
 
 const mockCleanupTaskSession = vi.fn().mockResolvedValue(undefined);
@@ -71,7 +73,9 @@ describe("event-tracking – uncovered lines", () => {
 
   describe("event queue drain error catch", () => {
     it("logs error and continues processing when handler throws", async () => {
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       const task = {
         id: "task-1",
@@ -83,9 +87,8 @@ describe("event-tracking – uncovered lines", () => {
 
       setupEventTracking("task-1", "sess-1", task);
 
-      const callback = (globalThis as Record<string, unknown>).__eventCallback as (
-        event: Record<string, unknown>,
-      ) => void;
+      const callback = (globalThis as Record<string, unknown>)
+        .__eventCallback as (event: Record<string, unknown>) => void;
 
       // Force an error in routeEvent by sending invalid event type
       // that won't match any case but the handler wrapping should catch errors
@@ -129,9 +132,8 @@ describe("event-tracking – uncovered lines", () => {
 
       setupEventTracking("task-rp", "sess-rp", task);
 
-      const callback = (globalThis as Record<string, unknown>).__eventCallback as (
-        event: Record<string, unknown>,
-      ) => void;
+      const callback = (globalThis as Record<string, unknown>)
+        .__eventCallback as (event: Record<string, unknown>) => void;
 
       callback({
         type: "session.error",
@@ -174,9 +176,8 @@ describe("event-tracking – uncovered lines", () => {
 
       setupEventTracking("task-bb", "sess-bb", task);
 
-      const callback = (globalThis as Record<string, unknown>).__eventCallback as (
-        event: Record<string, unknown>,
-      ) => void;
+      const callback = (globalThis as Record<string, unknown>)
+        .__eventCallback as (event: Record<string, unknown>) => void;
 
       callback({
         type: "error",
@@ -205,9 +206,8 @@ describe("event-tracking – uncovered lines", () => {
 
       setupEventTracking("task-idle", "sess-idle", task);
 
-      const callback = (globalThis as Record<string, unknown>).__eventCallback as (
-        event: Record<string, unknown>,
-      ) => void;
+      const callback = (globalThis as Record<string, unknown>)
+        .__eventCallback as (event: Record<string, unknown>) => void;
 
       callback({
         type: "session.idle",

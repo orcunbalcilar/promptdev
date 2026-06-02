@@ -17,7 +17,10 @@ vi.mock("@/lib/copilot/client", () => ({
   sendMessage: (...args: unknown[]) => mockSendMessage(...args),
 }));
 
-import { POST, GET } from "@/app/api/copilot/sessions/[sessionId]/messages/route";
+import {
+  POST,
+  GET,
+} from "@/app/api/copilot/sessions/[sessionId]/messages/route";
 import { requireAuth } from "@/lib/auth-guard";
 
 const mockRequireAuth = requireAuth as ReturnType<typeof vi.fn>;
@@ -26,7 +29,10 @@ function makeParams(sessionId: string) {
   return { params: Promise.resolve({ sessionId }) };
 }
 
-function makeRequest(url: string, init?: { method?: string; body?: string; headers?: Record<string, string> }) {
+function makeRequest(
+  url: string,
+  init?: { method?: string; body?: string; headers?: Record<string, string> },
+) {
   return new NextRequest(`http://localhost:3000${url}`, init);
 }
 

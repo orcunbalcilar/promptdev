@@ -61,7 +61,7 @@ describe("CopilotError", () => {
   it("should render the try again button", () => {
     render(<CopilotError error={testError} reset={mockReset} />);
     expect(
-      screen.getByRole("button", { name: /try again/i })
+      screen.getByRole("button", { name: /try again/i }),
     ).toBeInTheDocument();
   });
 

@@ -151,25 +151,27 @@ function SystemPromptField({ value, onChange }: FieldProps) {
 
 // ── Skills Selector ─────────────────────────────────────────────
 
-const ICON_MAP: Record<SkillIcon, React.ComponentType<{ className?: string }>> =
-  {
-    code: Code,
-    globe: Globe,
-    database: Database,
-    shield: Shield,
-    "test-tube": TestTube,
-    rocket: Rocket,
-    palette: Palette,
-    server: Server,
-    terminal: Terminal,
-    "file-text": FileText,
-    search: Search,
-    brain: Brain,
-    wrench: Wrench,
-    blocks: Blocks,
-    sparkles: Sparkles,
-    "git-branch": GitBranch,
-  };
+const ICON_MAP: Record<
+  SkillIcon,
+  React.ComponentType<{ className?: string }>
+> = {
+  code: Code,
+  globe: Globe,
+  database: Database,
+  shield: Shield,
+  "test-tube": TestTube,
+  rocket: Rocket,
+  palette: Palette,
+  server: Server,
+  terminal: Terminal,
+  "file-text": FileText,
+  search: Search,
+  brain: Brain,
+  wrench: Wrench,
+  blocks: Blocks,
+  sparkles: Sparkles,
+  "git-branch": GitBranch,
+};
 
 const CATEGORY_COLORS: Record<SkillCategory, string> = {
   development: "from-violet-500/20 to-purple-500/20 border-violet-500/30",
@@ -226,10 +228,19 @@ function SkillsSelector({
       </div>
       <p className="text-xs text-muted-foreground -mt-1">
         Equip the agent with domain-specific expertise from the{" "}
-        <a href="https://skills.sh" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
+        <a
+          href="https://skills.sh"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-foreground"
+        >
           skills.sh
         </a>{" "}
-        ecosystem. Skills are installed via <code className="text-[10px] bg-muted px-1 py-0.5 rounded">npx skills add</code>.
+        ecosystem. Skills are installed via{" "}
+        <code className="text-[10px] bg-muted px-1 py-0.5 rounded">
+          npx skills add
+        </code>
+        .
       </p>
 
       <div className="space-y-2">
@@ -285,7 +296,9 @@ function SkillCategoryGroup({
         onClick={onToggleExpand}
         className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/30 transition-colors"
       >
-        <span className={`text-xs font-semibold uppercase tracking-wider ${accent}`}>
+        <span
+          className={`text-xs font-semibold uppercase tracking-wider ${accent}`}
+        >
           {label}
         </span>
         <span className="text-[10px] text-muted-foreground hidden sm:inline">
@@ -304,7 +317,11 @@ function SkillCategoryGroup({
             stroke="currentColor"
             strokeWidth={2}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </span>
       </button>

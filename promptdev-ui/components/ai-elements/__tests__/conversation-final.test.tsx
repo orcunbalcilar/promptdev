@@ -4,11 +4,27 @@ import React from "react";
 
 // Mock use-stick-to-bottom
 vi.mock("use-stick-to-bottom", () => {
-  const StickToBottom = ({ children, ...props }: { children: React.ReactNode; className?: string }) => (
-    <div data-testid="stick-to-bottom" {...props}>{children}</div>
+  const StickToBottom = ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <div data-testid="stick-to-bottom" {...props}>
+      {children}
+    </div>
   );
-  StickToBottom.Content = ({ children, ...props }: { children: React.ReactNode; className?: string }) => (
-    <div data-testid="stick-content" {...props}>{children}</div>
+  StickToBottom.Content = ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <div data-testid="stick-content" {...props}>
+      {children}
+    </div>
   );
 
   return {
@@ -17,9 +33,7 @@ vi.mock("use-stick-to-bottom", () => {
   };
 });
 
-import {
-  ConversationScrollButton,
-} from "@/components/ai-elements/conversation";
+import { ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { useStickToBottomContext } from "use-stick-to-bottom";
 
 const mockUseStickToBottomContext = vi.mocked(useStickToBottomContext);

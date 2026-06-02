@@ -65,9 +65,7 @@ describe("Scheduled Task Executor", () => {
   });
 
   it("should skip tasks that are already running", async () => {
-    const tasks = [
-      { id: "task-1", status: "QUEUED", scheduledJobId: "job-1" },
-    ];
+    const tasks = [{ id: "task-1", status: "QUEUED", scheduledJobId: "job-1" }];
 
     vi.mocked(getQueuedScheduledTasks).mockResolvedValue(tasks as never);
     vi.mocked(isTaskRunning).mockReturnValue(true);
@@ -79,7 +77,9 @@ describe("Scheduled Task Executor", () => {
   });
 
   it("should handle query errors silently", async () => {
-    vi.mocked(getQueuedScheduledTasks).mockRejectedValue(new Error("ECONNREFUSED"));
+    vi.mocked(getQueuedScheduledTasks).mockRejectedValue(
+      new Error("ECONNREFUSED"),
+    );
 
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
@@ -131,6 +131,8 @@ describe("Scheduled Task Executor", () => {
     stopScheduledTaskExecutor();
 
     await vi.advanceTimersByTimeAsync(60_000);
-    expect(vi.mocked(getQueuedScheduledTasks).mock.calls.length).toBe(callCount);
+    expect(vi.mocked(getQueuedScheduledTasks).mock.calls.length).toBe(
+      callCount,
+    );
   });
 });

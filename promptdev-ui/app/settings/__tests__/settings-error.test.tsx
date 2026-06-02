@@ -46,7 +46,7 @@ describe("SettingsError", () => {
   it("should render the try again button", () => {
     render(<SettingsError error={testError} reset={mockReset} />);
     expect(
-      screen.getByRole("button", { name: /try again/i })
+      screen.getByRole("button", { name: /try again/i }),
     ).toBeInTheDocument();
   });
 

@@ -110,7 +110,11 @@ describe("monitoring-service", () => {
 
     it("should mark session as failed with error", async () => {
       const session = makeSession();
-      const ended = makeSession({ status: "FAILED", errorCount: 1, endedAt: NOW });
+      const ended = makeSession({
+        status: "FAILED",
+        errorCount: 1,
+        endedAt: NOW,
+      });
       mockDb.select.mockReturnValueOnce(chainResult([session]));
       mockDb.update.mockReturnValue(chainResult([ended]));
 
@@ -123,7 +127,9 @@ describe("monitoring-service", () => {
     it("should throw when session not found", async () => {
       mockDb.select.mockReturnValueOnce(chainResult([]));
 
-      await expect(endSession("nonexistent")).rejects.toThrow("Session not found");
+      await expect(endSession("nonexistent")).rejects.toThrow(
+        "Session not found",
+      );
     });
   });
 
@@ -157,7 +163,9 @@ describe("monitoring-service", () => {
     it("should throw when session not found", async () => {
       mockDb.select.mockReturnValueOnce(chainResult([]));
 
-      await expect(getSessionDetails("nonexistent")).rejects.toThrow("Session not found");
+      await expect(getSessionDetails("nonexistent")).rejects.toThrow(
+        "Session not found",
+      );
     });
   });
 
@@ -187,15 +195,17 @@ describe("monitoring-service", () => {
       mockDb.insert.mockReturnValue(chainResult([op]));
       // updateSessionAggregates: select + update
       mockDb.select.mockReturnValue(
-        chainResult([{
-          totalOps: 1,
-          totalInput: 100,
-          totalOutput: 50,
-          totalDur: 500,
-          msgCount: 1,
-          toolCount: 0,
-          errCount: 0,
-        }]),
+        chainResult([
+          {
+            totalOps: 1,
+            totalInput: 100,
+            totalOutput: 50,
+            totalDur: 500,
+            msgCount: 1,
+            toolCount: 0,
+            errCount: 0,
+          },
+        ]),
       );
       mockDb.update.mockReturnValue(chainResult([]));
 
@@ -221,7 +231,17 @@ describe("monitoring-service", () => {
       const ops = [makeOp({ id: "op-1" }), makeOp({ id: "op-2" })];
       mockDb.insert.mockReturnValue(chainResult(ops));
       mockDb.select.mockReturnValue(
-        chainResult([{ totalOps: 2, totalInput: 200, totalOutput: 100, totalDur: 1000, msgCount: 2, toolCount: 0, errCount: 0 }]),
+        chainResult([
+          {
+            totalOps: 2,
+            totalInput: 200,
+            totalOutput: 100,
+            totalDur: 1000,
+            msgCount: 2,
+            toolCount: 0,
+            errCount: 0,
+          },
+        ]),
       );
       mockDb.update.mockReturnValue(chainResult([]));
 
@@ -237,18 +257,41 @@ describe("monitoring-service", () => {
   describe("getDashboardMetrics", () => {
     it("should return aggregated metrics with all analytics", async () => {
       mockDb.select
-        .mockReturnValueOnce(chainResult([{ count: 10 }]))   // total sessions
-        .mockReturnValueOnce(chainResult([{ count: 3 }]))    // active sessions
-        .mockReturnValueOnce(chainResult([{ count: 50 }]))   // total operations
-        .mockReturnValueOnce(chainResult([makeSession()]))   // recent sessions
-        .mockReturnValueOnce(chainResult([{ totalInput: 5000, totalOutput: 2000 }])) // tokens
-        .mockReturnValueOnce(chainResult([{ count: 2 }]))    // errors
-        .mockReturnValueOnce(chainResult([{ type: "SEND_MESSAGE", count: 30 }, { type: "TOOL_EXECUTION", count: 20 }])) // ops by type
-        .mockReturnValueOnce(chainResult([{ model: "gpt-5.2", count: 8 }, { model: "claude-4", count: 2 }])) // sessions by model
-        .mockReturnValueOnce(chainResult([{ source: "web", count: 9 }, { source: "api", count: 1 }])) // sessions by source
-        .mockReturnValueOnce(chainResult([{ toolName: "readFile", executionCount: 15, avgDurationMs: 120 }])) // top tools
+        .mockReturnValueOnce(chainResult([{ count: 10 }])) // total sessions
+        .mockReturnValueOnce(chainResult([{ count: 3 }])) // active sessions
+        .mockReturnValueOnce(chainResult([{ count: 50 }])) // total operations
+        .mockReturnValueOnce(chainResult([makeSession()])) // recent sessions
+        .mockReturnValueOnce(
+          chainResult([{ totalInput: 5000, totalOutput: 2000 }]),
+        ) // tokens
+        .mockReturnValueOnce(chainResult([{ count: 2 }])) // errors
+        .mockReturnValueOnce(
+          chainResult([
+            { type: "SEND_MESSAGE", count: 30 },
+            { type: "TOOL_EXECUTION", count: 20 },
+          ]),
+        ) // ops by type
+        .mockReturnValueOnce(
+          chainResult([
+            { model: "gpt-5.2", count: 8 },
+            { model: "claude-4", count: 2 },
+          ]),
+        ) // sessions by model
+        .mockReturnValueOnce(
+          chainResult([
+            { source: "web", count: 9 },
+            { source: "api", count: 1 },
+          ]),
+        ) // sessions by source
+        .mockReturnValueOnce(
+          chainResult([
+            { toolName: "readFile", executionCount: 15, avgDurationMs: 120 },
+          ]),
+        ) // top tools
         .mockReturnValueOnce(chainResult([{ date: "2025-01-15", count: 10 }])) // daily ops
-        .mockReturnValueOnce(chainResult([makeOp({ success: false, errorMessage: "Timeout" })])); // recent errors
+        .mockReturnValueOnce(
+          chainResult([makeOp({ success: false, errorMessage: "Timeout" })]),
+        ); // recent errors
 
       const result = await getDashboardMetrics(7);
 
@@ -259,7 +302,10 @@ describe("monitoring-service", () => {
       expect(result.totalInputTokens).toBe(5000);
       expect(result.totalOutputTokens).toBe(2000);
       expect(result.recentSessions).toHaveLength(1);
-      expect(result.operationsByType).toEqual({ SEND_MESSAGE: 30, TOOL_EXECUTION: 20 });
+      expect(result.operationsByType).toEqual({
+        SEND_MESSAGE: 30,
+        TOOL_EXECUTION: 20,
+      });
       expect(result.sessionsByModel).toEqual({ "gpt-5.2": 8, "claude-4": 2 });
       expect(result.sessionsBySource).toEqual({ web: 9, api: 1 });
       expect(result.topTools).toHaveLength(1);
@@ -270,18 +316,18 @@ describe("monitoring-service", () => {
 
     it("should use default days parameter", async () => {
       mockDb.select
-        .mockReturnValueOnce(chainResult([{ count: 0 }]))   // total sessions
-        .mockReturnValueOnce(chainResult([{ count: 0 }]))   // active sessions
-        .mockReturnValueOnce(chainResult([{ count: 0 }]))   // total operations
-        .mockReturnValueOnce(chainResult([]))                // recent sessions
+        .mockReturnValueOnce(chainResult([{ count: 0 }])) // total sessions
+        .mockReturnValueOnce(chainResult([{ count: 0 }])) // active sessions
+        .mockReturnValueOnce(chainResult([{ count: 0 }])) // total operations
+        .mockReturnValueOnce(chainResult([])) // recent sessions
         .mockReturnValueOnce(chainResult([{ totalInput: 0, totalOutput: 0 }])) // tokens
-        .mockReturnValueOnce(chainResult([{ count: 0 }]))   // errors
-        .mockReturnValueOnce(chainResult([]))                // ops by type
-        .mockReturnValueOnce(chainResult([]))                // sessions by model
-        .mockReturnValueOnce(chainResult([]))                // sessions by source
-        .mockReturnValueOnce(chainResult([]))                // top tools
-        .mockReturnValueOnce(chainResult([]))                // daily ops
-        .mockReturnValueOnce(chainResult([]));               // recent errors
+        .mockReturnValueOnce(chainResult([{ count: 0 }])) // errors
+        .mockReturnValueOnce(chainResult([])) // ops by type
+        .mockReturnValueOnce(chainResult([])) // sessions by model
+        .mockReturnValueOnce(chainResult([])) // sessions by source
+        .mockReturnValueOnce(chainResult([])) // top tools
+        .mockReturnValueOnce(chainResult([])) // daily ops
+        .mockReturnValueOnce(chainResult([])); // recent errors
 
       const result = await getDashboardMetrics();
 
@@ -326,7 +372,11 @@ describe("monitoring-service", () => {
   describe("branch coverage – endSession with and without error", () => {
     it("increments errorCount when errorMessage is provided", async () => {
       const session = makeSession({ errorCount: 2 });
-      const ended = makeSession({ status: "FAILED", errorCount: 3, endedAt: NOW });
+      const ended = makeSession({
+        status: "FAILED",
+        errorCount: 3,
+        endedAt: NOW,
+      });
       mockDb.select.mockReturnValueOnce(chainResult([session]));
       mockDb.update.mockReturnValue(chainResult([ended]));
 
@@ -338,7 +388,11 @@ describe("monitoring-service", () => {
 
     it("handles null errorCount when incrementing", async () => {
       const session = makeSession({ errorCount: null });
-      const ended = makeSession({ status: "FAILED", errorCount: 1, endedAt: NOW });
+      const ended = makeSession({
+        status: "FAILED",
+        errorCount: 1,
+        endedAt: NOW,
+      });
       mockDb.select.mockReturnValueOnce(chainResult([session]));
       mockDb.update.mockReturnValue(chainResult([ended]));
 

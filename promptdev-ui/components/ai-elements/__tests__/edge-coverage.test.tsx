@@ -77,7 +77,7 @@ describe("Edge.Animated (lines 72-80)", () => {
     const { container } = render(
       <svg>
         <Edge.Animated {...baseProps} />
-      </svg>
+      </svg>,
     );
     expect(container.querySelector("[data-testid='base-edge']")).toBeNull();
   });
@@ -91,7 +91,7 @@ describe("Edge.Animated (lines 72-80)", () => {
     const { container } = render(
       <svg>
         <Edge.Animated {...baseProps} />
-      </svg>
+      </svg>,
     );
     expect(container.querySelector("[data-testid='base-edge']")).toBeNull();
   });
@@ -102,7 +102,7 @@ describe("Edge.Animated (lines 72-80)", () => {
     const { container } = render(
       <svg>
         <Edge.Animated {...baseProps} />
-      </svg>
+      </svg>,
     );
     expect(container.querySelector("[data-testid='base-edge']")).toBeNull();
   });
@@ -116,7 +116,7 @@ describe("Edge.Animated (lines 72-80)", () => {
     const { container } = render(
       <svg>
         <Edge.Animated {...baseProps} />
-      </svg>
+      </svg>,
     );
     expect(container.querySelector("[data-testid='base-edge']")).not.toBeNull();
   });
@@ -127,7 +127,7 @@ describe("Edge.Temporary", () => {
     const { container } = render(
       <svg>
         <Edge.Temporary {...baseProps} />
-      </svg>
+      </svg>,
     );
     expect(container.querySelector("[data-testid='base-edge']")).not.toBeNull();
   });

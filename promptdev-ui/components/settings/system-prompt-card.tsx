@@ -20,9 +20,7 @@ import type { SettingsCardProps } from "./types";
 
 export function SystemPromptCard({ userId, profile }: SettingsCardProps) {
   const queryClient = useQueryClient();
-  const [prompt, setPrompt] = useState(
-    () => profile.customSystemPrompt ?? "",
-  );
+  const [prompt, setPrompt] = useState(() => profile.customSystemPrompt ?? "");
 
   const mutation = useMutation({
     mutationFn: () =>

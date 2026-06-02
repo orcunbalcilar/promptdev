@@ -17,7 +17,13 @@ import {
 import { DEFAULT_MODEL_ID } from "@/lib/copilot/models";
 import type { ModelInfo } from "@github/copilot-sdk";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import React, { createContext, use, useCallback, useMemo, useState } from "react";
+import React, {
+  createContext,
+  use,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import { JOB_TYPE_TEMPLATE_IDS } from "../constants";
 import { getTemplateById, type SDLCTemplate } from "@/lib/sdlc";
 
@@ -89,8 +95,7 @@ const JobFormContext = createContext<JobFormState | null>(null);
 
 export function useJobForm(): JobFormState {
   const ctx = use(JobFormContext);
-  if (!ctx)
-    throw new Error("useJobForm must be used within <JobFormProvider>");
+  if (!ctx) throw new Error("useJobForm must be used within <JobFormProvider>");
   return ctx;
 }
 
@@ -100,7 +105,11 @@ interface JobFormProviderProps {
   readonly children: React.ReactNode;
 }
 
-export function JobFormProvider({ open, onClose, children }: JobFormProviderProps) {
+export function JobFormProvider({
+  open,
+  onClose,
+  children,
+}: JobFormProviderProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [promptTemplate, setPromptTemplate] = useState("");
@@ -110,7 +119,8 @@ export function JobFormProvider({ open, onClose, children }: JobFormProviderProp
   const [startAt, setStartAt] = useState("");
   const [enabled, setEnabled] = useState(true);
 
-  const [workspaceType, setWorkspaceType] = useState<WorkspaceType>("BITBUCKET");
+  const [workspaceType, setWorkspaceType] =
+    useState<WorkspaceType>("BITBUCKET");
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedRepo, setSelectedRepo] = useState("");
   const [localPath, setLocalPath] = useState("");
@@ -134,25 +144,31 @@ export function JobFormProvider({ open, onClose, children }: JobFormProviderProp
   }, [jobType]);
 
   // Fetch copilot models
-  const { data: models = [], isLoading: modelsLoading } = useQuery<ModelInfo[]>({
-    queryKey: ["copilot-models"],
-    queryFn: async () => {
-      const res = await fetch("/api/copilot/models");
-      if (!res.ok) return [];
-      const data = await res.json();
-      return data.models || [];
+  const { data: models = [], isLoading: modelsLoading } = useQuery<ModelInfo[]>(
+    {
+      queryKey: ["copilot-models"],
+      queryFn: async () => {
+        const res = await fetch("/api/copilot/models");
+        if (!res.ok) return [];
+        const data = await res.json();
+        return data.models || [];
+      },
     },
-  });
+  );
 
   // Fetch Bitbucket projects
-  const { data: projects = [], isLoading: projectsLoading } = useQuery<Project[]>({
+  const { data: projects = [], isLoading: projectsLoading } = useQuery<
+    Project[]
+  >({
     queryKey: ["bitbucket-projects"],
     queryFn: getProjects,
     enabled: open && workspaceType === "BITBUCKET",
   });
 
   // Fetch repositories
-  const { data: repositories = [], isLoading: reposLoading } = useQuery<Repository[]>({
+  const { data: repositories = [], isLoading: reposLoading } = useQuery<
+    Repository[]
+  >({
     queryKey: ["repositories", selectedProject],
     queryFn: () => getRepositories(selectedProject || undefined),
     enabled: open && workspaceType === "BITBUCKET",
@@ -167,8 +183,16 @@ export function JobFormProvider({ open, onClose, children }: JobFormProviderProp
   // Fetch branches
   const { data: branches = [] } = useQuery<Branch[]>({
     queryKey: ["branches", effectiveProjectKey, selectedRepo],
-    queryFn: /* v8 ignore start */ () => getBranches(selectedRepo, effectiveProjectKey || undefined) /* v8 ignore stop */,
-    enabled: open && workspaceType === "BITBUCKET" && selectedRepo.length > 0 && effectiveProjectKey.length > 0,
+    queryFn: /* v8 ignore start */ () =>
+      getBranches(
+        selectedRepo,
+        effectiveProjectKey || undefined,
+      ) /* v8 ignore stop */,
+    enabled:
+      open &&
+      workspaceType === "BITBUCKET" &&
+      selectedRepo.length > 0 &&
+      effectiveProjectKey.length > 0,
   });
 
   // Default branch logic
@@ -183,7 +207,11 @@ export function JobFormProvider({ open, onClose, children }: JobFormProviderProp
 
   // Sync branches with default if not set by user
   React.useEffect(() => {
-    if (defaultBranchId && sourceBranch === "main" && defaultBranchId !== "main") {
+    if (
+      defaultBranchId &&
+      sourceBranch === "main" &&
+      defaultBranchId !== "main"
+    ) {
       setSourceBranch(defaultBranchId);
       setTargetBranch(defaultBranchId);
     }

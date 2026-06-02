@@ -25,11 +25,7 @@ describe("ReviewResults", () => {
       },
     ];
     render(
-      <ReviewResults
-        results={results}
-        reviewModel="gpt-4o"
-        duration={5500}
-      />,
+      <ReviewResults results={results} reviewModel="gpt-4o" duration={5500} />,
     );
     expect(screen.getByText("gpt-4o")).toBeInTheDocument();
     expect(screen.getByText("5s")).toBeInTheDocument();

@@ -21,7 +21,8 @@ describe("generateTaskTitle", () => {
   });
 
   it("limits to ~8 words and appends ellipsis", () => {
-    const longPrompt = "one two three four five six seven eight nine ten eleven";
+    const longPrompt =
+      "one two three four five six seven eight nine ten eleven";
     const result = generateTaskTitle(longPrompt);
     expect(result).toBe("One two three four five six seven eight...");
   });
@@ -44,7 +45,9 @@ describe("generateTaskTitle", () => {
 
   it("handles exactly 8 words without ellipsis", () => {
     const exact8 = "one two three four five six seven eight";
-    expect(generateTaskTitle(exact8)).toBe("One two three four five six seven eight");
+    expect(generateTaskTitle(exact8)).toBe(
+      "One two three four five six seven eight",
+    );
   });
 
   it("handles single word", () => {
@@ -82,7 +85,9 @@ describe("slugify", () => {
   });
 
   it("handles mixed special characters", () => {
-    expect(slugify("  Hello, World! This is #1.  ")).toBe("hello-world-this-is-1");
+    expect(slugify("  Hello, World! This is #1.  ")).toBe(
+      "hello-world-this-is-1",
+    );
   });
 
   it("handles tabs and multiple spaces", () => {

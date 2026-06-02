@@ -42,7 +42,7 @@ describe("ModelSelector — uncovered lines", () => {
             </ModelSelectorGroup>
           </ModelSelectorList>
         </ModelSelectorContent>
-      </ModelSelector>
+      </ModelSelector>,
     );
 
     await user.click(screen.getByText("Open"));
@@ -65,7 +65,7 @@ describe("ModelSelector — uncovered lines", () => {
             <ModelSelectorEmpty>No models found</ModelSelectorEmpty>
           </ModelSelectorList>
         </ModelSelectorContent>
-      </ModelSelector>
+      </ModelSelector>,
     );
 
     await user.click(screen.getByText("Open"));
@@ -91,7 +91,7 @@ describe("ModelSelector — uncovered lines", () => {
             </ModelSelectorGroup>
           </ModelSelectorList>
         </ModelSelectorContent>
-      </ModelSelector>
+      </ModelSelector>,
     );
 
     await user.click(screen.getByText("Open"));

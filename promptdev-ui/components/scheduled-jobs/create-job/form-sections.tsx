@@ -165,7 +165,9 @@ export function AdvancedOptionsSection() {
           min={1}
           max={50}
           value={maxIterations}
-          onChange={(e) => setMaxIterations(Number.parseInt(e.target.value, 10))}
+          onChange={(e) =>
+            setMaxIterations(Number.parseInt(e.target.value, 10))
+          }
         />
       </div>
     </div>

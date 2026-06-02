@@ -26,7 +26,7 @@ export function TokenUsageDisplay({
     <div
       className={cn(
         "flex items-center gap-3 text-xs text-muted-foreground px-3 py-1.5 rounded-full bg-muted/50",
-        className
+        className,
       )}
     >
       <div className="flex items-center gap-1" title="Total tokens">

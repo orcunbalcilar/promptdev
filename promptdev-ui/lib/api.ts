@@ -279,8 +279,15 @@ async function apiFetch<T>(
   // PRD-03: Include CSRF token for state-changing requests
   const csrfHeaders: Record<string, string> = {};
   /* v8 ignore next 4 — CSRF extraction requires browser document context with optional chaining */
-  if (typeof document !== "undefined" && options?.method && options.method !== "GET") {
-    const match = /(?:next-auth\.csrf-token|__Host-next-auth\.csrf-token)=([^;|]+)/.exec(document.cookie);
+  if (
+    typeof document !== "undefined" &&
+    options?.method &&
+    options.method !== "GET"
+  ) {
+    const match =
+      /(?:next-auth\.csrf-token|__Host-next-auth\.csrf-token)=([^;|]+)/.exec(
+        document.cookie,
+      );
     if (match?.[1]) {
       csrfHeaders["x-csrf-token"] = match[1];
     }
@@ -325,7 +332,10 @@ export async function createTask(request: CreateTaskRequest): Promise<Task> {
   });
 }
 
-export async function updateTask(taskId: string, request: UpdateTaskRequest): Promise<Task> {
+export async function updateTask(
+  taskId: string,
+  request: UpdateTaskRequest,
+): Promise<Task> {
   return apiFetch<Task>(`/tasks/${taskId}`, {
     method: "PATCH",
     body: JSON.stringify(request),
@@ -431,7 +441,9 @@ export async function resumeTask(
 /**
  * Check if a task is currently being executed by the orchestrator.
  */
-export async function isTaskExecuting(taskId: string): Promise<{ running: boolean; sessionId: string | null }> {
+export async function isTaskExecuting(
+  taskId: string,
+): Promise<{ running: boolean; sessionId: string | null }> {
   const res = await fetch(`/api/tasks/${taskId}/execute`);
   if (!res.ok) return { running: false, sessionId: null };
   return res.json();
@@ -452,18 +464,32 @@ export async function getProjects(): Promise<Project[]> {
   return apiFetch<Project[]>("/projects");
 }
 
-export async function getRepositories(projectKey?: string): Promise<Repository[]> {
-  const params = projectKey ? `?projectKey=${encodeURIComponent(projectKey)}` : "";
+export async function getRepositories(
+  projectKey?: string,
+): Promise<Repository[]> {
+  const params = projectKey
+    ? `?projectKey=${encodeURIComponent(projectKey)}`
+    : "";
   return apiFetch<Repository[]>(`/repositories${params}`);
 }
 
-export async function getBranches(repoSlug: string, projectKey?: string): Promise<Branch[]> {
-  const params = projectKey ? `?projectKey=${encodeURIComponent(projectKey)}` : "";
+export async function getBranches(
+  repoSlug: string,
+  projectKey?: string,
+): Promise<Branch[]> {
+  const params = projectKey
+    ? `?projectKey=${encodeURIComponent(projectKey)}`
+    : "";
   return apiFetch<Branch[]>(`/repositories/${repoSlug}/branches${params}`);
 }
 
-export async function getDefaultBranch(repoSlug: string, projectKey?: string): Promise<Branch> {
-  const params = projectKey ? `?projectKey=${encodeURIComponent(projectKey)}` : "";
+export async function getDefaultBranch(
+  repoSlug: string,
+  projectKey?: string,
+): Promise<Branch> {
+  const params = projectKey
+    ? `?projectKey=${encodeURIComponent(projectKey)}`
+    : "";
   return apiFetch<Branch>(`/repositories/${repoSlug}/default-branch${params}`);
 }
 
@@ -514,9 +540,7 @@ export async function getScheduledJobs(
   return apiFetch<ScheduledJob[]>(`/scheduled-jobs${query}`);
 }
 
-export async function toggleScheduledJob(
-  jobId: string,
-): Promise<ScheduledJob> {
+export async function toggleScheduledJob(jobId: string): Promise<ScheduledJob> {
   return apiFetch<ScheduledJob>(`/scheduled-jobs/${jobId}/toggle`, {
     method: "POST",
   });

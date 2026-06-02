@@ -1,8 +1,6 @@
 "use client";
 
-import {
-  ChangedFilesTree,
-} from "@/components/tasks/activity-stream/file-tree";
+import { ChangedFilesTree } from "@/components/tasks/activity-stream/file-tree";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,9 +34,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { showErrorToast } from "@/lib/errors";
 import { stableQueryOptions } from "@/lib/query-policies";
-import {
-  statusColors,
-} from "@/components/tasks/task-helpers";
+import { statusColors } from "@/components/tasks/task-helpers";
 import { TaskHeaderActions } from "@/components/tasks/task-header-actions";
 import { TaskSidebar } from "@/components/tasks/task-sidebar";
 import { ResumeForm } from "@/components/tasks/resume-form";
@@ -46,12 +42,32 @@ import { TaskRefineForm } from "@/components/tasks/task-refine-form";
 
 // Lazy-load heaviest components
 const AgentActivityStream = dynamic(
-  () => import("@/components/tasks/activity-stream/stream").then((m) => ({ default: m.AgentActivityStream })),
-  { ssr: false, loading: () => <div className="flex items-center justify-center h-32"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> },
+  () =>
+    import("@/components/tasks/activity-stream/stream").then((m) => ({
+      default: m.AgentActivityStream,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-32">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    ),
+  },
 );
 const TaskChangesSummary = dynamic(
-  () => import("@/components/tasks/task-changes-summary").then((m) => ({ default: m.TaskChangesSummary })),
-  { ssr: false, loading: () => <div className="flex items-center justify-center h-32"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> },
+  () =>
+    import("@/components/tasks/task-changes-summary").then((m) => ({
+      default: m.TaskChangesSummary,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-32">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    ),
+  },
 );
 
 export default function TaskDetailPage() {
@@ -97,7 +113,7 @@ export default function TaskDetailPage() {
   const { data: models = [] } = useQuery<ModelInfo[]>({
     queryKey: ["copilot-models"],
     queryFn: async () => {
-      const res = await fetch('/api/copilot/models');
+      const res = await fetch("/api/copilot/models");
       if (!res.ok) return [];
       const data = await res.json();
       return data.models || [];
@@ -130,10 +146,15 @@ export default function TaskDetailPage() {
     queryFn: () => getTaskEvents(id),
     refetchInterval: (query) => {
       // Stop refetching when task is in a terminal state
-      if (task?.status && ["COMPLETED", "FAILED", "CANCELLED"].includes(task.status))
+      if (
+        task?.status &&
+        ["COMPLETED", "FAILED", "CANCELLED"].includes(task.status)
+      )
         return false;
       // Refetch events every 1 second while task is running
-      return task && !["COMPLETED", "FAILED", "CANCELLED"].includes(task.status) ? 1000 : false;
+      return task && !["COMPLETED", "FAILED", "CANCELLED"].includes(task.status)
+        ? 1000
+        : false;
     },
   });
 
@@ -162,10 +183,10 @@ export default function TaskDetailPage() {
         // Optimistically update task status from the event type
         const newStatus = EVENT_TO_STATUS.current[event.eventType];
         if (newStatus) {
-          queryClient.setQueryData(
-            ["task", id],
-            (old: Task | undefined) =>
-              old ? { ...old, status: newStatus, updatedAt: event.timestamp } : old,
+          queryClient.setQueryData(["task", id], (old: Task | undefined) =>
+            old
+              ? { ...old, status: newStatus, updatedAt: event.timestamp }
+              : old,
           );
         }
 
@@ -333,7 +354,9 @@ export default function TaskDetailPage() {
       {task.status === "PENDING" && task.jiraIssueKey && (
         <TaskRefineForm
           task={task}
-          onStarted={() => queryClient.refetchQueries({ queryKey: ["task", id] })}
+          onStarted={() =>
+            queryClient.refetchQueries({ queryKey: ["task", id] })
+          }
         />
       )}
 

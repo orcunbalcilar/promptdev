@@ -11,11 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 /** Routes exempt from CSRF validation (server-initiated or auth flows) */
-const EXEMPT_PATHS = [
-  "/api/auth/",
-  "/api/health",
-  "/api/stream/callback",
-];
+const EXEMPT_PATHS = ["/api/auth/", "/api/health", "/api/stream/callback"];
 
 /**
  * Validate the CSRF token on a state-changing request.
@@ -32,8 +28,9 @@ export function validateCsrf(request: NextRequest): NextResponse | null {
   // In non-production, skip CSRF for easier development/testing
   if (process.env.NODE_ENV !== "production") return null;
 
-  const cookieValue = request.cookies.get("next-auth.csrf-token")?.value
-    ?? request.cookies.get("__Host-next-auth.csrf-token")?.value;
+  const cookieValue =
+    request.cookies.get("next-auth.csrf-token")?.value ??
+    request.cookies.get("__Host-next-auth.csrf-token")?.value;
   const cookieToken = cookieValue?.split("|")[0];
   const headerToken = request.headers.get("x-csrf-token");
 

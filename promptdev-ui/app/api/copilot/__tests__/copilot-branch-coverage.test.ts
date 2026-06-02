@@ -262,11 +262,9 @@ describe("sessions/[sessionId]/messages/route.ts branch coverage", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.messageId).toBe("msg-99");
-    expect(mockSendMessage).toHaveBeenCalledWith(
-      "s1",
-      "Hello world",
-      [{ type: "file", uri: "/test.ts" }],
-    );
+    expect(mockSendMessage).toHaveBeenCalledWith("s1", "Hello world", [
+      { type: "file", uri: "/test.ts" },
+    ]);
   });
 
   it("GET success returns messages", async () => {

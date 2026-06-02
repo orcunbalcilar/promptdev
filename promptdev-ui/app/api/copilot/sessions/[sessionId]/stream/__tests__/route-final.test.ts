@@ -27,7 +27,10 @@ describe("Session stream route (line 70 - heartbeat catch)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
-    mockRequireAuth.mockResolvedValue({ error: undefined, session: {} as never });
+    mockRequireAuth.mockResolvedValue({
+      error: undefined,
+      session: {} as never,
+    });
   });
 
   afterEach(() => {
@@ -39,9 +42,12 @@ describe("Session stream route (line 70 - heartbeat catch)", () => {
     mockSubscribeToSession.mockReturnValue(() => {});
 
     const abortController = new AbortController();
-    const req = new NextRequest("http://localhost/api/copilot/sessions/s1/stream", {
-      signal: abortController.signal,
-    });
+    const req = new NextRequest(
+      "http://localhost/api/copilot/sessions/s1/stream",
+      {
+        signal: abortController.signal,
+      },
+    );
 
     const res = await GET(req, makeParams("s1"));
     expect(res.status).toBe(200);

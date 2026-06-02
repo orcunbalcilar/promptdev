@@ -42,7 +42,11 @@ export interface DashboardMetrics {
   operationsByType: Record<string, number>;
   sessionsByModel: Record<string, number>;
   sessionsBySource: Record<string, number>;
-  topTools: Array<{ toolName: string; executionCount: number; avgDurationMs: number }>;
+  topTools: Array<{
+    toolName: string;
+    executionCount: number;
+    avgDurationMs: number;
+  }>;
   dailyOperations: Array<{ date: string; count: number }>;
   recentErrors: Array<{
     id: string;
@@ -91,7 +95,9 @@ export interface OperationResponse {
   timestamp: string;
 }
 
-function toSessionResponse(s: typeof copilotSessions.$inferSelect): SessionResponse {
+function toSessionResponse(
+  s: typeof copilotSessions.$inferSelect,
+): SessionResponse {
   return {
     id: s.id,
     sdkSessionId: s.sdkSessionId,
@@ -111,7 +117,9 @@ function toSessionResponse(s: typeof copilotSessions.$inferSelect): SessionRespo
   };
 }
 
-function toOperationResponse(o: typeof copilotOperations.$inferSelect): OperationResponse {
+function toOperationResponse(
+  o: typeof copilotOperations.$inferSelect,
+): OperationResponse {
   return {
     id: o.id,
     sessionId: o.sessionId,
@@ -134,7 +142,9 @@ function toOperationResponse(o: typeof copilotOperations.$inferSelect): Operatio
 
 // ── Sessions ────────────────────────────────────────────────────
 
-export async function createSession(req: CreateSessionRequest): Promise<SessionResponse> {
+export async function createSession(
+  req: CreateSessionRequest,
+): Promise<SessionResponse> {
   const [session] = await getDb()
     .insert(copilotSessions)
     .values({
@@ -186,7 +196,9 @@ export async function getSessions(page = 0, size = 20) {
       .orderBy(desc(copilotSessions.createdAt))
       .limit(size)
       .offset(offset),
-    getDb().select({ count: sql<number>`count(*)` }).from(copilotSessions),
+    getDb()
+      .select({ count: sql<number>`count(*)` })
+      .from(copilotSessions),
   ]);
 
   return {
@@ -198,7 +210,9 @@ export async function getSessions(page = 0, size = 20) {
   };
 }
 
-export async function getSessionDetails(sdkSessionId: string): Promise<SessionResponse> {
+export async function getSessionDetails(
+  sdkSessionId: string,
+): Promise<SessionResponse> {
   const [session] = await getDb()
     .select()
     .from(copilotSessions)
@@ -208,7 +222,9 @@ export async function getSessionDetails(sdkSessionId: string): Promise<SessionRe
   return toSessionResponse(session);
 }
 
-export async function getSessionOperations(sessionId: string): Promise<OperationResponse[]> {
+export async function getSessionOperations(
+  sessionId: string,
+): Promise<OperationResponse[]> {
   const ops = await getDb()
     .select()
     .from(copilotOperations)
@@ -224,14 +240,20 @@ export async function deleteSession(sdkSessionId: string): Promise<void> {
     .where(eq(copilotSessions.sdkSessionId, sdkSessionId))
     .limit(1);
   if (session) {
-    await getDb().delete(copilotOperations).where(eq(copilotOperations.sessionId, session.id));
-    await getDb().delete(copilotSessions).where(eq(copilotSessions.id, session.id));
+    await getDb()
+      .delete(copilotOperations)
+      .where(eq(copilotOperations.sessionId, session.id));
+    await getDb()
+      .delete(copilotSessions)
+      .where(eq(copilotSessions.id, session.id));
   }
 }
 
 // ── Operations ──────────────────────────────────────────────────
 
-export async function createOperation(req: CreateOperationRequest): Promise<OperationResponse> {
+export async function createOperation(
+  req: CreateOperationRequest,
+): Promise<OperationResponse> {
   const [op] = await getDb()
     .insert(copilotOperations)
     .values({
@@ -291,7 +313,9 @@ export async function batchCreateOperations(
     .returning();
 
   // Update session aggregates for affected sessions
-  const sessionIds = [...new Set(operations.filter((o) => o.sessionId).map((o) => o.sessionId!))];
+  const sessionIds = [
+    ...new Set(operations.filter((o) => o.sessionId).map((o) => o.sessionId!)),
+  ];
   await Promise.all(sessionIds.map(updateSessionAggregates));
 
   return ops.map(toOperationResponse);
@@ -332,7 +356,9 @@ export async function getOperations(page = 0, size = 20) {
       .orderBy(desc(copilotOperations.timestamp))
       .limit(size)
       .offset(offset),
-    getDb().select({ count: sql<number>`count(*)` }).from(copilotOperations),
+    getDb()
+      .select({ count: sql<number>`count(*)` })
+      .from(copilotOperations),
   ]);
 
   return {
@@ -404,7 +430,9 @@ export async function getDashboardMetrics(days = 7): Promise<DashboardMetrics> {
     db
       .select({ count: sql<number>`count(*)` })
       .from(copilotOperations)
-      .where(sql`${copilotOperations.timestamp} >= ${cutoff} AND ${copilotOperations.success} = false`),
+      .where(
+        sql`${copilotOperations.timestamp} >= ${cutoff} AND ${copilotOperations.success} = false`,
+      ),
 
     // Operations by type in time range
     db

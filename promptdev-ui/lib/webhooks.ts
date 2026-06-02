@@ -42,7 +42,10 @@ const STATUS_TO_EVENT: Partial<Record<TaskStatus, WebhookEventType>> = {
   CANCELLED: "task.cancelled",
 };
 
-export function buildWebhookPayload(task: Task, event?: WebhookEventType): WebhookPayload {
+export function buildWebhookPayload(
+  task: Task,
+  event?: WebhookEventType,
+): WebhookPayload {
   return {
     event: event ?? STATUS_TO_EVENT[task.status] ?? "task.created",
     timestamp: new Date().toISOString(),

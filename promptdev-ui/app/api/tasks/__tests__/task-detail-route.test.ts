@@ -18,7 +18,9 @@ import { requireAuth, requireTaskOwnership } from "@/lib/auth-guard";
 import { getTask, updateTask } from "@/lib/services/task-service";
 
 const mockRequireAuth = requireAuth as ReturnType<typeof vi.fn>;
-const mockRequireTaskOwnership = requireTaskOwnership as ReturnType<typeof vi.fn>;
+const mockRequireTaskOwnership = requireTaskOwnership as ReturnType<
+  typeof vi.fn
+>;
 const mockGetTask = getTask as ReturnType<typeof vi.fn>;
 const mockUpdateTask = updateTask as ReturnType<typeof vi.fn>;
 
@@ -37,7 +39,10 @@ beforeEach(() => {
 describe("Task Detail API Route", () => {
   describe("GET /api/tasks/[taskId]", () => {
     it("returns 401 when auth fails", async () => {
-      const authError = Response.json({ error: "Unauthorized" }, { status: 401 });
+      const authError = Response.json(
+        { error: "Unauthorized" },
+        { status: 401 },
+      );
       mockRequireAuth.mockResolvedValue({ error: authError });
 
       const req = new NextRequest("http://localhost:3000/api/tasks/task-1");
@@ -73,7 +78,10 @@ describe("Task Detail API Route", () => {
 
   describe("PATCH /api/tasks/[taskId]", () => {
     it("returns 401 when auth fails", async () => {
-      const authError = Response.json({ error: "Unauthorized" }, { status: 401 });
+      const authError = Response.json(
+        { error: "Unauthorized" },
+        { status: 401 },
+      );
       mockRequireAuth.mockResolvedValue({ session: null, error: authError });
 
       const req = new NextRequest("http://localhost:3000/api/tasks/task-1", {
@@ -87,7 +95,10 @@ describe("Task Detail API Route", () => {
     });
 
     it("returns ownership error when user does not own the task", async () => {
-      const ownershipError = Response.json({ error: "Forbidden" }, { status: 403 });
+      const ownershipError = Response.json(
+        { error: "Forbidden" },
+        { status: 403 },
+      );
       mockRequireTaskOwnership.mockResolvedValue(ownershipError);
 
       const req = new NextRequest("http://localhost:3000/api/tasks/task-1", {
@@ -114,7 +125,9 @@ describe("Task Detail API Route", () => {
 
       expect(response.status).toBe(200);
       expect(body).toEqual(mockTask);
-      expect(mockUpdateTask).toHaveBeenCalledWith("task-1", { title: "Updated Title" });
+      expect(mockUpdateTask).toHaveBeenCalledWith("task-1", {
+        title: "Updated Title",
+      });
     });
 
     it("returns 400 when update fails", async () => {

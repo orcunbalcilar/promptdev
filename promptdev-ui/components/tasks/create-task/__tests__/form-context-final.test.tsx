@@ -15,7 +15,7 @@ vi.mock("@/lib/copilot/models", () => ({
 
 vi.mock("@/lib/skills", () => ({
   getDefaultSkillIds: () => ["skill1"],
-  buildInstallScript: (s: string) => s ? `install ${s}` : "",
+  buildInstallScript: (s: string) => (s ? `install ${s}` : ""),
 }));
 
 import {

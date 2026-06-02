@@ -38,18 +38,30 @@ describe("useBackendUser.ts branch coverage", () => {
     // session.user.id is a GitHub numeric ID (not UUID) → triggers sync path
     vi.mocked(useSession).mockReturnValue({
       data: {
-        user: { id: "12345", email: "test@test.com", name: "Test", image: null },
+        user: {
+          id: "12345",
+          email: "test@test.com",
+          name: "Test",
+          image: null,
+        },
         expires: "",
       },
       status: "authenticated",
       update: vi.fn(),
     });
 
-    const profile = { id: "uuid-1", name: "Test", email: "test@test.com", provider: "github" };
+    const profile = {
+      id: "uuid-1",
+      name: "Test",
+      email: "test@test.com",
+      provider: "github",
+    };
     mockSyncUser.mockResolvedValue(profile);
 
     const { useBackendUser } = await import("@/hooks/useBackendUser");
-    const { result } = renderHook(() => useBackendUser(), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useBackendUser(), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => expect(result.current.profile).toBeDefined());
     expect(mockSyncUser).toHaveBeenCalledWith(
@@ -72,7 +84,9 @@ describe("useBackendUser.ts branch coverage", () => {
 
     // Should throw because providerAccountId and email checks fail
     const { useBackendUser } = await import("@/hooks/useBackendUser");
-    const { result } = renderHook(() => useBackendUser(), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useBackendUser(), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => expect(result.current.error).toBeDefined());
   });
@@ -93,11 +107,18 @@ describe("useBackendUser.ts branch coverage", () => {
     });
 
     mockGetUserProfile.mockRejectedValueOnce(new Error("Not found"));
-    const profile = { id: "uuid-2", name: "Test", email: "test@test.com", provider: "github" };
+    const profile = {
+      id: "uuid-2",
+      name: "Test",
+      email: "test@test.com",
+      provider: "github",
+    };
     mockSyncUser.mockResolvedValue(profile);
 
     const { useBackendUser } = await import("@/hooks/useBackendUser");
-    const { result } = renderHook(() => useBackendUser(), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useBackendUser(), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => expect(result.current.profile).toBeDefined());
     expect(mockGetUserProfile).toHaveBeenCalled();
@@ -113,18 +134,30 @@ describe("useUserSync.ts branch coverage", () => {
   it("lines 28, 45-46: falls back through non-UUID path with provider fallback", async () => {
     vi.mocked(useSession).mockReturnValue({
       data: {
-        user: { id: "67890", email: "sync@test.com", name: "Sync", image: null },
+        user: {
+          id: "67890",
+          email: "sync@test.com",
+          name: "Sync",
+          image: null,
+        },
         expires: "",
       },
       status: "authenticated",
       update: vi.fn(),
     });
 
-    const profile = { id: "uuid-3", name: "Sync", email: "sync@test.com", provider: "github" };
+    const profile = {
+      id: "uuid-3",
+      name: "Sync",
+      email: "sync@test.com",
+      provider: "github",
+    };
     mockSyncUser.mockResolvedValue(profile);
 
     const { useUserSync } = await import("@/hooks/useUserSync");
-    const { result } = renderHook(() => useUserSync(), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useUserSync(), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => expect(result.current.profile).toBeDefined());
     expect(mockSyncUser).toHaveBeenCalledWith(
@@ -146,7 +179,9 @@ describe("useUserSync.ts branch coverage", () => {
     });
 
     const { useUserSync } = await import("@/hooks/useUserSync");
-    const { result } = renderHook(() => useUserSync(), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useUserSync(), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => expect(result.current.error).toBeDefined());
   });

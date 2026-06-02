@@ -75,10 +75,10 @@ beforeEach(() => {
    ================================================================== */
 describe("jira-opt-outs/route.ts branch coverage", () => {
   it("GET returns optOuts list for user", async () => {
-    mockGetOptOutsForUser.mockResolvedValue([{ id: "1", jiraIssueKey: "PROJ-1" }]);
-    const res = await optOutsGet(
-      makeReq("/api/jira-opt-outs?userId=u1"),
-    );
+    mockGetOptOutsForUser.mockResolvedValue([
+      { id: "1", jiraIssueKey: "PROJ-1" },
+    ]);
+    const res = await optOutsGet(makeReq("/api/jira-opt-outs?userId=u1"));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual([{ id: "1", jiraIssueKey: "PROJ-1" }]);
@@ -113,7 +113,11 @@ describe("jira-opt-outs/route.ts branch coverage", () => {
     const res = await optOutsPost(
       makeReq("/api/jira-opt-outs", {
         method: "POST",
-        body: JSON.stringify({ userId: "u1", jiraIssueKey: "PROJ-1", reason: "not needed" }),
+        body: JSON.stringify({
+          userId: "u1",
+          jiraIssueKey: "PROJ-1",
+          reason: "not needed",
+        }),
         headers: { "content-type": "application/json" },
       }),
     );

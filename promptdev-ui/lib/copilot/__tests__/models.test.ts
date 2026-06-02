@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  COPILOT_MODELS,
-  DEFAULT_MODEL_ID,
-  type CopilotModel,
-} from "../models";
+import { COPILOT_MODELS, DEFAULT_MODEL_ID, type CopilotModel } from "../models";
 
 describe("models", () => {
   describe("COPILOT_MODELS", () => {

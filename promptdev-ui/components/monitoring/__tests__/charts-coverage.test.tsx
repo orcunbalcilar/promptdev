@@ -31,13 +31,17 @@ vi.mock("recharts", async (importOriginal) => {
     Pie: () => null,
     XAxis: (props: Record<string, unknown>) => {
       if (typeof props.tickFormatter === "function") {
-        capturedTickFormatters.push(props.tickFormatter as (v: string) => string);
+        capturedTickFormatters.push(
+          props.tickFormatter as (v: string) => string,
+        );
       }
       return <div data-testid="x-axis" />;
     },
     YAxis: (props: Record<string, unknown>) => {
       if (typeof props.tickFormatter === "function") {
-        capturedTickFormatters.push(props.tickFormatter as (v: string) => string);
+        capturedTickFormatters.push(
+          props.tickFormatter as (v: string) => string,
+        );
       }
       return <div data-testid="y-axis" />;
     },
@@ -57,14 +61,12 @@ describe("charts.tsx branch coverage", () => {
   });
 
   it("DailyOperationsChart renders with data and tickFormatter slices date", () => {
-    render(
-      <DailyOperationsChart
-        data={[{ date: "2025-01-15", count: 5 }]}
-      />,
-    );
+    render(<DailyOperationsChart data={[{ date: "2025-01-15", count: 5 }]} />);
     expect(screen.getByText("Daily Operations")).toBeInTheDocument();
     // Line 59: tickFormatter={(value: string) => value.slice(5)}
-    const dateFormatter = capturedTickFormatters.find((fn) => fn("2025-01-15") === "01-15");
+    const dateFormatter = capturedTickFormatters.find(
+      (fn) => fn("2025-01-15") === "01-15",
+    );
     expect(dateFormatter).toBeDefined();
     expect(dateFormatter!("2025-01-15")).toBe("01-15");
   });
@@ -78,18 +80,24 @@ describe("charts.tsx branch coverage", () => {
     render(
       <TopToolsChart
         tools={[
-          { toolName: "a-very-long-tool-name-exceeds-twelve", executionCount: 10, avgDurationMs: 500 },
+          {
+            toolName: "a-very-long-tool-name-exceeds-twelve",
+            executionCount: 10,
+            avgDurationMs: 500,
+          },
           { toolName: "short", executionCount: 5, avgDurationMs: 200 },
         ]}
       />,
     );
     expect(screen.getByText("Most Used Tools")).toBeInTheDocument();
     // Line 153: tickFormatter truncation
-    const toolFormatter = capturedTickFormatters.find(
-      (fn) => fn("a-very-long-tool-name-exceeds-twelve").includes("..."),
+    const toolFormatter = capturedTickFormatters.find((fn) =>
+      fn("a-very-long-tool-name-exceeds-twelve").includes("..."),
     );
     expect(toolFormatter).toBeDefined();
-    expect(toolFormatter!("a-very-long-tool-name-exceeds-twelve")).toBe("a-very-long-...");
+    expect(toolFormatter!("a-very-long-tool-name-exceeds-twelve")).toBe(
+      "a-very-long-...",
+    );
     expect(toolFormatter!("short")).toBe("short");
   });
 });

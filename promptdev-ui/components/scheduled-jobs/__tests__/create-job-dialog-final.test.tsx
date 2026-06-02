@@ -5,9 +5,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Mock ResizeObserver
 globalThis.ResizeObserver = class ResizeObserver {
-  observe() { /* noop */ }
-  unobserve() { /* noop */ }
-  disconnect() { /* noop */ }
+  observe() {
+    /* noop */
+  }
+  unobserve() {
+    /* noop */
+  }
+  disconnect() {
+    /* noop */
+  }
 } as unknown as typeof ResizeObserver;
 
 Element.prototype.scrollIntoView = vi.fn();

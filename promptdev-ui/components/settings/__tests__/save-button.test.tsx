@@ -26,9 +26,7 @@ describe("SaveButton", () => {
     const user = userEvent.setup();
     const onClick = vi.fn();
     render(<SaveButton {...defaultProps} onClick={onClick} />);
-    await user.click(
-      screen.getByRole("button", { name: /save settings/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /save settings/i }));
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
@@ -63,12 +61,8 @@ describe("SaveButton", () => {
   it("is not clickable when pending", async () => {
     const user = userEvent.setup();
     const onClick = vi.fn();
-    render(
-      <SaveButton {...defaultProps} isPending={true} onClick={onClick} />,
-    );
-    await user.click(
-      screen.getByRole("button", { name: /save settings/i }),
-    );
+    render(<SaveButton {...defaultProps} isPending={true} onClick={onClick} />);
+    await user.click(screen.getByRole("button", { name: /save settings/i }));
     expect(onClick).not.toHaveBeenCalled();
   });
 });

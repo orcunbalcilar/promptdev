@@ -74,7 +74,10 @@ describe("presence", () => {
     it("should filter out stale viewers", () => {
       let state = createPresenceState();
       const staleTime = new Date(Date.now() - 60000).toISOString();
-      state = addViewer(state, makePresence({ userId: "user-1", lastSeenAt: staleTime }));
+      state = addViewer(
+        state,
+        makePresence({ userId: "user-1", lastSeenAt: staleTime }),
+      );
       state = addViewer(state, makePresence({ userId: "user-2" }));
       const active = getActiveViewers(state);
       expect(active).toHaveLength(1);

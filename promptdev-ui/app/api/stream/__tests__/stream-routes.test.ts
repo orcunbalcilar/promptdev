@@ -26,7 +26,10 @@ import { POST as callbackPOST } from "@/app/api/stream/callback/route";
 
 const mockRequireAuth = requireAuth as ReturnType<typeof vi.fn>;
 
-function makeRequest(url: string, init?: { method?: string; body?: string; headers?: Record<string, string> }) {
+function makeRequest(
+  url: string,
+  init?: { method?: string; body?: string; headers?: Record<string, string> },
+) {
   return new NextRequest(`http://localhost:3000${url}`, init);
 }
 
@@ -50,7 +53,9 @@ beforeEach(() => {
 
 describe("POST /api/stream/callback", () => {
   it("processes agent callback successfully", async () => {
-    const task = { id: "task-1", status: "completed" } as unknown as Awaited<ReturnType<typeof taskService.processAgentCallback>>;
+    const task = { id: "task-1", status: "completed" } as unknown as Awaited<
+      ReturnType<typeof taskService.processAgentCallback>
+    >;
     vi.mocked(taskService.processAgentCallback).mockResolvedValue(task);
 
     const req = makeRequest("/api/stream/callback", {

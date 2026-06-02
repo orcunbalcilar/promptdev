@@ -42,7 +42,7 @@ interface ConfirmationContextValue {
 }
 
 const ConfirmationContext = createContext<ConfirmationContextValue | null>(
-  null
+  null,
 );
 
 const useConfirmation = () => {

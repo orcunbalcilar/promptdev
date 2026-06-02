@@ -11,7 +11,8 @@ const mockCreateCopilotSession = vi.fn();
 const mockGetAllSessions = vi.fn();
 
 vi.mock("@/lib/copilot/client", () => ({
-  createCopilotSession: (...args: unknown[]) => mockCreateCopilotSession(...args),
+  createCopilotSession: (...args: unknown[]) =>
+    mockCreateCopilotSession(...args),
   getAllSessions: (...args: unknown[]) => mockGetAllSessions(...args),
 }));
 
@@ -20,7 +21,10 @@ import { requireAuth } from "@/lib/auth-guard";
 
 const mockRequireAuth = requireAuth as ReturnType<typeof vi.fn>;
 
-function makeRequest(url: string, init?: { method?: string; body?: string; headers?: Record<string, string> }) {
+function makeRequest(
+  url: string,
+  init?: { method?: string; body?: string; headers?: Record<string, string> },
+) {
   return new NextRequest(`http://localhost:3000${url}`, init);
 }
 

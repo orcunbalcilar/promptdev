@@ -58,7 +58,12 @@ import { ensureUserExists, requireTaskOwnership } from "../auth-guard";
 
 function fakeSession(overrides: Partial<Session> = {}): Session {
   return {
-    user: { id: "user-1", name: "Test User", email: "test@example.com", image: "https://avatar.url/test.png" },
+    user: {
+      id: "user-1",
+      name: "Test User",
+      email: "test@example.com",
+      image: "https://avatar.url/test.png",
+    },
     expires: "2030-01-01",
     ...overrides,
   } as Session;
@@ -73,7 +78,9 @@ describe("ensureUserExists", () => {
     mockWhere.mockReturnValue({ limit: mockLimit });
     // insert chain
     mockInsert.mockReturnValue({ values: mockValues });
-    mockValues.mockReturnValue({ onConflictDoNothing: mockOnConflictDoNothing });
+    mockValues.mockReturnValue({
+      onConflictDoNothing: mockOnConflictDoNothing,
+    });
     mockOnConflictDoNothing.mockReturnValue({ returning: mockReturning });
   });
 
@@ -136,7 +143,9 @@ describe("ensureUserExists", () => {
 
   it("throws when session has no user id", async () => {
     const session = { user: { name: "No ID" }, expires: "" } as Session;
-    await expect(ensureUserExists(session)).rejects.toThrow("No user ID in session");
+    await expect(ensureUserExists(session)).rejects.toThrow(
+      "No user ID in session",
+    );
   });
 
   it("handles session with empty email and name", async () => {

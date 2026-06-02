@@ -5,7 +5,12 @@
  * DELETE /api/copilot/sessions/[sessionId] - Destroy session
  */
 
-import { abortSession, destroySession, getSession, resumeCopilotSession } from "@/lib/copilot/client";
+import {
+  abortSession,
+  destroySession,
+  getSession,
+  resumeCopilotSession,
+} from "@/lib/copilot/client";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-guard";
 
@@ -30,11 +35,12 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     // If not in memory, try resuming from persisted SDK sessions
     if (!session) {
       try {
-        const userExt = authSession.user as Record<string, unknown> | undefined;
-        const userToken = userExt?.copilotToken as string | undefined;
-        session = await resumeCopilotSession(sessionId, userToken);
+        session = await resumeCopilotSession(sessionId);
       } catch {
-        return NextResponse.json({ error: "Session not found" }, { status: 404 });
+        return NextResponse.json(
+          { error: "Session not found" },
+          { status: 404 },
+        );
       }
     }
 

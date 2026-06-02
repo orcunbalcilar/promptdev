@@ -7,7 +7,8 @@ const mockProcessAgentCallback = vi.fn();
 
 vi.mock("@/lib/services/task-service", () => ({
   getTask: (...args: unknown[]) => mockGetTask(...args),
-  processAgentCallback: (...args: unknown[]) => mockProcessAgentCallback(...args),
+  processAgentCallback: (...args: unknown[]) =>
+    mockProcessAgentCallback(...args),
 }));
 
 const mockCreateWorkspace = vi.fn();
@@ -17,7 +18,8 @@ const mockCleanupWorkspace = vi.fn();
 
 vi.mock("@/lib/services/workspace-service", () => ({
   createWorkspace: (...args: unknown[]) => mockCreateWorkspace(...args),
-  createLocalWorkspace: (...args: unknown[]) => mockCreateLocalWorkspace(...args),
+  createLocalWorkspace: (...args: unknown[]) =>
+    mockCreateLocalWorkspace(...args),
   cloneRepository: (...args: unknown[]) => mockCloneRepository(...args),
   cleanupWorkspace: (...args: unknown[]) => mockCleanupWorkspace(...args),
 }));
@@ -137,11 +139,11 @@ describe("backend", () => {
 
     it("should not throw when processAgentCallback fails", async () => {
       mockProcessAgentCallback.mockRejectedValue(new Error("DB error"));
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
-      await expect(
-        sendCallback("task-1", "PROGRESS"),
-      ).resolves.toBeUndefined();
+      await expect(sendCallback("task-1", "PROGRESS")).resolves.toBeUndefined();
 
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("Failed to send callback"),
@@ -216,12 +218,7 @@ describe("backend", () => {
       mockGetCloneUrl.mockReturnValue("https://bb.com/repo.git");
       mockCloneRepository.mockReturnValue("/tmp/ws/task-1");
 
-      const result = cloneRepository(
-        "task-1",
-        "PROJ",
-        "my-repo",
-        "feature",
-      );
+      const result = cloneRepository("task-1", "PROJ", "my-repo", "feature");
 
       expect(mockGetBitbucketConfig).toHaveBeenCalled();
       expect(mockGetCloneUrl).toHaveBeenCalledWith("PROJ", "my-repo");

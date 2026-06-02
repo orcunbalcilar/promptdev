@@ -42,7 +42,7 @@ export const CommitHeader = ({
     <div
       className={cn(
         "group flex cursor-pointer items-center justify-between gap-4 p-3 text-left transition-colors hover:opacity-80",
-        className
+        className,
       )}
     >
       {children}
@@ -85,7 +85,7 @@ export const CommitMetadata = ({
   <div
     className={cn(
       "flex items-center gap-2 text-muted-foreground text-xs",
-      className
+      className,
     )}
     {...props}
   >
@@ -159,7 +159,7 @@ export const CommitTimestamp = ({
 }: CommitTimestampProps) => {
   const formatted = relativeTimeFormat.format(
     Math.round((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
-    "day"
+    "day",
   );
 
   return (
@@ -228,7 +228,7 @@ export const CommitCopyButton = ({
         onCopy?.();
         timeoutRef.current = window.setTimeout(
           () => setIsCopied(false),
-          timeout
+          timeout,
         );
       }
     } catch (error) {
@@ -240,7 +240,7 @@ export const CommitCopyButton = ({
     () => () => {
       window.clearTimeout(timeoutRef.current);
     },
-    []
+    [],
   );
 
   const Icon = isCopied ? CheckIcon : CopyIcon;
@@ -292,7 +292,7 @@ export const CommitFile = ({
   <div
     className={cn(
       "flex items-center justify-between gap-2 rounded px-2 py-1 text-sm hover:bg-muted/50",
-      className
+      className,
     )}
     {...props}
   >
@@ -340,7 +340,7 @@ export const CommitFileStatus = ({
     className={cn(
       "font-medium font-mono text-xs",
       fileStatusStyles[status],
-      className
+      className,
     )}
     {...props}
   >
@@ -382,7 +382,7 @@ export const CommitFileChanges = ({
   <div
     className={cn(
       "flex shrink-0 items-center gap-1 font-mono text-xs",
-      className
+      className,
     )}
     {...props}
   >

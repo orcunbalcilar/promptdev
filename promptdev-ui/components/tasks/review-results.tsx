@@ -1,20 +1,15 @@
-"use client"
+"use client";
 
-import { useMemo } from "react"
-import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { useMemo } from "react";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   CodeBlockContainer,
   CodeBlockHeader,
   CodeBlockTitle,
   CodeBlockContent,
-} from "@/components/ai-elements/code-block"
+} from "@/components/ai-elements/code-block";
 import {
   AlertTriangle,
   Info,
@@ -24,25 +19,25 @@ import {
   Bot,
   ChevronDown,
   CheckCircle2,
-} from "lucide-react"
+} from "lucide-react";
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface ReviewResult {
-  severity: "info" | "warning" | "error"
-  filePath: string
-  line?: number
-  description: string
-  suggestion?: string
-  codeSnippet?: string
+  severity: "info" | "warning" | "error";
+  filePath: string;
+  line?: number;
+  description: string;
+  suggestion?: string;
+  codeSnippet?: string;
 }
 
 export interface ReviewResultsProps {
-  results: ReviewResult[]
-  reviewModel?: string
-  duration?: number
+  results: ReviewResult[];
+  reviewModel?: string;
+  duration?: number;
 }
 
 // ============================================================================
@@ -51,8 +46,8 @@ export interface ReviewResultsProps {
 
 /* v8 ignore start — inferLanguage lookup map branches */
 function inferLanguage(filePath: string): string {
-  if (!filePath) return "text"
-  const ext = filePath.split(".").pop()?.toLowerCase()
+  if (!filePath) return "text";
+  const ext = filePath.split(".").pop()?.toLowerCase();
   const langMap: Record<string, string> = {
     ts: "typescript",
     tsx: "tsx",
@@ -73,8 +68,8 @@ function inferLanguage(filePath: string): string {
     yaml: "yaml",
     md: "markdown",
     xml: "xml",
-  }
-  return langMap[ext ?? ""] ?? "text"
+  };
+  return langMap[ext ?? ""] ?? "text";
 }
 /* v8 ignore stop */
 
@@ -104,15 +99,15 @@ const SEVERITY_CONFIG = {
     iconClass: "text-blue-600",
     label: "Info",
   },
-} as const
+} as const;
 
 function formatDuration(ms: number): string {
-  if (ms < 1000) return `${ms}ms`
-  const secs = Math.floor(ms / 1000)
-  if (secs < 60) return `${secs}s`
-  const mins = Math.floor(secs / 60)
-  const remainSecs = secs % 60
-  return `${mins}m ${remainSecs}s`
+  if (ms < 1000) return `${ms}ms`;
+  const secs = Math.floor(ms / 1000);
+  if (secs < 60) return `${secs}s`;
+  const mins = Math.floor(secs / 60);
+  const remainSecs = secs % 60;
+  return `${mins}m ${remainSecs}s`;
 }
 
 // ============================================================================
@@ -123,14 +118,14 @@ function ReviewSummaryBadge({
   results,
 }: Readonly<{ results: ReviewResult[] }>) {
   const counts = useMemo(() => {
-    const c = { error: 0, warning: 0, info: 0 }
+    const c = { error: 0, warning: 0, info: 0 };
     for (const r of results) {
-      c[r.severity]++
+      c[r.severity]++;
     }
-    return c
-  }, [results])
+    return c;
+  }, [results]);
 
-  const total = results.length
+  const total = results.length;
 
   if (total === 0) {
     return (
@@ -141,7 +136,7 @@ function ReviewSummaryBadge({
         <CheckCircle2 className="size-3 mr-1" />
         No issues found
       </Badge>
-    )
+    );
   }
 
   return (
@@ -177,17 +172,15 @@ function ReviewSummaryBadge({
         </Badge>
       )}
     </div>
-  )
+  );
 }
 
-function ReviewFinding({
-  result,
-}: Readonly<{ result: ReviewResult }>) {
-  const config = SEVERITY_CONFIG[result.severity]
-  const SeverityIcon = config.icon
+function ReviewFinding({ result }: Readonly<{ result: ReviewResult }>) {
+  const config = SEVERITY_CONFIG[result.severity];
+  const SeverityIcon = config.icon;
   const lang = inferLanguage(result.filePath) as Parameters<
     typeof CodeBlockContent
-  >[0]["language"]
+  >[0]["language"];
 
   return (
     <div
@@ -204,7 +197,10 @@ function ReviewFinding({
         />
         <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="outline" className={cn("text-[10px]", config.badgeClass)}>
+            <Badge
+              variant="outline"
+              className={cn("text-[10px]", config.badgeClass)}
+            >
               {config.label}
             </Badge>
             <span className="text-xs font-mono text-muted-foreground flex items-center gap-1">
@@ -245,7 +241,7 @@ function ReviewFinding({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -259,13 +255,13 @@ export function ReviewResults({
 }: Readonly<ReviewResultsProps>) {
   // Sort: errors first, then warnings, then info
   const sortedResults = useMemo(() => {
-    const order: Record<string, number> = { error: 0, warning: 1, info: 2 }
+    const order: Record<string, number> = { error: 0, warning: 1, info: 2 };
     /* v8 ignore start — severity sort with unknown fallback */
     return [...results].sort(
       (a, b) => (order[a.severity] ?? 3) - (order[b.severity] ?? 3),
-    )
+    );
     /* v8 ignore stop */
-  }, [results])
+  }, [results]);
 
   return (
     <Card>
@@ -304,13 +300,16 @@ export function ReviewResults({
         ) : (
           <div className="space-y-3">
             {sortedResults.map((result, index) => (
-              <ReviewFinding key={`${result.filePath}-${result.line ?? 0}-${index}`} result={result} />
+              <ReviewFinding
+                key={`${result.filePath}-${result.line ?? 0}-${index}`}
+                result={result}
+              />
             ))}
           </div>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // ============================================================================
@@ -318,16 +317,16 @@ export function ReviewResults({
 // ============================================================================
 
 export function parseReviewResults(details?: string): ReviewResult[] {
-  if (!details) return []
+  if (!details) return [];
   try {
-    const parsed = JSON.parse(details) as unknown
-    if (Array.isArray(parsed)) return parsed as ReviewResult[]
+    const parsed = JSON.parse(details) as unknown;
+    if (Array.isArray(parsed)) return parsed as ReviewResult[];
     /* v8 ignore start — object type check + alternative JSON shapes */
     if (typeof parsed === "object" && parsed !== null) {
-      const obj = parsed as Record<string, unknown>
-      if (Array.isArray(obj.findings)) return obj.findings as ReviewResult[]
-      if (Array.isArray(obj.results)) return obj.results as ReviewResult[]
-      if (Array.isArray(obj.issues)) return obj.issues as ReviewResult[]
+      const obj = parsed as Record<string, unknown>;
+      if (Array.isArray(obj.findings)) return obj.findings as ReviewResult[];
+      if (Array.isArray(obj.results)) return obj.results as ReviewResult[];
+      if (Array.isArray(obj.issues)) return obj.issues as ReviewResult[];
     }
     /* v8 ignore stop */
   } catch {
@@ -338,7 +337,7 @@ export function parseReviewResults(details?: string): ReviewResult[] {
         filePath: "review",
         description: details,
       },
-    ]
+    ];
   }
-  return []
+  return [];
 }

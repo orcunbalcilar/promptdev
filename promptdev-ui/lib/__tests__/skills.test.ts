@@ -98,9 +98,7 @@ describe("getSkillsByCategory", () => {
     const groups = getSkillsByCategory();
     expect(groups.length).toBeGreaterThan(0);
 
-    const orders = groups.map(
-      (g) => SKILL_CATEGORIES[g.category].order,
-    );
+    const orders = groups.map((g) => SKILL_CATEGORIES[g.category].order);
     for (let i = 1; i < orders.length; i++) {
       expect(orders[i]).toBeGreaterThanOrEqual(orders[i - 1]);
     }
@@ -109,8 +107,12 @@ describe("getSkillsByCategory", () => {
   it("includes all skills in exactly one group", () => {
     const groups = getSkillsByCategory();
     const groupedSkillIds = groups.flatMap((g) => g.skills.map((s) => s.id));
-    const sortedGrouped = groupedSkillIds.toSorted((a, b) => a.localeCompare(b));
-    const sortedAll = SKILLS.map((s) => s.id).toSorted((a, b) => a.localeCompare(b));
+    const sortedGrouped = groupedSkillIds.toSorted((a, b) =>
+      a.localeCompare(b),
+    );
+    const sortedAll = SKILLS.map((s) => s.id).toSorted((a, b) =>
+      a.localeCompare(b),
+    );
     expect(sortedGrouped).toEqual(sortedAll);
   });
 
@@ -150,7 +152,9 @@ describe("getDefaultSkillIds", () => {
       (s) => s.id,
     );
     const sortedDefaults = defaults.toSorted((a, b) => a.localeCompare(b));
-    const sortedExpected = expectedDefaults.toSorted((a, b) => a.localeCompare(b));
+    const sortedExpected = expectedDefaults.toSorted((a, b) =>
+      a.localeCompare(b),
+    );
     expect(sortedDefaults).toEqual(sortedExpected);
   });
 });
@@ -171,12 +175,16 @@ describe("getSkillById", () => {
 describe("getInstallCommand", () => {
   it("returns correct npx command for a skill", () => {
     const skill = getSkillById("vercel-react-best-practices")!;
-    expect(getInstallCommand(skill)).toBe("npx -y skills add vercel-labs/agent-skills");
+    expect(getInstallCommand(skill)).toBe(
+      "npx -y skills add vercel-labs/agent-skills",
+    );
   });
 
   it("returns correct command for anthropics skills", () => {
     const skill = getSkillById("frontend-design")!;
-    expect(getInstallCommand(skill)).toBe("npx -y skills add anthropics/skills");
+    expect(getInstallCommand(skill)).toBe(
+      "npx -y skills add anthropics/skills",
+    );
   });
 });
 
@@ -196,12 +204,16 @@ describe("buildInstallCommands", () => {
 
   it("deduplicates skills from the same package", () => {
     // vercel-react-best-practices and web-design-guidelines both come from vercel-labs/agent-skills
-    const cmds = buildInstallCommands("vercel-react-best-practices, web-design-guidelines");
+    const cmds = buildInstallCommands(
+      "vercel-react-best-practices, web-design-guidelines",
+    );
     expect(cmds).toEqual(["npx -y skills add vercel-labs/agent-skills"]);
   });
 
   it("returns multiple commands for skills from different packages", () => {
-    const cmds = buildInstallCommands("vercel-react-best-practices, frontend-design, find-skills");
+    const cmds = buildInstallCommands(
+      "vercel-react-best-practices, frontend-design, find-skills",
+    );
     expect(cmds).toHaveLength(3);
     expect(cmds).toContain("npx -y skills add vercel-labs/agent-skills");
     expect(cmds).toContain("npx -y skills add anthropics/skills");
@@ -209,12 +221,16 @@ describe("buildInstallCommands", () => {
   });
 
   it("ignores unknown skill IDs", () => {
-    const cmds = buildInstallCommands("vercel-react-best-practices, unknown-skill");
+    const cmds = buildInstallCommands(
+      "vercel-react-best-practices, unknown-skill",
+    );
     expect(cmds).toEqual(["npx -y skills add vercel-labs/agent-skills"]);
   });
 
   it("trims whitespace from skill IDs", () => {
-    const cmds = buildInstallCommands("  vercel-react-best-practices  ,  frontend-design  ");
+    const cmds = buildInstallCommands(
+      "  vercel-react-best-practices  ,  frontend-design  ",
+    );
     expect(cmds).toHaveLength(2);
   });
 });
@@ -231,7 +247,9 @@ describe("buildInstallScript", () => {
   });
 
   it("chains multiple commands with &&", () => {
-    const script = buildInstallScript("vercel-react-best-practices, frontend-design");
+    const script = buildInstallScript(
+      "vercel-react-best-practices, frontend-design",
+    );
     expect(script).toContain("&&");
     expect(script).toContain("vercel-labs/agent-skills");
     expect(script).toContain("anthropics/skills");

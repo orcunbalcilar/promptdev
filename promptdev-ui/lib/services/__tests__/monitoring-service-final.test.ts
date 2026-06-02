@@ -68,7 +68,10 @@ describe("monitoring-service – uncovered functions", () => {
 
   describe("getSessionOperations", () => {
     it("fetches operations by sessionId and maps to responses", async () => {
-      const ops = [makeOp(), makeOp({ id: "op-2", operationType: "TOOL_EXECUTION" })];
+      const ops = [
+        makeOp(),
+        makeOp({ id: "op-2", operationType: "TOOL_EXECUTION" }),
+      ];
       mockDb.select.mockReturnValue(chainResult(ops));
 
       const result = await getSessionOperations("sess-1");

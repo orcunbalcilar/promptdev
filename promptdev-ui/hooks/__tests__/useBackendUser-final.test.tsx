@@ -84,7 +84,7 @@ describe("useBackendUser (lines 22, 53)", () => {
     );
 
     expect(result.current.error?.message).toBe(
-      "Session missing required user fields (id, email)"
+      "Session missing required user fields (id, email)",
     );
   });
 
@@ -124,7 +124,12 @@ describe("useBackendUser (lines 22, 53)", () => {
     const uuid = "b2c3d4e5-f6a7-8901-bcde-f12345678901";
     mockUseSession.mockReturnValue({
       data: {
-        user: { id: uuid, email: "existing@test.com", name: "Existing", image: null },
+        user: {
+          id: uuid,
+          email: "existing@test.com",
+          name: "Existing",
+          image: null,
+        },
         expires: "2099-01-01",
       } as never,
       status: "authenticated",
@@ -154,7 +159,12 @@ describe("useBackendUser (lines 22, 53)", () => {
   it("syncs via OAuth when session ID is not a UUID", async () => {
     mockUseSession.mockReturnValue({
       data: {
-        user: { id: "67890", email: "oauth@test.com", name: "OAuth User", image: "https://avatar.com" },
+        user: {
+          id: "67890",
+          email: "oauth@test.com",
+          name: "OAuth User",
+          image: "https://avatar.com",
+        },
         expires: "2099-01-01",
       } as never,
       status: "authenticated",
@@ -175,13 +185,15 @@ describe("useBackendUser (lines 22, 53)", () => {
       expect(result.current.userId).toBe("synced-uuid");
     });
 
-    expect(mockSyncUser).toHaveBeenCalledWith(expect.objectContaining({
-      provider: "github",
-      providerAccountId: "67890",
-      email: "oauth@test.com",
-      name: "OAuth User",
-      avatarUrl: "https://avatar.com",
-    }));
+    expect(mockSyncUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: "github",
+        providerAccountId: "67890",
+        email: "oauth@test.com",
+        name: "OAuth User",
+        avatarUrl: "https://avatar.com",
+      }),
+    );
   });
 
   // ── Branch coverage: unauthenticated/loading states ───────

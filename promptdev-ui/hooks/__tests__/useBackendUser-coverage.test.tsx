@@ -39,19 +39,27 @@ describe("useBackendUser – coverage", () => {
   });
 
   it("fetches profile for UUID session id (line 22: isUuid=true path)", async () => {
-    const profile = { id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", email: "test@example.com" };
+    const profile = {
+      id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      email: "test@example.com",
+    };
     mockGetUserProfile.mockResolvedValue(profile);
 
     const { result } = renderHook(() => useBackendUser(), { wrapper });
 
     await waitFor(() => expect(result.current.userId).toBe(profile.id));
-    expect(mockGetUserProfile).toHaveBeenCalledWith("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+    expect(mockGetUserProfile).toHaveBeenCalledWith(
+      "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    );
     expect(mockSyncUser).not.toHaveBeenCalled();
   });
 
   it("falls back to sync when getUserProfile fails for UUID user (line 53)", async () => {
     mockGetUserProfile.mockRejectedValue(new Error("Not found"));
-    const profile = { id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", email: "test@example.com" };
+    const profile = {
+      id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      email: "test@example.com",
+    };
     mockSyncUser.mockResolvedValue(profile);
 
     const { result } = renderHook(() => useBackendUser(), { wrapper });
@@ -63,7 +71,12 @@ describe("useBackendUser – coverage", () => {
   it("syncs for non-UUID session id (numeric GitHub ID)", async () => {
     vi.mocked(useSession).mockReturnValue({
       data: {
-        user: { id: "12345", email: "gh@example.com", name: "GH User", image: null },
+        user: {
+          id: "12345",
+          email: "gh@example.com",
+          name: "GH User",
+          image: null,
+        },
         expires: "",
       },
       status: "authenticated",
@@ -77,5 +90,4 @@ describe("useBackendUser – coverage", () => {
     await waitFor(() => expect(result.current.userId).toBe("new-uuid"));
     expect(mockSyncUser).toHaveBeenCalled();
   });
-
 });

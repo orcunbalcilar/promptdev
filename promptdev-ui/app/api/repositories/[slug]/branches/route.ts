@@ -8,9 +8,17 @@ export async function GET(
   const { slug } = await params;
   const projectKey = request.nextUrl.searchParams.get("projectKey");
   if (!projectKey) {
-    return NextResponse.json({ error: "projectKey is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "projectKey is required" },
+      { status: 400 },
+    );
   }
-  const filterText = request.nextUrl.searchParams.get("filterText") ?? undefined;
-  const branches = await bitbucketService.listBranches(projectKey, slug, filterText);
+  const filterText =
+    request.nextUrl.searchParams.get("filterText") ?? undefined;
+  const branches = await bitbucketService.listBranches(
+    projectKey,
+    slug,
+    filterText,
+  );
   return NextResponse.json(branches);
 }

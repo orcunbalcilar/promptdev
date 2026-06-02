@@ -7,7 +7,10 @@ export async function GET(request: NextRequest) {
   if (error) return error;
 
   const searchParams = request.nextUrl.searchParams;
-  const days = Math.min(Math.max(Number.parseInt(searchParams.get("days") ?? "7", 10) || 7, 1), 90);
+  const days = Math.min(
+    Math.max(Number.parseInt(searchParams.get("days") ?? "7", 10) || 7, 1),
+    90,
+  );
 
   const metrics = await monitoringService.getDashboardMetrics(days);
   return NextResponse.json(metrics);

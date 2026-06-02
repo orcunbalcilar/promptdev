@@ -190,7 +190,7 @@ export const SpeechInput = ({
         }
       }
     },
-    []
+    [],
   );
 
   // Start MediaRecorder recording
@@ -309,7 +309,7 @@ export const SpeechInput = ({
           isListening
             ? "bg-destructive text-white hover:bg-destructive/80 hover:text-white"
             : "bg-primary text-primary-foreground hover:bg-primary/80 hover:text-primary-foreground",
-          className
+          className,
         )}
         disabled={isDisabled}
         onClick={toggleListening}

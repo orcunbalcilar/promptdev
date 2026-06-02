@@ -1,16 +1,16 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
 
-vi.mock('react-dom', async () => {
-  const actual = await vi.importActual('react-dom')
-  return { ...actual, createPortal: (children: React.ReactNode) => children }
-})
+vi.mock("react-dom", async () => {
+  const actual = await vi.importActual("react-dom");
+  return { ...actual, createPortal: (children: React.ReactNode) => children };
+});
 
 globalThis.ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
-} as unknown as typeof ResizeObserver
+} as unknown as typeof ResizeObserver;
 
 import {
   PromptInput,
@@ -19,44 +19,46 @@ import {
   PromptInputTextarea,
   PromptInputFooter,
   PromptInputSubmit,
-} from '@/components/ai-elements/prompt-input'
+} from "@/components/ai-elements/prompt-input";
 
-describe('PromptInput', () => {
-  it('renders children', () => {
+describe("PromptInput", () => {
+  it("renders children", () => {
     render(
       <PromptInput onSubmit={vi.fn()}>
         <PromptInputBody>
           <PromptInputTextarea />
         </PromptInputBody>
-      </PromptInput>
-    )
+      </PromptInput>,
+    );
 
-    expect(screen.getByPlaceholderText('What would you like to know?')).toBeInTheDocument()
-  })
+    expect(
+      screen.getByPlaceholderText("What would you like to know?"),
+    ).toBeInTheDocument();
+  });
 
-  it('renders form element', () => {
+  it("renders form element", () => {
     const { container } = render(
       <PromptInput onSubmit={vi.fn()}>
         <span>Content</span>
-      </PromptInput>
-    )
+      </PromptInput>,
+    );
 
-    expect(container.querySelector('form')).toBeInTheDocument()
-  })
+    expect(container.querySelector("form")).toBeInTheDocument();
+  });
 
-  it('renders with custom className', () => {
+  it("renders with custom className", () => {
     const { container } = render(
       <PromptInput onSubmit={vi.fn()} className="custom-form">
         <span>Content</span>
-      </PromptInput>
-    )
+      </PromptInput>,
+    );
 
-    expect(container.querySelector('form')).toHaveClass('custom-form')
-  })
-})
+    expect(container.querySelector("form")).toHaveClass("custom-form");
+  });
+});
 
-describe('PromptInputProvider', () => {
-  it('provides context to children', () => {
+describe("PromptInputProvider", () => {
+  it("provides context to children", () => {
     render(
       <PromptInputProvider>
         <PromptInput onSubmit={vi.fn()}>
@@ -64,13 +66,15 @@ describe('PromptInputProvider', () => {
             <PromptInputTextarea />
           </PromptInputBody>
         </PromptInput>
-      </PromptInputProvider>
-    )
+      </PromptInputProvider>,
+    );
 
-    expect(screen.getByPlaceholderText('What would you like to know?')).toBeInTheDocument()
-  })
+    expect(
+      screen.getByPlaceholderText("What would you like to know?"),
+    ).toBeInTheDocument();
+  });
 
-  it('accepts initial input', () => {
+  it("accepts initial input", () => {
     render(
       <PromptInputProvider initialInput="Hello">
         <PromptInput onSubmit={vi.fn()}>
@@ -78,35 +82,35 @@ describe('PromptInputProvider', () => {
             <PromptInputTextarea />
           </PromptInputBody>
         </PromptInput>
-      </PromptInputProvider>
-    )
+      </PromptInputProvider>,
+    );
 
-    expect(screen.getByDisplayValue('Hello')).toBeInTheDocument()
-  })
-})
+    expect(screen.getByDisplayValue("Hello")).toBeInTheDocument();
+  });
+});
 
-describe('PromptInputSubmit', () => {
-  it('renders submit button', () => {
+describe("PromptInputSubmit", () => {
+  it("renders submit button", () => {
     render(
       <PromptInput onSubmit={vi.fn()}>
         <PromptInputFooter>
           <PromptInputSubmit />
         </PromptInputFooter>
-      </PromptInput>
-    )
+      </PromptInput>,
+    );
 
-    expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument()
-  })
+    expect(screen.getByRole("button", { name: /submit/i })).toBeInTheDocument();
+  });
 
-  it('renders stop button when streaming', () => {
+  it("renders stop button when streaming", () => {
     render(
       <PromptInput onSubmit={vi.fn()}>
         <PromptInputFooter>
           <PromptInputSubmit status="streaming" onStop={vi.fn()} />
         </PromptInputFooter>
-      </PromptInput>
-    )
+      </PromptInput>,
+    );
 
-    expect(screen.getByRole('button', { name: /stop/i })).toBeInTheDocument()
-  })
-})
+    expect(screen.getByRole("button", { name: /stop/i })).toBeInTheDocument();
+  });
+});

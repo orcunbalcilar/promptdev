@@ -107,7 +107,9 @@ describe("scheduled-job-service", () => {
     it("should throw when job not found", async () => {
       mockDb.select.mockReturnValueOnce(chainResult([]));
 
-      await expect(getJob("nonexistent")).rejects.toThrow("Scheduled job not found");
+      await expect(getJob("nonexistent")).rejects.toThrow(
+        "Scheduled job not found",
+      );
     });
   });
 
@@ -160,7 +162,9 @@ describe("scheduled-job-service", () => {
     it("should throw when job not found", async () => {
       mockDb.select.mockReturnValueOnce(chainResult([]));
 
-      await expect(toggleJob("nonexistent")).rejects.toThrow("Scheduled job not found");
+      await expect(toggleJob("nonexistent")).rejects.toThrow(
+        "Scheduled job not found",
+      );
     });
   });
 
@@ -178,7 +182,11 @@ describe("scheduled-job-service", () => {
   describe("markJobRun", () => {
     it("should update last run time and compute next run", async () => {
       const job = makeJob();
-      const updated = makeJob({ lastRunAt: NOW, lastTaskId: "task-1", nextRunAt: NEXT_RUN });
+      const updated = makeJob({
+        lastRunAt: NOW,
+        lastTaskId: "task-1",
+        nextRunAt: NEXT_RUN,
+      });
       mockDb.select.mockReturnValueOnce(chainResult([job]));
       mockDb.update.mockReturnValue(chainResult([updated]));
 
@@ -191,15 +199,29 @@ describe("scheduled-job-service", () => {
     it("should throw when job not found", async () => {
       mockDb.select.mockReturnValueOnce(chainResult([]));
 
-      await expect(markJobRun("nonexistent", "task-1")).rejects.toThrow("Scheduled job not found");
+      await expect(markJobRun("nonexistent", "task-1")).rejects.toThrow(
+        "Scheduled job not found",
+      );
     });
   });
 
   describe("getJobHistory", () => {
     it("should return task history for a job", async () => {
       const tasks = [
-        { id: "t-1", title: "Run 1", status: "COMPLETED", createdAt: NOW, completedAt: NOW },
-        { id: "t-2", title: "Run 2", status: "FAILED", createdAt: NOW, completedAt: null },
+        {
+          id: "t-1",
+          title: "Run 1",
+          status: "COMPLETED",
+          createdAt: NOW,
+          completedAt: NOW,
+        },
+        {
+          id: "t-2",
+          title: "Run 2",
+          status: "FAILED",
+          createdAt: NOW,
+          completedAt: null,
+        },
       ];
       mockDb.select.mockReturnValue(chainResult(tasks));
 

@@ -31,7 +31,11 @@ vi.mock("@/lib/sse-client", () => ({
 }));
 
 vi.mock("@/lib/query-policies", () => ({
-  realtimeQueryOptions: { staleTime: 0, gcTime: 0, refetchOnWindowFocus: false },
+  realtimeQueryOptions: {
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnWindowFocus: false,
+  },
 }));
 
 vi.mock("sonner", () => ({

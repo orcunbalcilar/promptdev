@@ -24,7 +24,21 @@ describe("export.ts line 59 — window undefined branch", () => {
       expect(() =>
         exportTasks(
           [
-            { id: "1", title: "T", status: "COMPLETED", createdAt: "", updatedAt: "", prompt: "", repositorySlug: "", sourceBranch: "", targetBranch: "", currentAttempt: 1, maxAttempts: 3, workspaceType: "BITBUCKET", modelId: "" },
+            {
+              id: "1",
+              title: "T",
+              status: "COMPLETED",
+              createdAt: "",
+              updatedAt: "",
+              prompt: "",
+              repositorySlug: "",
+              sourceBranch: "",
+              targetBranch: "",
+              currentAttempt: 1,
+              maxAttempts: 3,
+              workspaceType: "BITBUCKET",
+              modelId: "",
+            },
           ] as never[],
           { format: "csv", fields: ["title"] },
         ),

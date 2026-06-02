@@ -15,7 +15,7 @@ describe("TerminalClearButton (line 183)", () => {
     render(
       <Terminal output="test output" onClear={onClear}>
         <TerminalClearButton />
-      </Terminal>
+      </Terminal>,
     );
 
     const clearButton = screen.getByRole("button");
@@ -28,7 +28,7 @@ describe("TerminalClearButton (line 183)", () => {
     render(
       <Terminal output="output">
         <TerminalClearButton />
-      </Terminal>
+      </Terminal>,
     );
 
     // TerminalClearButton renders null, so no button exists
@@ -47,13 +47,13 @@ describe("TerminalClearButton (line 183)", () => {
     render(
       <Terminal output="test">
         <TerminalCopyButton onError={onError} />
-      </Terminal>
+      </Terminal>,
     );
 
     const copyBtn = screen.getByRole("button");
     fireEvent.click(copyBtn);
     expect(onError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Clipboard API not available" })
+      expect.objectContaining({ message: "Clipboard API not available" }),
     );
 
     // Restore clipboard

@@ -16,10 +16,15 @@ export function KanbanBoard({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 lg:h-full lg:min-h-0 lg:overflow-hidden">
       {STATUS_GROUPS.map((group) => {
-        const columnTasks = tasks.filter((task) => group.statuses.includes(task.status));
+        const columnTasks = tasks.filter((task) =>
+          group.statuses.includes(task.status),
+        );
         const columnClass = STATUS_GROUP_STYLES[group.label] ?? "";
         return (
-          <div key={group.label} className="flex flex-col lg:h-full gap-3 min-h-0">
+          <div
+            key={group.label}
+            className="flex flex-col lg:h-full gap-3 min-h-0"
+          >
             <div className="flex items-center justify-between px-1 shrink-0">
               <h2 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">
                 {group.label}

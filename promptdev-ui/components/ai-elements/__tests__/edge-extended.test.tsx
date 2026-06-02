@@ -8,12 +8,8 @@ vi.mock("@xyflow/react", () => ({
     <path data-testid={`edge-${id}`} d={path} style={style} {...props} />
   ),
   useInternalNode: (...args: unknown[]) => mockUseInternalNode(...args),
-  getBezierPath: vi
-    .fn()
-    .mockReturnValue(["M0,0 C50,0 50,100 100,100", 50, 50]),
-  getSimpleBezierPath: vi
-    .fn()
-    .mockReturnValue(["M0,0 C25,0 75,100 100,100"]),
+  getBezierPath: vi.fn().mockReturnValue(["M0,0 C50,0 50,100 100,100", 50, 50]),
+  getSimpleBezierPath: vi.fn().mockReturnValue(["M0,0 C25,0 75,100 100,100"]),
   Position: {
     Top: "top",
     Bottom: "bottom",
@@ -253,8 +249,6 @@ describe("Edge.Temporary", () => {
       </svg>,
     );
 
-    expect(
-      container.querySelector("[data-testid='edge-temp-1']"),
-    ).toBeTruthy();
+    expect(container.querySelector("[data-testid='edge-temp-1']")).toBeTruthy();
   });
 });

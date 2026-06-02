@@ -111,7 +111,11 @@ describe("jira-service", () => {
     it("should return transitions object", async () => {
       const transitions = {
         transitions: [
-          { id: "21", name: "In Progress", to: { name: "In Progress", id: "3" } },
+          {
+            id: "21",
+            name: "In Progress",
+            to: { name: "In Progress", id: "3" },
+          },
           { id: "31", name: "Done", to: { name: "Done", id: "5" } },
         ],
       };
@@ -208,12 +212,16 @@ describe("jira-service", () => {
         }),
       );
 
-      await expect(getIssue("PROJ-999")).rejects.toThrow("Jira API error 404: Issue not found");
+      await expect(getIssue("PROJ-999")).rejects.toThrow(
+        "Jira API error 404: Issue not found",
+      );
     });
 
     it("should throw when JIRA_URL is not configured", async () => {
       delete process.env.JIRA_URL;
-      await expect(searchIssues("test")).rejects.toThrow("JIRA_URL is not configured");
+      await expect(searchIssues("test")).rejects.toThrow(
+        "JIRA_URL is not configured",
+      );
     });
   });
 });

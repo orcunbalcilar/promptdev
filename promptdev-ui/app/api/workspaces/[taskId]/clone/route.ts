@@ -9,7 +9,10 @@ export async function POST(
   const { taskId } = await params;
   const body = await request.json();
   try {
-    const cloneUrl = bitbucketService.getCloneUrl(body.projectKey, body.repoSlug);
+    const cloneUrl = bitbucketService.getCloneUrl(
+      body.projectKey,
+      body.repoSlug,
+    );
     const path = workspaceService.cloneRepository(
       taskId,
       cloneUrl,

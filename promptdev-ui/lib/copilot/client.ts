@@ -44,7 +44,9 @@ const userInputHandlers = new Map<string, UserInputRequestHandler>();
 /**
  * Get user input handler for a session
  */
-export function getUserInputHandler(sessionId: string): UserInputRequestHandler | undefined {
+export function getUserInputHandler(
+  sessionId: string,
+): UserInputRequestHandler | undefined {
   return userInputHandlers.get(sessionId);
 }
 
@@ -53,25 +55,19 @@ let copilotClient: CopilotClient | null = null;
 let clientStarting = false;
 let clientStartPromise: Promise<void> | null = null;
 
-// Per-user client cache (keyed by user token hash)
-const userClients = new Map<string, CopilotClient>();
-
-/**
- * Simple hash for cache key (avoids storing raw tokens in map keys)
- */
-function tokenCacheKey(token: string): string {
-  return `user:${token.slice(0, 12)}...${token.slice(-4)}`;
-}
-
 /**
  * Ensure node:sqlite is available for the Copilot CLI child process.
  * Node < 25 needs --experimental-sqlite; Node 25+ has it built-in.
  */
 function ensureSqliteSupport(): void {
   const [major] = process.versions.node.split(".").map(Number);
-  if (major < 25 && !process.env.NODE_OPTIONS?.includes("--experimental-sqlite")) {
+  if (
+    major < 25 &&
+    !process.env.NODE_OPTIONS?.includes("--experimental-sqlite")
+  ) {
     /* v8 ignore next */
-    process.env.NODE_OPTIONS = `${process.env.NODE_OPTIONS ?? ""} --experimental-sqlite`.trim();
+    process.env.NODE_OPTIONS =
+      `${process.env.NODE_OPTIONS ?? ""} --experimental-sqlite`.trim();
   }
 }
 
@@ -97,17 +93,11 @@ export async function getCopilotClient(): Promise<CopilotClient> {
 
   /* v8 ignore start — conditional config based on env vars */
   copilotClient = new CopilotClient({
-    autoStart: false,
     useLoggedInUser: !githubToken,
-    githubToken,
+    gitHubToken: githubToken,
     logLevel: process.env.NODE_ENV === "development" ? "debug" : "info",
   });
   /* v8 ignore stop */
-
-  // Subscribe to client-level lifecycle events for monitoring
-  copilotClient.on((event) => {
-    console.log(`[Copilot] Client lifecycle: ${event.type} — session ${event.sessionId}`);
-  });
 
   clientStartPromise = copilotClient.start();
   await clientStartPromise;
@@ -118,57 +108,14 @@ export async function getCopilotClient(): Promise<CopilotClient> {
 }
 
 /**
- * Get or create a per-user Copilot client using their personal GitHub token.
- * Supported token types: gho_ (OAuth), ghu_ (GitHub App), github_pat_ (fine-grained PAT)
- */
-export async function getUserCopilotClient(
-  userGithubToken: string,
-): Promise<CopilotClient> {
-  const cacheKey = tokenCacheKey(userGithubToken);
-
-  const existing = userClients.get(cacheKey);
-  if (existing) {
-    return existing;
-  }
-
-  ensureSqliteSupport();
-
-  /* v8 ignore start — conditional config based on env vars */
-  const client = new CopilotClient({
-    autoStart: false,
-    useLoggedInUser: false,
-    githubToken: userGithubToken,
-    logLevel: process.env.NODE_ENV === "development" ? "debug" : "info",
-  });
-  /* v8 ignore stop */
-
-  await client.start();
-  userClients.set(cacheKey, client);
-
-  console.log(`[Copilot] Per-user client started (${cacheKey})`);
-  return client;
-}
-
-/**
- * Get the appropriate Copilot client — per-user if a token is provided, shared otherwise.
- */
-export async function getClientForUser(
-  userGithubToken?: string,
-): Promise<CopilotClient> {
-  if (userGithubToken) {
-    return getUserCopilotClient(userGithubToken);
-  }
-  return getCopilotClient();
-}
-
-/**
  * Build custom tools that the SDK agent can invoke.
  * These let the agent query project-specific resources (Jira, Bitbucket, etc.)
  */
 function buildCustomTools(taskId: string) {
   return [
     defineTool("get_task_info", {
-      description: "Get current task information including status, iteration count, and completion criteria",
+      description:
+        "Get current task information including status, iteration count, and completion criteria",
       parameters: z.object({}),
       handler: async () => {
         const { getTask } = await import("../services/task-service");
@@ -186,18 +133,28 @@ function buildCustomTools(taskId: string) {
       },
     }),
     defineTool("report_progress", {
-      description: "Report task progress to the system. Use this to update the user on implementation progress.",
+      description:
+        "Report task progress to the system. Use this to update the user on implementation progress.",
       parameters: z.object({
         message: z.string().describe("Progress message"),
-        percentComplete: z.number().min(0).max(100).optional().describe("Estimated completion percentage"),
+        percentComplete: z
+          .number()
+          .min(0)
+          .max(100)
+          .optional()
+          .describe("Estimated completion percentage"),
       }),
       handler: async ({ message, percentComplete }) => {
-        const { processAgentCallback } = await import("../services/task-service");
+        const { processAgentCallback } =
+          await import("../services/task-service");
         await processAgentCallback({
           taskId,
           eventType: "PROGRESS",
           message,
-          details: percentComplete !== undefined && percentComplete !== null ? JSON.stringify({ percentComplete }) : undefined,
+          details:
+            percentComplete !== undefined && percentComplete !== null
+              ? JSON.stringify({ percentComplete })
+              : undefined,
         });
         return { reported: true, message };
       },
@@ -208,9 +165,16 @@ function buildCustomTools(taskId: string) {
 /**
  * Build session hooks that integrate the SDK lifecycle with our monitoring.
  */
-function buildSessionHooks(taskId: string, sessionId: string, hooksConfig?: SessionHooksConfig) {
+function buildSessionHooks(
+  taskId: string,
+  sessionId: string,
+  hooksConfig?: SessionHooksConfig,
+) {
   return {
-    onPreToolUse: async (input: { toolName: string; toolArgs: Record<string, unknown> }) => {
+    onPreToolUse: async (input: {
+      toolName: string;
+      toolArgs: Record<string, unknown>;
+    }) => {
       // Log tool calls for monitoring
       console.log(`[Copilot] Pre-tool: ${input.toolName} for task ${taskId}`);
 
@@ -225,7 +189,11 @@ function buildSessionHooks(taskId: string, sessionId: string, hooksConfig?: Sess
       };
     },
 
-    onPostToolUse: async (input: { toolName: string; toolArgs: Record<string, unknown>; result: unknown }) => {
+    onPostToolUse: async (input: {
+      toolName: string;
+      toolArgs: Record<string, unknown>;
+      result: unknown;
+    }) => {
       if (hooksConfig?.onPostToolUse) {
         return hooksConfig.onPostToolUse(input);
       }
@@ -233,7 +201,9 @@ function buildSessionHooks(taskId: string, sessionId: string, hooksConfig?: Sess
     },
 
     onSessionStart: async (input: { source: string }) => {
-      console.log(`[Copilot] Session started (${input.source}) for task ${taskId}`);
+      console.log(
+        `[Copilot] Session started (${input.source}) for task ${taskId}`,
+      );
       if (hooksConfig?.onSessionStart) {
         return hooksConfig.onSessionStart(input);
       }
@@ -241,7 +211,9 @@ function buildSessionHooks(taskId: string, sessionId: string, hooksConfig?: Sess
     },
 
     onSessionEnd: async (input: { reason: string }) => {
-      console.log(`[Copilot] Session ended (${input.reason}) for task ${taskId}`);
+      console.log(
+        `[Copilot] Session ended (${input.reason}) for task ${taskId}`,
+      );
       if (hooksConfig?.onSessionEnd) {
         return hooksConfig.onSessionEnd(input);
       }
@@ -253,7 +225,8 @@ function buildSessionHooks(taskId: string, sessionId: string, hooksConfig?: Sess
         return hooksConfig.onErrorOccurred(input);
       }
       // Default: retry on transient errors, abort on critical ones
-      const transient = input.error.includes("timeout") || input.error.includes("rate limit");
+      const transient =
+        input.error.includes("timeout") || input.error.includes("rate limit");
       return {
         errorHandling: transient ? ("retry" as const) : ("abort" as const),
       };
@@ -270,6 +243,7 @@ function buildSessionConfig(
   targetModelId: string,
   supportsReasoning: boolean,
   tools: ReturnType<typeof buildCustomTools>,
+  gitHubToken?: string,
 ): Record<string, unknown> {
   const config: Record<string, unknown> = {
     sessionId,
@@ -283,11 +257,16 @@ function buildSessionConfig(
       backgroundCompactionThreshold: 0.8,
       bufferExhaustionThreshold: 0.95,
     },
-    hooks: request.taskId ? buildSessionHooks(request.taskId, sessionId, request.hooks) : undefined,
-    ...(request.workingDirectory && { workingDirectory: request.workingDirectory }),
+    hooks: request.taskId
+      ? buildSessionHooks(request.taskId, sessionId, request.hooks)
+      : undefined,
+    ...(request.workingDirectory && {
+      workingDirectory: request.workingDirectory,
+    }),
     ...(request.mcpServers?.length && { mcpServers: request.mcpServers }),
     ...(request.agents?.length && { agents: request.agents }),
     clientName: "promptdev",
+    ...(gitHubToken && { gitHubToken }),
   };
 
   if (request.onUserInputRequest) {
@@ -301,7 +280,9 @@ function buildSessionConfig(
       type: request.provider.type,
       baseUrl: request.provider.baseUrl,
       ...(request.provider.apiKey && { apiKey: request.provider.apiKey }),
-      ...(request.provider.bearerToken && { bearerToken: request.provider.bearerToken }),
+      ...(request.provider.bearerToken && {
+        bearerToken: request.provider.bearerToken,
+      }),
       ...(request.provider.wireApi && { wireApi: request.provider.wireApi }),
       ...(request.provider.azure && { azure: request.provider.azure }),
     };
@@ -312,12 +293,13 @@ function buildSessionConfig(
 
 /**
  * Create a new Copilot session with full SDK features.
+ * Pass userGithubToken to authenticate the session as the requesting user (per-session auth).
  */
 export async function createCopilotSession(
   request: CreateSessionRequest,
   userGithubToken?: string,
 ): Promise<CopilotSession> {
-  const client = await getClientForUser(userGithubToken);
+  const client = await getCopilotClient();
   const sessionId = nanoid();
   /* v8 ignore next */
   const targetModelId = request.model ?? DEFAULT_MODEL_ID;
@@ -331,11 +313,21 @@ export async function createCopilotSession(
       supportsReasoning = targetModel.capabilities.supports.reasoningEffort;
     }
   } catch (err) {
-    console.warn(`[Copilot] Failed to fetch model capabilities for ${targetModelId}:`, err);
+    console.warn(
+      `[Copilot] Failed to fetch model capabilities for ${targetModelId}:`,
+      err,
+    );
   }
 
   const tools = request.taskId ? buildCustomTools(request.taskId) : [];
-  const sessionConfig = buildSessionConfig(sessionId, request, targetModelId, supportsReasoning, tools);
+  const sessionConfig = buildSessionConfig(
+    sessionId,
+    request,
+    targetModelId,
+    supportsReasoning,
+    tools,
+    userGithubToken,
+  );
 
   if (request.onUserInputRequest) {
     userInputHandlers.set(sessionId, request.onUserInputRequest);
@@ -356,7 +348,9 @@ export async function createCopilotSession(
 
   setupSessionEventListeners(sessionId, session);
 
-  const providerInfo = request.provider ? ` (BYOK: ${request.provider.type})` : "";
+  const providerInfo = request.provider
+    ? ` (BYOK: ${request.provider.type})`
+    : "";
   console.log(`[Copilot] Session created: ${sessionId}${providerInfo}`);
 
   return metadata;
@@ -367,11 +361,10 @@ export async function createCopilotSession(
  */
 export async function resumeCopilotSession(
   existingSessionId: string,
-  userGithubToken?: string,
 ): Promise<CopilotSession> {
-  const client = await getClientForUser(userGithubToken);
+  const client = await getCopilotClient();
 
-  const session = await client.resumeSession(existingSessionId);
+  const session = await client.resumeSession(existingSessionId, {});
 
   activeSessions.set(existingSessionId, session);
 
@@ -393,11 +386,9 @@ export async function resumeCopilotSession(
 /**
  * List available models from the Copilot SDK.
  */
-export async function listAvailableModels(
-  userGithubToken?: string,
-): Promise<ModelInfo[]> {
+export async function listAvailableModels(): Promise<ModelInfo[]> {
   try {
-    const client = await getClientForUser(userGithubToken);
+    const client = await getCopilotClient();
     const models = await client.listModels();
     return models;
   } catch (error) {
@@ -409,11 +400,9 @@ export async function listAvailableModels(
 /**
  * List existing SDK sessions.
  */
-export async function listSDKSessions(
-  userGithubToken?: string,
-) {
+export async function listSDKSessions() {
   try {
-    const client = await getClientForUser(userGithubToken);
+    const client = await getCopilotClient();
     return await client.listSessions();
   } catch (error) {
     console.warn("[Copilot] Failed to list SDK sessions:", error);
@@ -424,10 +413,14 @@ export async function listSDKSessions(
 /**
  * Get Copilot account quota information (usage limits, remaining, etc.)
  */
-export async function getAccountQuota(userGithubToken?: string) {
+export async function getAccountQuota() {
   try {
-    const client = await getClientForUser(userGithubToken);
-    return await (client as unknown as { rpc: { call: (method: string) => Promise<unknown> } }).rpc.call("account.getQuota");
+    const client = await getCopilotClient();
+    return await (
+      client as unknown as {
+        rpc: { call: (method: string) => Promise<unknown> };
+      }
+    ).rpc.call("account.getQuota");
   } catch (error) {
     console.warn("[Copilot] Failed to get account quota:", error);
     return null;
@@ -437,8 +430,8 @@ export async function getAccountQuota(userGithubToken?: string) {
 /**
  * Delete a persisted SDK session from disk.
  */
-export async function deleteSDKSession(sessionId: string, userGithubToken?: string): Promise<void> {
-  const client = await getClientForUser(userGithubToken);
+export async function deleteSDKSession(sessionId: string): Promise<void> {
+  const client = await getCopilotClient();
   await client.deleteSession(sessionId);
 }
 
@@ -471,9 +464,18 @@ function updateSessionState(sessionId: string, event: unknown): void {
 
   if (type === "session.idle") {
     metadata.state = "idle";
-  } else if (type === "session.compaction_start" || type === "subagent.started" || type === "hook.start") {
+  } else if (
+    type === "session.compaction_start" ||
+    type === "subagent.started" ||
+    type === "hook.start"
+  ) {
     metadata.state = "processing";
-  } else if (type === "session.compaction_complete" || type === "subagent.completed" || type === "subagent.failed" || type === "hook.end") {
+  } else if (
+    type === "session.compaction_complete" ||
+    type === "subagent.completed" ||
+    type === "subagent.failed" ||
+    type === "hook.end"
+  ) {
     metadata.state = "idle";
   } else if (type === "session.title_changed" && raw.data?.title) {
     metadata.title = raw.data.title as string;
@@ -494,27 +496,53 @@ function updateSessionState(sessionId: string, event: unknown): void {
  */
 const KNOWN_EVENT_TYPES = new Set<string>([
   // Session lifecycle
-  "session.start", "session.resume", "session.error", "session.idle",
-  "session.title_changed", "session.info", "session.warning",
-  "session.model_change", "session.handoff", "session.truncation",
-  "session.snapshot_rewind", "session.shutdown", "session.context_changed",
-  "session.usage_info", "session.compaction_start", "session.compaction_complete",
+  "session.start",
+  "session.resume",
+  "session.error",
+  "session.idle",
+  "session.title_changed",
+  "session.info",
+  "session.warning",
+  "session.model_change",
+  "session.handoff",
+  "session.truncation",
+  "session.snapshot_rewind",
+  "session.shutdown",
+  "session.context_changed",
+  "session.usage_info",
+  "session.compaction_start",
+  "session.compaction_complete",
   // User
-  "user.message", "pending_messages.modified",
+  "user.message",
+  "pending_messages.modified",
   // Assistant
-  "assistant.turn_start", "assistant.intent", "assistant.reasoning",
-  "assistant.reasoning_delta", "assistant.message", "assistant.message_delta",
-  "assistant.turn_end", "assistant.usage",
+  "assistant.turn_start",
+  "assistant.intent",
+  "assistant.reasoning",
+  "assistant.reasoning_delta",
+  "assistant.message",
+  "assistant.message_delta",
+  "assistant.turn_end",
+  "assistant.usage",
   // Tools
-  "tool.user_requested", "tool.execution_start", "tool.execution_partial_result",
-  "tool.execution_progress", "tool.execution_complete",
+  "tool.user_requested",
+  "tool.execution_start",
+  "tool.execution_partial_result",
+  "tool.execution_progress",
+  "tool.execution_complete",
   // Sub-agents & Skills
-  "skill.invoked", "subagent.started", "subagent.completed",
-  "subagent.failed", "subagent.selected",
+  "skill.invoked",
+  "subagent.started",
+  "subagent.completed",
+  "subagent.failed",
+  "subagent.selected",
   // Hooks
-  "hook.start", "hook.end",
+  "hook.start",
+  "hook.end",
   // Misc
-  "abort", "system.message", "error",
+  "abort",
+  "system.message",
+  "error",
   // Legacy compat
   "tool.execution_end",
 ]);
@@ -528,7 +556,7 @@ function transformEvent(
 ): TypedCopilotEvent | null {
   const rawEvent = event as { type: string; data?: unknown };
 
-  if (!KNOWN_EVENT_TYPES.has(rawEvent.type as CopilotEventType)) {
+  if (!KNOWN_EVENT_TYPES.has(rawEvent.type)) {
     if (process.env.NODE_ENV === "development") {
       console.log(`[Copilot] Unknown event type: ${rawEvent.type}`, rawEvent);
     }
@@ -680,7 +708,7 @@ export function getAllSessions(): CopilotSession[] {
 export async function destroySession(sessionId: string): Promise<void> {
   const session = activeSessions.get(sessionId);
   if (session) {
-    await session.destroy();
+    await session.disconnect();
     activeSessions.delete(sessionId);
     sessionMetadata.delete(sessionId);
     sessionSubscribers.delete(sessionId);
@@ -716,7 +744,7 @@ export async function getSessionMessages(
   if (!session) {
     throw new Error(`Session not found: ${sessionId}`);
   }
-  return session.getMessages();
+  return session.getEvents();
 }
 
 /**
@@ -725,12 +753,6 @@ export async function getSessionMessages(
 export async function shutdown(): Promise<void> {
   for (const sessionId of activeSessions.keys()) {
     await destroySession(sessionId);
-  }
-
-  for (const [key, client] of userClients.entries()) {
-    await client.stop();
-    userClients.delete(key);
-    console.log(`[Copilot] Per-user client stopped (${key})`);
   }
 
   if (copilotClient) {

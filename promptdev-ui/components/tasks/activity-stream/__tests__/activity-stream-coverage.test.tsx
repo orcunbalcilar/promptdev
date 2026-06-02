@@ -18,7 +18,11 @@ const { makeMock, makeSimpleMock } = vi.hoisted(() => {
     };
   const makeSimpleMockFn = (name: string) =>
     function MockSimple(props: Record<string, unknown>) {
-      return React.createElement("span", { "data-testid": name }, typeof props.children === "string" ? props.children : "");
+      return React.createElement(
+        "span",
+        { "data-testid": name },
+        typeof props.children === "string" ? props.children : "",
+      );
     };
   return { makeMock: makeMockFn, makeSimpleMock: makeSimpleMockFn };
 });
@@ -106,7 +110,9 @@ vi.mock("@/components/ai-elements/tool", () => ({
   Tool: makeMock("tool"),
   ToolContent: makeMock("tool-content"),
   ToolHeader: makeMock("tool-header"),
-  ToolInput: ({ input }: { input?: Record<string, unknown> }) => <div>{JSON.stringify(input)}</div>,
+  ToolInput: ({ input }: { input?: Record<string, unknown> }) => (
+    <div>{JSON.stringify(input)}</div>
+  ),
   ToolOutput: ({ output }: { output?: string }) => <div>{output}</div>,
 }));
 vi.mock("@/components/tasks/review-results", () => ({
@@ -140,19 +146,33 @@ const baseTask: Task = {
 describe("event-renderers.tsx branch coverage", () => {
   it("lines 654-667: TASK_FAILED without details renders simple checkpoint", () => {
     const events: TaskEvent[] = [
-      { id: "e1", eventType: "TASK_FAILED", message: "Task Failed", timestamp: new Date().toISOString() },
+      {
+        id: "e1",
+        eventType: "TASK_FAILED",
+        message: "Task Failed",
+        timestamp: new Date().toISOString(),
+      },
     ];
     const groups = groupEvents(events);
-    const { container } = render(<>{groups.map((g) => renderGroupedEvent(g, baseTask, false))}</>);
+    const { container } = render(
+      <>{groups.map((g) => renderGroupedEvent(g, baseTask, false))}</>,
+    );
     expect(container.textContent).toContain("Task Failed");
   });
 
   it("lines 654-667: TASK_QUEUED renders queued event", () => {
     const events: TaskEvent[] = [
-      { id: "e1", eventType: "TASK_QUEUED", message: "Queued", timestamp: new Date().toISOString() },
+      {
+        id: "e1",
+        eventType: "TASK_QUEUED",
+        message: "Queued",
+        timestamp: new Date().toISOString(),
+      },
     ];
     const groups = groupEvents(events);
-    const { container } = render(<>{groups.map((g) => renderGroupedEvent(g, baseTask, false))}</>);
+    const { container } = render(
+      <>{groups.map((g) => renderGroupedEvent(g, baseTask, false))}</>,
+    );
     expect(container.textContent).toContain("Queued");
   });
 
@@ -167,7 +187,9 @@ describe("event-renderers.tsx branch coverage", () => {
       },
     ];
     const groups = groupEvents(events);
-    const { container } = render(<>{groups.map((g) => renderGroupedEvent(g, baseTask, false))}</>);
+    const { container } = render(
+      <>{groups.map((g) => renderGroupedEvent(g, baseTask, false))}</>,
+    );
     expect(container.textContent).toContain("Some extra details");
   });
 
@@ -190,7 +212,9 @@ describe("event-renderers.tsx branch coverage", () => {
       },
     ];
     const groups = groupEvents(events);
-    const { container } = render(<>{groups.map((g) => renderGroupedEvent(g, baseTask, false))}</>);
+    const { container } = render(
+      <>{groups.map((g) => renderGroupedEvent(g, baseTask, false))}</>,
+    );
     expect(container).toBeTruthy();
   });
 });
@@ -198,10 +222,30 @@ describe("event-renderers.tsx branch coverage", () => {
 describe("event-grouping.ts branch coverage", () => {
   it("line 22: consumed.has prevents double-matching of AGENT_TOOL_RESULT", () => {
     const events: TaskEvent[] = [
-      { id: "call1", eventType: "AGENT_TOOL_CALL", message: "tool1", timestamp: "2024-01-01T00:00:00Z" },
-      { id: "call2", eventType: "AGENT_TOOL_CALL", message: "tool2", timestamp: "2024-01-01T00:00:01Z" },
-      { id: "res1", eventType: "AGENT_TOOL_RESULT", message: "result1", timestamp: "2024-01-01T00:00:02Z" },
-      { id: "res2", eventType: "AGENT_TOOL_RESULT", message: "result2", timestamp: "2024-01-01T00:00:03Z" },
+      {
+        id: "call1",
+        eventType: "AGENT_TOOL_CALL",
+        message: "tool1",
+        timestamp: "2024-01-01T00:00:00Z",
+      },
+      {
+        id: "call2",
+        eventType: "AGENT_TOOL_CALL",
+        message: "tool2",
+        timestamp: "2024-01-01T00:00:01Z",
+      },
+      {
+        id: "res1",
+        eventType: "AGENT_TOOL_RESULT",
+        message: "result1",
+        timestamp: "2024-01-01T00:00:02Z",
+      },
+      {
+        id: "res2",
+        eventType: "AGENT_TOOL_RESULT",
+        message: "result2",
+        timestamp: "2024-01-01T00:00:03Z",
+      },
     ];
     const groups = groupEvents(events);
     expect(groups.length).toBeGreaterThanOrEqual(2);
@@ -209,9 +253,26 @@ describe("event-grouping.ts branch coverage", () => {
 
   it("line 56: collectBatch groups consecutive events of same type", () => {
     const events: TaskEvent[] = [
-      { id: "e1", eventType: "FILE_CREATED", message: "f1", timestamp: "2024-01-01T00:00:00Z", filePath: "a.ts" },
-      { id: "e2", eventType: "FILE_CREATED", message: "f2", timestamp: "2024-01-01T00:00:01Z", filePath: "b.ts" },
-      { id: "e3", eventType: "LOG", message: "log", timestamp: "2024-01-01T00:00:02Z" },
+      {
+        id: "e1",
+        eventType: "FILE_CREATED",
+        message: "f1",
+        timestamp: "2024-01-01T00:00:00Z",
+        filePath: "a.ts",
+      },
+      {
+        id: "e2",
+        eventType: "FILE_CREATED",
+        message: "f2",
+        timestamp: "2024-01-01T00:00:01Z",
+        filePath: "b.ts",
+      },
+      {
+        id: "e3",
+        eventType: "LOG",
+        message: "log",
+        timestamp: "2024-01-01T00:00:02Z",
+      },
     ];
     const groups = groupEvents(events);
     // Events produce groups - file events may or may not batch depending on implementation

@@ -4,7 +4,15 @@
  * Also covers task-changes/event-processors.ts lines 27, 96
  */
 import { describe, it, expect } from "vitest";
-import { fileStatusToType, inferLanguage, parseJsonSafe, formatDuration, getFileName, buildFolderStructure, getSuiteStatus } from "../task-changes/types";
+import {
+  fileStatusToType,
+  inferLanguage,
+  parseJsonSafe,
+  formatDuration,
+  getFileName,
+  buildFolderStructure,
+  getSuiteStatus,
+} from "../task-changes/types";
 import { processFileEvent } from "../task-changes/event-processors";
 import type { TaskEvent } from "@/lib/api";
 import type { FileChangeInfo } from "../task-changes/types";
@@ -44,9 +52,27 @@ describe("types.ts branch coverage", () => {
 
   it("buildFolderStructure groups files by directory", () => {
     const files: FileChangeInfo[] = [
-      { filePath: "src/a.ts", type: "added", language: "typescript", additions: 1, deletions: 0 },
-      { filePath: "src/b.ts", type: "modified", language: "typescript", additions: 1, deletions: 1 },
-      { filePath: "lib/c.ts", type: "deleted", language: "typescript", additions: 0, deletions: 5 },
+      {
+        filePath: "src/a.ts",
+        type: "added",
+        language: "typescript",
+        additions: 1,
+        deletions: 0,
+      },
+      {
+        filePath: "src/b.ts",
+        type: "modified",
+        language: "typescript",
+        additions: 1,
+        deletions: 1,
+      },
+      {
+        filePath: "lib/c.ts",
+        type: "deleted",
+        language: "typescript",
+        additions: 0,
+        deletions: 5,
+      },
     ];
     const result = buildFolderStructure(files);
     expect(result.has("src")).toBe(true);

@@ -203,16 +203,10 @@ function TriageSuggestions({
           </li>
         )}
         <li>Add specific acceptance criteria for the implementation</li>
-        <li>
-          Mention technical constraints or architectural requirements
-        </li>
-        <li>
-          Specify test requirements (unit tests, integration tests, E2E)
-        </li>
+        <li>Mention technical constraints or architectural requirements</li>
+        <li>Specify test requirements (unit tests, integration tests, E2E)</li>
         <li>Define edge cases or error handling expectations</li>
-        <li>
-          Reference related files or components that should be modified
-        </li>
+        <li>Reference related files or components that should be modified</li>
       </ul>
     </div>
   );

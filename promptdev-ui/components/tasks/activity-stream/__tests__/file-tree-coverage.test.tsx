@@ -5,9 +5,15 @@ import { ChangedFilesTree } from "../file-tree";
 
 // Radix UI's Collapsible uses ResizeObserver internally
 globalThis.ResizeObserver = class ResizeObserver {
-  observe() { /* noop */ }
-  unobserve() { /* noop */ }
-  disconnect() { /* noop */ }
+  observe() {
+    /* noop */
+  }
+  unobserve() {
+    /* noop */
+  }
+  disconnect() {
+    /* noop */
+  }
 } as unknown as typeof ResizeObserver;
 
 // ── Helpers ────────────────────────────────────────────────────
@@ -42,7 +48,10 @@ describe("ChangedFilesTree – uncovered paths", () => {
 
   it("builds tree from FILE_CREATED events", () => {
     const events = [
-      makeEvent({ eventType: "FILE_CREATED", filePath: "src/utils/helpers.ts" }),
+      makeEvent({
+        eventType: "FILE_CREATED",
+        filePath: "src/utils/helpers.ts",
+      }),
       makeEvent({ eventType: "FILE_MODIFIED", filePath: "src/index.ts" }),
     ];
     render(<ChangedFilesTree events={events} />);
@@ -58,7 +67,12 @@ describe("ChangedFilesTree – uncovered paths", () => {
         details: "abc1234",
         fileChanges: JSON.stringify([
           { path: "README.md", status: "added", additions: 10, deletions: 0 },
-          { path: "src/app.ts", status: "modified", additions: 5, deletions: 2 },
+          {
+            path: "src/app.ts",
+            status: "modified",
+            additions: 5,
+            deletions: 2,
+          },
         ]),
       }),
     ];

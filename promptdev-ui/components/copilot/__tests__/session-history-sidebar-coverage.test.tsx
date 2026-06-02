@@ -8,9 +8,15 @@ import {
 
 // Radix ScrollArea uses ResizeObserver which jsdom doesn't provide
 globalThis.ResizeObserver = class ResizeObserver {
-  observe() { /* noop */ }
-  unobserve() { /* noop */ }
-  disconnect() { /* noop */ }
+  observe() {
+    /* noop */
+  }
+  unobserve() {
+    /* noop */
+  }
+  disconnect() {
+    /* noop */
+  }
 } as unknown as typeof ResizeObserver;
 
 // ── Helpers ────────────────────────────────────────────────────
@@ -70,9 +76,12 @@ describe("SessionHistorySidebar – uncovered paths", () => {
 
     // Find the more-options button for the first session - it's opacity-0 in CSS
     // but still present in DOM. There should be one per session.
-    const moreButtons = screen.getAllByRole("button").filter(
-      (btn) => btn.querySelector("svg") && btn.className.includes("opacity-0"),
-    );
+    const moreButtons = screen
+      .getAllByRole("button")
+      .filter(
+        (btn) =>
+          btn.querySelector("svg") && btn.className.includes("opacity-0"),
+      );
     expect(moreButtons.length).toBeGreaterThanOrEqual(1);
 
     // Click the first more-options button

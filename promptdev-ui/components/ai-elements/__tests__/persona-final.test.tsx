@@ -15,7 +15,6 @@ vi.mock("@rive-app/react-webgl2", () => ({
   useViewModelInstanceColor: vi.fn(() => null),
 }));
 
-
 describe("Persona — uncovered lines", () => {
   // The persona component is complex with rive animations.
   // We test the basic rendering and state handling.
@@ -78,13 +77,7 @@ describe("Persona — uncovered lines", () => {
     const onLoad = vi.fn();
     const onLoadError = vi.fn();
 
-    render(
-      <Persona
-        state="idle"
-        onLoad={onLoad}
-        onLoadError={onLoadError}
-      />
-    );
+    render(<Persona state="idle" onLoad={onLoad} onLoadError={onLoadError} />);
 
     expect(screen.getByTestId("rive-component")).toBeInTheDocument();
   });
@@ -171,7 +164,7 @@ describe("Persona — uncovered lines", () => {
     const { Persona } = await import("@/components/ai-elements/persona");
     expect(() =>
       // @ts-expect-error testing invalid variant
-      render(<Persona state="idle" variant="nonexistent" />)
+      render(<Persona state="idle" variant="nonexistent" />),
     ).toThrow("Invalid variant: nonexistent");
   });
 });

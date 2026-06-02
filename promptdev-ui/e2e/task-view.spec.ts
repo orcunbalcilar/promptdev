@@ -30,14 +30,14 @@ async function authenticate(page: Page) {
 async function navigateToTask(page: Page, taskId: string) {
   await page.goto(`/tasks/${taskId}`);
   // Wait for the task detail page to load
-  await expect(page.getByRole("button", { name: "Back" })).toBeVisible({ timeout: 10000 });
+  await expect(page.getByRole("button", { name: "Back" })).toBeVisible({
+    timeout: 10000,
+  });
 }
 
 // Helper: get first available task ID from the API
 async function getFirstTaskId(page: Page): Promise<string> {
-  const response = await page.request.get(
-    "/api/tasks?page=0&size=1",
-  );
+  const response = await page.request.get("/api/tasks?page=0&size=1");
   expect(response.ok()).toBeTruthy();
   const data = await response.json();
   expect(data.content.length).toBeGreaterThan(0);
@@ -60,13 +60,17 @@ test.describe("Task View Page", () => {
     await expect(page.getByText("Task Progress")).toBeVisible();
 
     // Center Panel - Tabs
-    await expect(page.getByRole("tab", { name: /Live Activity/i })).toBeVisible();
+    await expect(
+      page.getByRole("tab", { name: /Live Activity/i }),
+    ).toBeVisible();
     await expect(
       page.getByRole("tab", { name: /Changes Summary/i }),
     ).toBeVisible();
 
     // Right Panel - Changed Files
-    await expect(page.getByRole("heading", { name: "Changed Files" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Changed Files" }),
+    ).toBeVisible();
   });
 
   test("should show workspace and branch information", async ({ page }) => {
@@ -97,9 +101,7 @@ test.describe("Task View Page", () => {
     await expect(eventBadge).toBeVisible();
   });
 
-  test("should display Changes Summary tab with sections", async ({
-    page,
-  }) => {
+  test("should display Changes Summary tab with sections", async ({ page }) => {
     await navigateToTask(page, taskId);
 
     // Switch to Changes Summary tab
@@ -118,7 +120,9 @@ test.describe("Task View Page", () => {
     await navigateToTask(page, taskId);
 
     // Right panel header
-    await expect(page.getByRole("heading", { name: "Changed Files" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Changed Files" }),
+    ).toBeVisible();
 
     // Toggle button to show/hide panel
     const toggleButton = page
@@ -135,7 +139,9 @@ test.describe("Task View Page", () => {
 
     // If no FILE_* events exist yet, the tree shows a placeholder
     const noFilesMsg = page.getByText("No files changed yet");
-    const changedFilesHeading = page.getByRole("heading", { name: "Changed Files" });
+    const changedFilesHeading = page.getByRole("heading", {
+      name: "Changed Files",
+    });
     const fileTreeItems = page.locator('[data-testid="file-tree-item"]');
 
     // Either tree items exist, the file badges show, or the placeholder shows
@@ -181,14 +187,14 @@ test.describe("Task View - Token Info (Issue #5)", () => {
     const metricsCard = page.getByText("Session Metrics");
 
     // Check that either the metrics card exists or the monitoring data populates it
-    const isMetricsVisible = await metricsCard
-      .isVisible()
-      .catch(() => false);
+    const isMetricsVisible = await metricsCard.isVisible().catch(() => false);
 
     if (isMetricsVisible) {
       await expect(page.getByText("Input Tokens").first()).toBeVisible();
       await expect(page.getByText("Output Tokens").first()).toBeVisible();
-      await expect(page.getByText("Messages", { exact: true }).first()).toBeVisible();
+      await expect(
+        page.getByText("Messages", { exact: true }).first(),
+      ).toBeVisible();
       await expect(page.getByText("Tool Calls").first()).toBeVisible();
     }
     // If no metrics card, the task may not have had any token tracking yet
@@ -276,9 +282,9 @@ test.describe("Task View - Agent Activity Content (Issue #2)", () => {
 
     if (logEvents.length > 0) {
       // At least one "Agent response" text should appear
-      await expect(
-        page.getByText(/Agent response/i).first(),
-      ).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(/Agent response/i).first()).toBeVisible({
+        timeout: 5000,
+      });
     }
   });
 });
@@ -313,9 +319,7 @@ test.describe("Task View - Navigation and Actions", () => {
     }
 
     await navigateToTask(page, activeTask.id);
-    await expect(
-      page.getByRole("button", { name: /Cancel/i }),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: /Cancel/i })).toBeVisible();
   });
 
   test("should show Retry button for failed/cancelled tasks", async ({
@@ -346,9 +350,7 @@ test.describe("Task View - File Changes Flow (Issues #1, #3)", () => {
     await authenticate(page);
 
     // Query all tasks and find one with FILE_* events
-    const tasksResponse = await page.request.get(
-      "/api/tasks",
-    );
+    const tasksResponse = await page.request.get("/api/tasks");
     const tasks = await tasksResponse.json();
 
     let taskWithFileEvents = null;
@@ -358,9 +360,7 @@ test.describe("Task View - File Changes Flow (Issues #1, #3)", () => {
       );
       const events = await eventsResponse.json();
       const fileEvents = events.filter((e: { eventType: string }) =>
-        ["FILE_CREATED", "FILE_MODIFIED", "FILE_DELETED"].includes(
-          e.eventType,
-        ),
+        ["FILE_CREATED", "FILE_MODIFIED", "FILE_DELETED"].includes(e.eventType),
       );
       if (fileEvents.length > 0) {
         taskWithFileEvents = task;
@@ -383,7 +383,9 @@ test.describe("Task View - File Changes Flow (Issues #1, #3)", () => {
       await expect(changesTab).toBeVisible();
 
       // Changed Files panel should exist
-      await expect(page.getByRole("heading", { name: "Changed Files" })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "Changed Files" }),
+      ).toBeVisible();
       return;
     }
 
@@ -436,9 +438,7 @@ test.describe("Task View - Review Completion (Issue #6)", () => {
       await expect(page.getByText(/reviewing/i).first()).toBeVisible();
 
       // Verify the Cancel button is available (user can unstick it)
-      await expect(
-        page.getByRole("button", { name: /Cancel/i }),
-      ).toBeVisible();
+      await expect(page.getByRole("button", { name: /Cancel/i })).toBeVisible();
     }
   });
 
@@ -448,9 +448,7 @@ test.describe("Task View - Review Completion (Issue #6)", () => {
     await authenticate(page);
 
     // Find a task that has review events
-    const tasksResponse = await page.request.get(
-      "/api/tasks",
-    );
+    const tasksResponse = await page.request.get("/api/tasks");
     const tasks = await tasksResponse.json();
 
     let taskWithReview = null;
@@ -478,8 +476,8 @@ test.describe("Task View - Review Completion (Issue #6)", () => {
     await navigateToTask(page, taskWithReview.id);
 
     // The activity stream should show review-related content
-    await expect(
-      page.getByText(/review/i).first(),
-    ).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/review/i).first()).toBeVisible({
+      timeout: 5000,
+    });
   });
 });

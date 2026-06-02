@@ -47,12 +47,11 @@ import {
   CopilotMessageDisplay,
   StreamingAssistantMessage,
 } from "@/components/copilot/copilot-messages";
-import type {
-  CopilotMessage,
-  CopilotToolExecution,
-} from "@/lib/copilot/types";
+import type { CopilotMessage, CopilotToolExecution } from "@/lib/copilot/types";
 
-function makeTool(overrides: Partial<CopilotToolExecution> = {}): CopilotToolExecution {
+function makeTool(
+  overrides: Partial<CopilotToolExecution> = {},
+): CopilotToolExecution {
   return {
     id: "tool-1",
     name: "readFile",
@@ -111,9 +110,7 @@ describe("CopilotMessageDisplay", () => {
   });
 
   it("renders active tools alongside message tools without key collision", () => {
-    const messageTools = [
-      makeTool({ id: "t-1", name: "readFile" }),
-    ];
+    const messageTools = [makeTool({ id: "t-1", name: "readFile" })];
     const activeTools = [
       makeTool({ id: "t-1", name: "readFile" }), // Same ID — should not cause key collision
       makeTool({ id: "t-2", name: "writeFile" }),
@@ -135,7 +132,7 @@ describe("CopilotMessageDisplay", () => {
 
     // Check no duplicate key warnings
     const keyWarnings = consoleSpy.mock.calls.filter(
-      (args) => typeof args[0] === "string" && args[0].includes("unique \"key\""),
+      (args) => typeof args[0] === "string" && args[0].includes('unique "key"'),
     );
     expect(keyWarnings).toHaveLength(0);
 
@@ -162,7 +159,7 @@ describe("CopilotMessageDisplay", () => {
     );
 
     const keyWarnings = consoleSpy.mock.calls.filter(
-      (args) => typeof args[0] === "string" && args[0].includes("unique \"key\""),
+      (args) => typeof args[0] === "string" && args[0].includes('unique "key"'),
     );
     expect(keyWarnings).toHaveLength(0);
 

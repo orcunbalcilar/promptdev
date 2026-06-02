@@ -38,9 +38,7 @@ vi.mock("@/components/ai-elements/stack-trace", () => ({
 }));
 
 vi.mock("@/components/ai-elements/queue", () => ({
-  Queue: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
+  Queue: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   QueueItem: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
@@ -159,9 +157,7 @@ describe("LogEvent agent response detection (lines 704-706, 710-712, 718, 721)",
     });
     const group: EventGroup = { type: "single", events: [event], key: "g5" };
     render(<>{renderGroupedEvent(group, mockTask, false)}</>);
-    expect(
-      screen.getByText("Extracted detail content"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Extracted detail content")).toBeInTheDocument();
   });
 
   it("renders plain log when no agent response or JSON content", () => {
@@ -185,9 +181,7 @@ describe("TaskCompletedEvent message parsing (lines 726-727)", () => {
     });
     const group: EventGroup = { type: "single", events: [event], key: "g7" };
     render(<>{renderGroupedEvent(group, mockTask, false)}</>);
-    expect(
-      screen.getByText("Task Completed Successfully"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Task Completed Successfully")).toBeInTheDocument();
     expect(screen.getByText("Files: 5, Commits: 2")).toBeInTheDocument();
   });
 

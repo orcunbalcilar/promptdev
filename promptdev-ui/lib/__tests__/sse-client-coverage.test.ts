@@ -12,16 +12,28 @@ const MockEventSource = vi.fn(function (this: EventSource) {
   this.close = mockClose;
   this.addEventListener = mockAddEventListener;
   Object.defineProperty(this, "onopen", {
-    set(cb) { onOpenCb = cb; },
-    get() { return onOpenCb; },
+    set(cb) {
+      onOpenCb = cb;
+    },
+    get() {
+      return onOpenCb;
+    },
   });
   Object.defineProperty(this, "onerror", {
-    set(cb) { onErrorCb = cb; },
-    get() { return onErrorCb; },
+    set(cb) {
+      onErrorCb = cb;
+    },
+    get() {
+      return onErrorCb;
+    },
   });
   Object.defineProperty(this, "onmessage", {
-    set(cb) { onMessageCb = cb; },
-    get() { return onMessageCb; },
+    set(cb) {
+      onMessageCb = cb;
+    },
+    get() {
+      return onMessageCb;
+    },
   });
 }) as unknown as typeof EventSource;
 
@@ -58,7 +70,10 @@ describe("sse-client – coverage (lines 42, 67, 87)", () => {
     });
 
     expect(mockAddEventListener).toHaveBeenCalledWith("task-update", onMessage);
-    expect(mockAddEventListener).toHaveBeenCalledWith("status-change", onMessage);
+    expect(mockAddEventListener).toHaveBeenCalledWith(
+      "status-change",
+      onMessage,
+    );
   });
 
   it("reconnects with backoff on error (line 67)", () => {

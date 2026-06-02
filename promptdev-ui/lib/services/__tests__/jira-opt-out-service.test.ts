@@ -42,7 +42,10 @@ beforeEach(() => {
 describe("jira-opt-out-service", () => {
   describe("getOptOutsForUser", () => {
     it("should return opt-outs for user", async () => {
-      const optOuts = [makeOptOut(), makeOptOut({ id: "opt-2", jiraIssueKey: "PROJ-20" })];
+      const optOuts = [
+        makeOptOut(),
+        makeOptOut({ id: "opt-2", jiraIssueKey: "PROJ-20" }),
+      ];
       mockDb.select.mockReturnValueOnce(chainResult(optOuts));
 
       const result = await getOptOutsForUser("user-1");

@@ -7,7 +7,8 @@ export async function GET(request: NextRequest) {
   if (error) return error;
 
   const userId = request.nextUrl.searchParams.get("userId");
-  if (!userId) return NextResponse.json({ error: "userId required" }, { status: 400 });
+  if (!userId)
+    return NextResponse.json({ error: "userId required" }, { status: 400 });
 
   // Check for single issue opt-out
   const issueKey = request.nextUrl.searchParams.get("issueKey");

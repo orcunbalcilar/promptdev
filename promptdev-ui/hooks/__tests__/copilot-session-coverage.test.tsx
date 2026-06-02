@@ -22,7 +22,16 @@ vi.mock("@/hooks/useBackendUser", () => ({
 vi.mock("@/lib/copilot/models", () => ({
   DEFAULT_MODEL_ID: "gpt-4",
   useModels: () => ({
-    models: [{ id: "gpt-4", name: "GPT-4", capabilities: { supports: { reasoningEffort: false, vision: false }, limits: { max_context_window_tokens: 128000 } } }],
+    models: [
+      {
+        id: "gpt-4",
+        name: "GPT-4",
+        capabilities: {
+          supports: { reasoningEffort: false, vision: false },
+          limits: { max_context_window_tokens: 128000 },
+        },
+      },
+    ],
     isLoading: false,
   }),
 }));
@@ -39,7 +48,9 @@ function wrapper({ children }: { children: React.ReactNode }) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockFetch.mockResolvedValue(new Response(JSON.stringify({}), { status: 200 }));
+  mockFetch.mockResolvedValue(
+    new Response(JSON.stringify({}), { status: 200 }),
+  );
 });
 
 describe("useCopilotSession – exportConversation branch coverage", () => {

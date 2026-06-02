@@ -46,7 +46,7 @@ describe("MonitoringError", () => {
   it("should render the try again button", () => {
     render(<MonitoringError error={testError} reset={mockReset} />);
     expect(
-      screen.getByRole("button", { name: /try again/i })
+      screen.getByRole("button", { name: /try again/i }),
     ).toBeInTheDocument();
   });
 
@@ -60,10 +60,7 @@ describe("MonitoringError", () => {
 
   it("should log the error to console", () => {
     render(<MonitoringError error={testError} reset={mockReset} />);
-    expect(console.error).toHaveBeenCalledWith(
-      "Monitoring error:",
-      testError
-    );
+    expect(console.error).toHaveBeenCalledWith("Monitoring error:", testError);
   });
 
   it("should display error with digest property", () => {

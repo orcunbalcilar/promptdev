@@ -150,8 +150,8 @@ describe("task-service – branch coverage", () => {
       const event = makeEvent();
 
       mockDb.insert
-        .mockReturnValueOnce(chainResult([task]))   // insert task
-        .mockReturnValueOnce(chainResult([event]));  // insert event
+        .mockReturnValueOnce(chainResult([task])) // insert task
+        .mockReturnValueOnce(chainResult([event])); // insert event
 
       const result = await createTask({
         title: "Minimal Task",
@@ -258,12 +258,16 @@ describe("task-service – branch coverage", () => {
 
   describe("processAgentCallback – buildTaskUpdates branches", () => {
     it("handles AGENT_STARTED with null currentAttempt (uses ?? 0)", async () => {
-      const task = makeTask({ currentAttempt: null, maxAttempts: null, status: "QUEUED" });
+      const task = makeTask({
+        currentAttempt: null,
+        maxAttempts: null,
+        status: "QUEUED",
+      });
       const event = makeEvent({ eventType: "AGENT_STARTED" });
       const updated = makeTask({ status: "IN_PROGRESS", currentAttempt: 1 });
 
       mockDb.select
-        .mockReturnValueOnce(chainResult([task]))  // find task
+        .mockReturnValueOnce(chainResult([task])) // find task
         .mockReturnValueOnce(chainResult([updated])); // get updated
       mockDb.insert.mockReturnValue(chainResult([event]));
       mockDb.update.mockReturnValue(chainResult([]));
@@ -277,7 +281,11 @@ describe("task-service – branch coverage", () => {
     });
 
     it("handles AGENT_STARTED when max attempts exceeded", async () => {
-      const task = makeTask({ currentAttempt: 3, maxAttempts: 3, status: "QUEUED" });
+      const task = makeTask({
+        currentAttempt: 3,
+        maxAttempts: 3,
+        status: "QUEUED",
+      });
       const event = makeEvent({ eventType: "AGENT_STARTED" });
       const updated = makeTask({ status: "FAILED" });
 
@@ -334,7 +342,10 @@ describe("task-service – branch coverage", () => {
     it("handles ITERATION_STARTED with details containing currentIteration", async () => {
       const task = makeTask({ status: "IN_PROGRESS" });
       const event = makeEvent({ eventType: "ITERATION_STARTED" });
-      const updated = makeTask({ status: "ITERATION_PENDING", currentIteration: 2 });
+      const updated = makeTask({
+        status: "ITERATION_PENDING",
+        currentIteration: 2,
+      });
 
       mockDb.select
         .mockReturnValueOnce(chainResult([task]))
@@ -439,7 +450,10 @@ describe("task-service – branch coverage", () => {
 
     it("handles REVIEWING_FAILED", async () => {
       const task = makeTask({ status: "REVIEWING" });
-      const event = makeEvent({ eventType: "REVIEWING_FAILED", message: "Review issues found" });
+      const event = makeEvent({
+        eventType: "REVIEWING_FAILED",
+        message: "Review issues found",
+      });
       const updated = makeTask({ status: "FAILED" });
 
       mockDb.select
@@ -458,7 +472,11 @@ describe("task-service – branch coverage", () => {
     it("handles PR_CREATED with pullRequestId and pullRequestUrl", async () => {
       const task = makeTask({ status: "PUSHING" });
       const event = makeEvent({ eventType: "PR_CREATED" });
-      const updated = makeTask({ status: "CREATING_PR", pullRequestId: 42, pullRequestUrl: "https://bb/pr/42" });
+      const updated = makeTask({
+        status: "CREATING_PR",
+        pullRequestId: 42,
+        pullRequestUrl: "https://bb/pr/42",
+      });
 
       mockDb.select
         .mockReturnValueOnce(chainResult([task]))
@@ -635,13 +653,13 @@ describe("task-service – branch coverage", () => {
       const event = makeEvent({ eventType: "ERROR" });
 
       mockDb.select
-        .mockReturnValueOnce(chainResult([task]))       // find task
-        .mockReturnValueOnce(chainResult([]))            // check existing opt-out
-        .mockReturnValueOnce(chainResult([updated]));    // get updated
+        .mockReturnValueOnce(chainResult([task])) // find task
+        .mockReturnValueOnce(chainResult([])) // check existing opt-out
+        .mockReturnValueOnce(chainResult([updated])); // get updated
       mockDb.update.mockReturnValue(chainResult([]));
       mockDb.insert
-        .mockReturnValueOnce(chainResult([event]))       // insert event
-        .mockReturnValueOnce(chainResult([]));           // insert opt-out
+        .mockReturnValueOnce(chainResult([event])) // insert event
+        .mockReturnValueOnce(chainResult([])); // insert opt-out
 
       await cancelTask("task-1");
 
@@ -660,7 +678,7 @@ describe("task-service – branch coverage", () => {
 
       mockDb.select
         .mockReturnValueOnce(chainResult([task]))
-        .mockReturnValueOnce(chainResult([{ id: "opt-1" }]))  // existing opt-out
+        .mockReturnValueOnce(chainResult([{ id: "opt-1" }])) // existing opt-out
         .mockReturnValueOnce(chainResult([updated]));
       mockDb.update.mockReturnValue(chainResult([]));
       mockDb.insert.mockReturnValueOnce(chainResult([event]));

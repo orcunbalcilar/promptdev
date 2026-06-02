@@ -346,7 +346,11 @@ describe("event-tracking", () => {
       // Start tool first
       handler({
         type: "tool.execution_start",
-        data: { toolName: "write_file", toolId: "t-1", input: { path: "a.ts" } },
+        data: {
+          toolName: "write_file",
+          toolId: "t-1",
+          input: { path: "a.ts" },
+        },
       } as TypedCopilotEvent);
       await flushEventQueue();
 
@@ -417,7 +421,11 @@ describe("event-tracking", () => {
 
       handler({
         type: "tool.execution_start",
-        data: { toolName: "edit_file", toolId: "t-file", input: { path: "src/app.ts" } },
+        data: {
+          toolName: "edit_file",
+          toolId: "t-file",
+          input: { path: "src/app.ts" },
+        },
       } as TypedCopilotEvent);
       await flushEventQueue();
 
@@ -997,7 +1005,11 @@ describe("event-tracking", () => {
 
       handler({
         type: "tool.execution_start",
-        data: { toolName: "write_to_file", toolId: "fid", input: { path: "/src/index.ts" } },
+        data: {
+          toolName: "write_to_file",
+          toolId: "fid",
+          input: { path: "/src/index.ts" },
+        },
       } as TypedCopilotEvent);
       await flushEventQueue();
 

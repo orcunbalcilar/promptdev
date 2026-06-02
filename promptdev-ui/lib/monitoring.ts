@@ -3,234 +3,264 @@
  * Sends tracking data to local Next.js API routes for persistence and analytics.
  */
 
-const MONITORING_API_BASE = '/api'
+const MONITORING_API_BASE = "/api";
 
 interface RegisterSessionParams {
-  sdkSessionId: string
-  model: string
-  reasoningEffort?: string
-  taskId?: string
-  source?: string
+  sdkSessionId: string;
+  model: string;
+  reasoningEffort?: string;
+  taskId?: string;
+  source?: string;
 }
 
 interface TrackOperationParams {
-  sessionId?: string
-  taskId?: string
-  operationType: string
-  message?: string
-  details?: string
-  toolName?: string
-  model?: string
-  inputTokens?: number
-  outputTokens?: number
-  durationMs?: number
-  success?: boolean
-  errorMessage?: string
-  source?: string
-  clientInfo?: string
+  sessionId?: string;
+  taskId?: string;
+  operationType: string;
+  message?: string;
+  details?: string;
+  toolName?: string;
+  model?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  durationMs?: number;
+  success?: boolean;
+  errorMessage?: string;
+  source?: string;
+  clientInfo?: string;
 }
 
 export interface MonitoringDashboard {
-  totalSessions: number
-  activeSessions: number
-  totalOperations: number
-  totalErrors: number
-  totalInputTokens: number
-  totalOutputTokens: number
-  operationsByType: Record<string, number>
-  sessionsByModel: Record<string, number>
-  sessionsBySource: Record<string, number>
+  totalSessions: number;
+  activeSessions: number;
+  totalOperations: number;
+  totalErrors: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  operationsByType: Record<string, number>;
+  sessionsByModel: Record<string, number>;
+  sessionsBySource: Record<string, number>;
   topTools: Array<{
-    toolName: string
-    executionCount: number
-    avgDurationMs: number
-  }>
+    toolName: string;
+    executionCount: number;
+    avgDurationMs: number;
+  }>;
   dailyOperations: Array<{
-    date: string
-    count: number
-  }>
+    date: string;
+    count: number;
+  }>;
   recentErrors: Array<{
-    id: string
-    operationType: string
-    message: string
-    errorMessage: string
-    timestamp: string
-    sessionId: string
-  }>
+    id: string;
+    operationType: string;
+    message: string;
+    errorMessage: string;
+    timestamp: string;
+    sessionId: string;
+  }>;
 }
 
 export interface MonitoringSession {
-  id: string
-  sdkSessionId: string
-  model: string
-  reasoningEffort?: string
-  status: 'ACTIVE' | 'ENDED' | 'ERROR'
-  totalInputTokens: number
-  totalOutputTokens: number
-  messageCount: number
-  toolExecutionCount: number
-  errorCount: number
-  source: string
-  createdAt: string
-  endedAt?: string
+  id: string;
+  sdkSessionId: string;
+  model: string;
+  reasoningEffort?: string;
+  status: "ACTIVE" | "ENDED" | "ERROR";
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  messageCount: number;
+  toolExecutionCount: number;
+  errorCount: number;
+  source: string;
+  createdAt: string;
+  endedAt?: string;
 }
 
 export interface MonitoringOperation {
-  id: string
-  operationType: string
-  message?: string
-  details?: string
-  toolName?: string
-  model?: string
-  inputTokens?: number
-  outputTokens?: number
-  durationMs?: number
-  success?: boolean
-  errorMessage?: string
-  source?: string
-  timestamp: string
+  id: string;
+  operationType: string;
+  message?: string;
+  details?: string;
+  toolName?: string;
+  model?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  durationMs?: number;
+  success?: boolean;
+  errorMessage?: string;
+  source?: string;
+  timestamp: string;
 }
 
 export interface PaginatedResponse<T> {
-  content: T[]
-  totalElements: number
-  totalPages: number
-  size: number
-  number: number
-  first: boolean
-  last: boolean
-  empty: boolean
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
 }
 
 async function monitoringFetch<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<T> {
-  const url = `${MONITORING_API_BASE}/monitoring${endpoint}`
+  const url = `${MONITORING_API_BASE}/monitoring${endpoint}`;
 
   try {
     const response = await fetch(url, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...options?.headers,
       },
-    })
+    });
 
     if (!response.ok) {
-      console.warn(`[Monitoring] API request failed: ${response.status} ${response.statusText}`)
-      return {} as T
+      console.warn(
+        `[Monitoring] API request failed: ${response.status} ${response.statusText}`,
+      );
+      return {} as T;
     }
 
-    const text = await response.text()
-    if (!text) return {} as T
+    const text = await response.text();
+    if (!text) return {} as T;
 
-    return JSON.parse(text) as T
+    return JSON.parse(text) as T;
   } catch (error) {
     // Monitoring should never break the main app flow
-    console.warn('[Monitoring] Failed to send tracking data:', error)
-    return {} as T
+    console.warn("[Monitoring] Failed to send tracking data:", error);
+    return {} as T;
   }
 }
 
 /**
  * Register a new Copilot session for monitoring.
  */
-export async function registerMonitoringSession(params: RegisterSessionParams): Promise<void> {
-  await monitoringFetch('/sessions', {
-    method: 'POST',
+export async function registerMonitoringSession(
+  params: RegisterSessionParams,
+): Promise<void> {
+  await monitoringFetch("/sessions", {
+    method: "POST",
     body: JSON.stringify(params),
-  })
+  });
 }
 
 /**
  * End a monitoring session.
  */
-export async function endMonitoringSession(sdkSessionId: string): Promise<void> {
+export async function endMonitoringSession(
+  sdkSessionId: string,
+): Promise<void> {
   await monitoringFetch(`/sessions/${sdkSessionId}`, {
-    method: 'DELETE',
-  })
+    method: "DELETE",
+  });
 }
 
 /**
  * Track a single operation.
  */
-export async function trackOperation(params: TrackOperationParams): Promise<void> {
-  await monitoringFetch('/operations', {
-    method: 'POST',
+export async function trackOperation(
+  params: TrackOperationParams,
+): Promise<void> {
+  await monitoringFetch("/operations", {
+    method: "POST",
     body: JSON.stringify(params),
-  })
+  });
 }
 
 /**
  * Batch track multiple operations (for buffered sending).
  */
-export async function trackOperationsBatch(operations: TrackOperationParams[]): Promise<void> {
-  if (operations.length === 0) return
+export async function trackOperationsBatch(
+  operations: TrackOperationParams[],
+): Promise<void> {
+  if (operations.length === 0) return;
 
-  await monitoringFetch('/operations/batch', {
-    method: 'POST',
+  await monitoringFetch("/operations/batch", {
+    method: "POST",
     body: JSON.stringify(operations),
-  })
+  });
 }
 
 /**
  * Get monitoring dashboard metrics.
  */
-export async function getMonitoringDashboard(days = 7): Promise<MonitoringDashboard> {
-  return monitoringFetch<MonitoringDashboard>(`/dashboard?days=${days}`)
+export async function getMonitoringDashboard(
+  days = 7,
+): Promise<MonitoringDashboard> {
+  return monitoringFetch<MonitoringDashboard>(`/dashboard?days=${days}`);
 }
 
 /**
  * Get all sessions (paginated).
  */
-export async function getMonitoringSessions(page = 0, size = 20): Promise<PaginatedResponse<MonitoringSession>> {
-  return monitoringFetch<PaginatedResponse<MonitoringSession>>(`/sessions?page=${page}&size=${size}`)
+export async function getMonitoringSessions(
+  page = 0,
+  size = 20,
+): Promise<PaginatedResponse<MonitoringSession>> {
+  return monitoringFetch<PaginatedResponse<MonitoringSession>>(
+    `/sessions?page=${page}&size=${size}`,
+  );
 }
 
 /**
  * Get a single monitoring session by its SDK session ID.
  */
-export async function getMonitoringSessionDetails(sdkSessionId: string): Promise<MonitoringSession> {
-  return monitoringFetch<MonitoringSession>(`/sessions/${sdkSessionId}/details`)
+export async function getMonitoringSessionDetails(
+  sdkSessionId: string,
+): Promise<MonitoringSession> {
+  return monitoringFetch<MonitoringSession>(
+    `/sessions/${sdkSessionId}/details`,
+  );
 }
 
 /**
  * Get operations for a session.
  */
-export async function getSessionOperations(sdkSessionId: string): Promise<MonitoringOperation[]> {
-  return monitoringFetch<MonitoringOperation[]>(`/sessions/${sdkSessionId}/operations`)
+export async function getSessionOperations(
+  sdkSessionId: string,
+): Promise<MonitoringOperation[]> {
+  return monitoringFetch<MonitoringOperation[]>(
+    `/sessions/${sdkSessionId}/operations`,
+  );
 }
 
 /**
  * Get all operations (paginated).
  */
-export async function getMonitoringOperations(page = 0, size = 50): Promise<PaginatedResponse<MonitoringOperation>> {
-  return monitoringFetch<PaginatedResponse<MonitoringOperation>>(`/operations?page=${page}&size=${size}`)
+export async function getMonitoringOperations(
+  page = 0,
+  size = 50,
+): Promise<PaginatedResponse<MonitoringOperation>> {
+  return monitoringFetch<PaginatedResponse<MonitoringOperation>>(
+    `/operations?page=${page}&size=${size}`,
+  );
 }
 
 // ============================================================================
 // Operation tracking buffer (batched sending for performance)
 // ============================================================================
 
-let operationBuffer: TrackOperationParams[] = []
-let flushTimeout: NodeJS.Timeout | null = null
-const FLUSH_INTERVAL = 3000 // 3 seconds
-const FLUSH_SIZE = 10 // Flush when buffer reaches this size
+let operationBuffer: TrackOperationParams[] = [];
+let flushTimeout: NodeJS.Timeout | null = null;
+const FLUSH_INTERVAL = 3000; // 3 seconds
+const FLUSH_SIZE = 10; // Flush when buffer reaches this size
 
 /**
  * Queue an operation for batched tracking.
  * Automatically flushes after buffer size or time threshold.
  */
 export function queueOperation(params: TrackOperationParams): void {
-  operationBuffer.push(params)
+  operationBuffer.push(params);
 
   if (operationBuffer.length >= FLUSH_SIZE) {
-    flushOperations()
-    return
+    flushOperations();
+    return;
   }
 
-  flushTimeout ??= setTimeout(flushOperations, FLUSH_INTERVAL)
+  flushTimeout ??= setTimeout(flushOperations, FLUSH_INTERVAL);
 }
 
 /**
@@ -238,14 +268,14 @@ export function queueOperation(params: TrackOperationParams): void {
  */
 export async function flushOperations(): Promise<void> {
   if (flushTimeout) {
-    clearTimeout(flushTimeout)
-    flushTimeout = null
+    clearTimeout(flushTimeout);
+    flushTimeout = null;
   }
 
-  if (operationBuffer.length === 0) return
+  if (operationBuffer.length === 0) return;
 
-  const ops = [...operationBuffer]
-  operationBuffer = []
+  const ops = [...operationBuffer];
+  operationBuffer = [];
 
-  await trackOperationsBatch(ops)
+  await trackOperationsBatch(ops);
 }

@@ -52,8 +52,18 @@ describe("event-grouping.ts line 56 — break on type mismatch", () => {
     const { groupEvents } = await import("../event-grouping");
     // Create events where a STEP type appears then changes to non-STEP
     const events = [
-      { id: "1", eventType: "AGENT_TOOL_CALL", message: "m1", timestamp: "2025-01-01T00:00:01" },
-      { id: "2", eventType: "PROGRESS", message: "m2", timestamp: "2025-01-01T00:00:02" },
+      {
+        id: "1",
+        eventType: "AGENT_TOOL_CALL",
+        message: "m1",
+        timestamp: "2025-01-01T00:00:01",
+      },
+      {
+        id: "2",
+        eventType: "PROGRESS",
+        message: "m2",
+        timestamp: "2025-01-01T00:00:02",
+      },
     ];
     const groups = groupEvents(events as never[]);
     expect(groups.length).toBeGreaterThanOrEqual(1);

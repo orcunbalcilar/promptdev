@@ -14,12 +14,8 @@ import { RefreshCcw, Shield } from "lucide-react";
 import { useTaskForm } from "./_form-context";
 
 export function IterativeSection() {
-  const {
-    iterative,
-    setIterative,
-    maxIterations,
-    setMaxIterations,
-  } = useTaskForm();
+  const { iterative, setIterative, maxIterations, setMaxIterations } =
+    useTaskForm();
 
   return (
     <>
@@ -117,17 +113,13 @@ export function ReviewSection() {
           <Label>Review Model (optional)</Label>
           <Select
             value={reviewModelId || "__same__"}
-            onValueChange={(v) =>
-              setReviewModelId(v === "__same__" ? "" : v)
-            }
+            onValueChange={(v) => setReviewModelId(v === "__same__" ? "" : v)}
             disabled={modelsLoading}
           >
             <SelectTrigger>
               <SelectValue
                 placeholder={
-                  modelsLoading
-                    ? "Loading models..."
-                    : "Use same model as task"
+                  modelsLoading ? "Loading models..." : "Use same model as task"
                 }
               />
             </SelectTrigger>

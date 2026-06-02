@@ -31,11 +31,10 @@ at /src/index.ts:5:10`;
 const SIMPLE_TRACE = `Error: Something went wrong`;
 
 describe("StackTrace — uncovered lines", () => {
-
   // Lines 65: useStackTrace throws outside context
   it("StackTraceErrorType throws when used outside StackTrace", () => {
     expect(() => render(<StackTraceErrorType />)).toThrow(
-      "StackTrace components must be used within StackTrace"
+      "StackTrace components must be used within StackTrace",
     );
   });
 
@@ -47,12 +46,12 @@ describe("StackTrace — uncovered lines", () => {
           <StackTraceErrorType />
           <StackTraceErrorMessage />
         </StackTraceError>
-      </StackTrace>
+      </StackTrace>,
     );
 
     expect(screen.getByText("TypeError")).toBeInTheDocument();
     expect(
-      screen.getByText("Cannot read properties of undefined")
+      screen.getByText("Cannot read properties of undefined"),
     ).toBeInTheDocument();
   });
 
@@ -65,7 +64,7 @@ describe("StackTrace — uncovered lines", () => {
           <StackTraceErrorType />
           <StackTraceErrorMessage />
         </StackTraceError>
-      </StackTrace>
+      </StackTrace>,
     );
 
     expect(screen.getByText("Error")).toBeInTheDocument();
@@ -80,7 +79,7 @@ describe("StackTrace — uncovered lines", () => {
           <StackTraceErrorType />
           <StackTraceErrorMessage />
         </StackTraceError>
-      </StackTrace>
+      </StackTrace>,
     );
 
     expect(screen.getByText("Error")).toBeInTheDocument();
@@ -94,7 +93,7 @@ describe("StackTrace — uncovered lines", () => {
         <StackTraceError data-testid="error-container">
           <StackTraceErrorType />
         </StackTraceError>
-      </StackTrace>
+      </StackTrace>,
     );
 
     const container = screen.getByTestId("error-container");
@@ -110,7 +109,7 @@ describe("StackTrace — uncovered lines", () => {
         <StackTraceError>
           <StackTraceErrorType />
         </StackTraceError>
-      </StackTrace>
+      </StackTrace>,
     );
 
     expect(screen.getByText("TypeError")).toBeInTheDocument();
@@ -129,7 +128,7 @@ describe("StackTrace — uncovered lines", () => {
             <button type="button">Action</button>
           </StackTraceActions>
         </StackTrace>
-      </div>
+      </div>,
     );
 
     await user.click(screen.getByText("Action"));
@@ -149,7 +148,7 @@ describe("StackTrace — uncovered lines", () => {
     render(
       <StackTrace trace={SAMPLE_TRACE}>
         <StackTraceCopyButton onCopy={onCopy} />
-      </StackTrace>
+      </StackTrace>,
     );
 
     const button = screen.getByRole("button");
@@ -175,12 +174,12 @@ describe("StackTrace — uncovered lines", () => {
     render(
       <StackTrace trace={SAMPLE_TRACE}>
         <StackTraceCopyButton onError={onError} />
-      </StackTrace>
+      </StackTrace>,
     );
 
     await user.click(screen.getByRole("button"));
     expect(onError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Clipboard API not available" })
+      expect.objectContaining({ message: "Clipboard API not available" }),
     );
 
     // Restore
@@ -203,7 +202,7 @@ at external (/src/app.ts:1:1)`;
           <StackTraceErrorType />
           <StackTraceErrorMessage />
         </StackTraceError>
-      </StackTrace>
+      </StackTrace>,
     );
 
     expect(screen.getByText("Error")).toBeInTheDocument();
@@ -220,7 +219,7 @@ at external (/src/app.ts:1:1)`;
           <StackTraceErrorType />
           <StackTraceErrorMessage />
         </StackTraceError>
-      </StackTrace>
+      </StackTrace>,
     );
 
     expect(screen.getByText("Error")).toBeInTheDocument();
@@ -237,7 +236,7 @@ at fn (/src/app.ts:1:1)`;
           <StackTraceErrorType />
           <StackTraceErrorMessage />
         </StackTraceError>
-      </StackTrace>
+      </StackTrace>,
     );
 
     expect(screen.getByText("RangeError")).toBeInTheDocument();
@@ -254,7 +253,7 @@ at fn (/src/app.ts:1:1)`;
         <StackTraceActions>
           <button type="button">Action</button>
         </StackTraceActions>
-      </StackTrace>
+      </StackTrace>,
     );
 
     // Attach a listener on the parent to check propagation
@@ -276,7 +275,7 @@ at fn (/src/app.ts:1:1)`;
         <StackTraceActions>
           <button type="button">Action</button>
         </StackTraceActions>
-      </StackTrace>
+      </StackTrace>,
     );
 
     screen.getByText("Action").focus();
@@ -299,7 +298,7 @@ at fn (/src/app.ts:1:1)`;
     render(
       <StackTrace trace={SAMPLE_TRACE}>
         <StackTraceCopyButton onCopy={onCopy} timeout={500} />
-      </StackTrace>
+      </StackTrace>,
     );
 
     await user.click(screen.getByRole("button"));
@@ -324,7 +323,7 @@ at fn (/src/app.ts:1:1)`;
           <StackTraceErrorType />
           <StackTraceErrorMessage />
         </StackTraceError>
-      </StackTrace>
+      </StackTrace>,
     );
     // errorType is null — ErrorType renders nothing via children ?? trace.errorType
     // errorMessage falls back to the raw trace
@@ -339,11 +338,11 @@ at fn (/src/app.ts:1:1)`;
           <StackTraceErrorType />
           <StackTraceErrorMessage />
         </StackTraceError>
-      </StackTrace>
+      </StackTrace>,
     );
     // errorType should be null, errorMessage should be the full first line
     expect(
-      screen.getByText("Something happened unexpectedly")
+      screen.getByText("Something happened unexpectedly"),
     ).toBeInTheDocument();
   });
 
@@ -356,7 +355,7 @@ at fn (/src/app.ts:1:1)`;
           <StackTraceErrorType />
           <StackTraceErrorMessage />
         </StackTraceError>
-      </StackTrace>
+      </StackTrace>,
     );
     expect(screen.getByText("Error")).toBeInTheDocument();
   });
@@ -368,7 +367,7 @@ at fn (/src/app.ts:1:1)`;
     render(
       <StackTrace trace={trace}>
         <StackTraceFrames />
-      </StackTrace>
+      </StackTrace>,
     );
     // Frame goes through fallback path, rendered as raw text minus "at "
     expect(screen.getByText("node_modules/foo")).toBeInTheDocument();
@@ -380,7 +379,7 @@ at fn (/src/app.ts:1:1)`;
     render(
       <StackTrace trace={trace}>
         <StackTraceFrames />
-      </StackTrace>
+      </StackTrace>,
     );
     expect(screen.getByText("node:events")).toBeInTheDocument();
   });
@@ -391,7 +390,7 @@ at fn (/src/app.ts:1:1)`;
     render(
       <StackTrace trace={trace}>
         <StackTraceFrames />
-      </StackTrace>
+      </StackTrace>,
     );
     expect(screen.getByText("some-garbage-no-line-col")).toBeInTheDocument();
   });
@@ -404,7 +403,7 @@ at fn (/src/app.ts:1:1)`;
         <StackTraceActions>
           <button type="button">SpaceAction</button>
         </StackTraceActions>
-      </StackTrace>
+      </StackTrace>,
     );
     screen.getByText("SpaceAction").focus();
     await user.keyboard(" ");
@@ -418,7 +417,7 @@ at fn (/src/app.ts:1:1)`;
         <StackTraceActions>
           <button type="button">OtherKeyAction</button>
         </StackTraceActions>
-      </StackTrace>
+      </StackTrace>,
     );
     screen.getByText("OtherKeyAction").focus();
     await user.keyboard("a");
@@ -430,7 +429,7 @@ at fn (/src/app.ts:1:1)`;
     render(
       <StackTrace trace={trace}>
         <StackTraceFrames />
-      </StackTrace>
+      </StackTrace>,
     );
     // FilePathButton renders filePath:lineNumber:columnNumber as one button
     const btn = screen.getByRole("button");
@@ -445,7 +444,7 @@ at fn (/src/app.ts:1:1)`;
     render(
       <StackTrace trace={trace}>
         <StackTraceFrames />
-      </StackTrace>
+      </StackTrace>,
     );
     // Neither filePath nor functionName, so raw text (minus "at ") is shown
     expect(screen.getByText("weird-unparseable-line")).toBeInTheDocument();
@@ -458,7 +457,7 @@ at fn (/src/app.ts:1:1)`;
     render(
       <StackTrace trace={SAMPLE_TRACE} onFilePathClick={onFilePathClick}>
         <StackTraceFrames />
-      </StackTrace>
+      </StackTrace>,
     );
     // Click the first file path button (myFunction at /src/app/page.tsx:10:5)
     const buttons = screen.getAllByRole("button");
@@ -472,7 +471,7 @@ at fn (/src/app.ts:1:1)`;
     render(
       <StackTrace trace={SAMPLE_TRACE}>
         <StackTraceFrames />
-      </StackTrace>
+      </StackTrace>,
     );
     const buttons = screen.getAllByRole("button");
     // All buttons should be disabled when no onFilePathClick is provided
@@ -485,7 +484,7 @@ at fn (/src/app.ts:1:1)`;
     render(
       <StackTrace trace={SAMPLE_TRACE}>
         <StackTraceFrames showInternalFrames={false} />
-      </StackTrace>
+      </StackTrace>,
     );
     // node_modules frame should be hidden
     // myFunction, Object.handler, and /src/index.ts:5:10 should show
@@ -501,7 +500,7 @@ at loader (/node_modules/next/dist/server.js:100:3)`;
     render(
       <StackTrace trace={trace}>
         <StackTraceFrames showInternalFrames={false} />
-      </StackTrace>
+      </StackTrace>,
     );
     expect(screen.getByText("No stack frames")).toBeInTheDocument();
   });
@@ -511,7 +510,7 @@ at loader (/node_modules/next/dist/server.js:100:3)`;
     render(
       <StackTrace trace={SAMPLE_TRACE}>
         <StackTraceExpandButton data-testid="expand-btn" />
-      </StackTrace>
+      </StackTrace>,
     );
     const el = screen.getByTestId("expand-btn");
     expect(el.querySelector("svg")).toBeInTheDocument();
@@ -521,7 +520,7 @@ at loader (/node_modules/next/dist/server.js:100:3)`;
     render(
       <StackTrace trace={SAMPLE_TRACE} open={true}>
         <StackTraceExpandButton data-testid="expand-btn-open" />
-      </StackTrace>
+      </StackTrace>,
     );
     const svg = screen
       .getByTestId("expand-btn-open")
@@ -536,7 +535,7 @@ at loader (/node_modules/next/dist/server.js:100:3)`;
         <StackTraceContent>
           <div>Inner content</div>
         </StackTraceContent>
-      </StackTrace>
+      </StackTrace>,
     );
     expect(screen.getByText("Inner content")).toBeInTheDocument();
   });
@@ -547,7 +546,7 @@ at loader (/node_modules/next/dist/server.js:100:3)`;
         <StackTraceContent maxHeight={200}>
           <div>Scrollable content</div>
         </StackTraceContent>
-      </StackTrace>
+      </StackTrace>,
     );
     expect(screen.getByText("Scrollable content")).toBeInTheDocument();
   });
@@ -565,7 +564,7 @@ at loader (/node_modules/next/dist/server.js:100:3)`;
     render(
       <StackTrace trace={SAMPLE_TRACE}>
         <StackTraceCopyButton onError={onError} />
-      </StackTrace>
+      </StackTrace>,
     );
     await user.click(screen.getByRole("button"));
     expect(onError).toHaveBeenCalledWith(clipError);
@@ -577,12 +576,14 @@ at loader (/node_modules/next/dist/server.js:100:3)`;
     const { container } = render(
       <StackTrace trace={trace}>
         <StackTraceFrames />
-      </StackTrace>
+      </StackTrace>,
     );
     // Frame is internal → rendered with muted styling
     const btn = screen.getByRole("button");
     expect(btn.textContent).toContain("internal/modules/cjs/loader");
-    expect(container.querySelector(String.raw`.text-muted-foreground\/50`)).toBeInTheDocument();
+    expect(
+      container.querySelector(String.raw`.text-muted-foreground\/50`),
+    ).toBeInTheDocument();
   });
 
   // isInternal detection: withoutFn path with node_modules
@@ -591,11 +592,13 @@ at loader (/node_modules/next/dist/server.js:100:3)`;
     const { container } = render(
       <StackTrace trace={trace}>
         <StackTraceFrames />
-      </StackTrace>
+      </StackTrace>,
     );
     const btn = screen.getByRole("button");
     expect(btn.textContent).toContain("/node_modules/react/index.js");
-    expect(container.querySelector(String.raw`.text-muted-foreground\/50`)).toBeInTheDocument();
+    expect(
+      container.querySelector(String.raw`.text-muted-foreground\/50`),
+    ).toBeInTheDocument();
   });
 
   // isInternal detection: withoutFn path with node: prefix
@@ -604,11 +607,13 @@ at loader (/node_modules/next/dist/server.js:100:3)`;
     const { container } = render(
       <StackTrace trace={trace}>
         <StackTraceFrames />
-      </StackTrace>
+      </StackTrace>,
     );
     const btn = screen.getByRole("button");
     expect(btn.textContent).toContain("node:events");
-    expect(container.querySelector(String.raw`.text-muted-foreground\/50`)).toBeInTheDocument();
+    expect(
+      container.querySelector(String.raw`.text-muted-foreground\/50`),
+    ).toBeInTheDocument();
   });
 
   // isInternal detection: withoutFn path with internal/
@@ -617,11 +622,13 @@ at loader (/node_modules/next/dist/server.js:100:3)`;
     const { container } = render(
       <StackTrace trace={trace}>
         <StackTraceFrames />
-      </StackTrace>
+      </StackTrace>,
     );
     const btn = screen.getByRole("button");
     expect(btn.textContent).toContain("internal/process/task_queues");
-    expect(container.querySelector(String.raw`.text-muted-foreground\/50`)).toBeInTheDocument();
+    expect(
+      container.querySelector(String.raw`.text-muted-foreground\/50`),
+    ).toBeInTheDocument();
   });
 
   // Non-internal withoutFn frame (all isInternal checks false)
@@ -630,7 +637,7 @@ at loader (/node_modules/next/dist/server.js:100:3)`;
     const { container } = render(
       <StackTrace trace={trace}>
         <StackTraceFrames />
-      </StackTrace>
+      </StackTrace>,
     );
     // Non-internal frames get text-foreground/90 class
     const frameDiv = container.querySelector(String.raw`.text-foreground\/90`);
@@ -643,7 +650,7 @@ at loader (/node_modules/next/dist/server.js:100:3)`;
     const { container } = render(
       <StackTrace trace={trace}>
         <StackTraceFrames />
-      </StackTrace>
+      </StackTrace>,
     );
     const frameDiv = container.querySelector(String.raw`.text-foreground\/90`);
     expect(frameDiv).toBeInTheDocument();
@@ -658,7 +665,7 @@ at loader (/node_modules/next/dist/server.js:100:3)`;
         <StackTraceHeader>
           <span>Click me</span>
         </StackTraceHeader>
-      </StackTrace>
+      </StackTrace>,
     );
     await user.click(screen.getByText("Click me"));
     expect(onOpenChange).toHaveBeenCalled();
@@ -669,7 +676,7 @@ at loader (/node_modules/next/dist/server.js:100:3)`;
     render(
       <StackTrace trace={SAMPLE_TRACE}>
         <StackTraceErrorMessage>Custom message</StackTraceErrorMessage>
-      </StackTrace>
+      </StackTrace>,
     );
     expect(screen.getByText("Custom message")).toBeInTheDocument();
   });
@@ -679,7 +686,7 @@ at loader (/node_modules/next/dist/server.js:100:3)`;
     render(
       <StackTrace trace={SAMPLE_TRACE}>
         <StackTraceErrorType>CustomType</StackTraceErrorType>
-      </StackTrace>
+      </StackTrace>,
     );
     expect(screen.getByText("CustomType")).toBeInTheDocument();
   });
@@ -693,7 +700,7 @@ at garbage-line`;
     render(
       <StackTrace trace={trace}>
         <StackTraceFrames />
-      </StackTrace>
+      </StackTrace>,
     );
     const buttons = screen.getAllByRole("button");
     // withParens: functionName shown in span, filePath in button

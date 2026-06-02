@@ -88,7 +88,7 @@ describe("MicSelector — uncovered lines", () => {
         <MicSelectorTrigger>
           <MicSelectorValue />
         </MicSelectorTrigger>
-      </MicSelector>
+      </MicSelector>,
     );
 
     expect(screen.getByText("Select microphone...")).toBeInTheDocument();
@@ -109,7 +109,7 @@ describe("MicSelector — uncovered lines", () => {
         <MicSelectorTrigger>
           <MicSelectorLabel device={device} />
         </MicSelectorTrigger>
-      </MicSelector>
+      </MicSelector>,
     );
 
     // Should split into name and device ID
@@ -132,7 +132,7 @@ describe("MicSelector — uncovered lines", () => {
         <MicSelectorTrigger>
           <MicSelectorLabel device={device} />
         </MicSelectorTrigger>
-      </MicSelector>
+      </MicSelector>,
     );
 
     expect(screen.getByText("USB Microphone")).toBeInTheDocument();
@@ -163,7 +163,7 @@ describe("MicSelector — uncovered lines", () => {
             )}
           </MicSelectorList>
         </MicSelectorContent>
-      </MicSelector>
+      </MicSelector>,
     );
 
     // Wait for devices load
@@ -188,7 +188,9 @@ describe("MicSelector — uncovered lines", () => {
     await user.click(screen.getByText("Load"));
 
     await waitFor(() => {
-      expect(screen.getByTestId("error")).toHaveTextContent("Permission denied");
+      expect(screen.getByTestId("error")).toHaveTextContent(
+        "Permission denied",
+      );
     });
   });
 
@@ -211,14 +213,16 @@ describe("MicSelector — uncovered lines", () => {
         resizeCallback = cb;
       }
       observe = observeMock;
-      unobserve() {/* noop */}
+      unobserve() {
+        /* noop */
+      }
       disconnect = disconnectMock;
     } as unknown as typeof ResizeObserver;
 
     render(
       <MicSelector>
         <MicSelectorTrigger>Select mic</MicSelectorTrigger>
-      </MicSelector>
+      </MicSelector>,
     );
 
     expect(observeMock).toHaveBeenCalled();
@@ -227,17 +231,25 @@ describe("MicSelector — uncovered lines", () => {
     if (resizeCallback) {
       act(() => {
         resizeCallback!(
-          [{ target: { offsetWidth: 200 } }] as unknown as ResizeObserverEntry[],
-          {} as ResizeObserver
+          [
+            { target: { offsetWidth: 200 } },
+          ] as unknown as ResizeObserverEntry[],
+          {} as ResizeObserver,
         );
       });
     }
 
     // Restore standard mock
     globalThis.ResizeObserver = class ResizeObserver {
-      observe() {/* noop */}
-      unobserve() {/* noop */}
-      disconnect() {/* noop */}
+      observe() {
+        /* noop */
+      }
+      unobserve() {
+        /* noop */
+      }
+      disconnect() {
+        /* noop */
+      }
     } as unknown as typeof ResizeObserver;
   });
 
@@ -250,14 +262,18 @@ describe("MicSelector — uncovered lines", () => {
     const onOpenChange = vi.fn();
 
     render(
-      <MicSelector onValueChange={onValueChange} onOpenChange={onOpenChange} open>
+      <MicSelector
+        onValueChange={onValueChange}
+        onOpenChange={onOpenChange}
+        open
+      >
         <MicSelectorTrigger>Select</MicSelectorTrigger>
         <MicSelectorContent>
           <MicSelectorList>
             {() => <MicSelectorItem value="mic1">Mic 1</MicSelectorItem>}
           </MicSelectorList>
         </MicSelectorContent>
-      </MicSelector>
+      </MicSelector>,
     );
 
     await user.click(screen.getByText("Mic 1"));
@@ -272,7 +288,7 @@ describe("MicSelector — uncovered lines", () => {
     mockEnumerateDevices.mockReturnValue(
       new Promise<MediaDeviceInfo[]>((r) => {
         resolveEnum = r;
-      })
+      }),
     );
 
     render(<HookTester />);
@@ -305,7 +321,7 @@ describe("MicSelector — uncovered lines", () => {
 
     // Find the devicechange handler registered via addEventListener
     const deviceChangeCall = mockAddEventListener.mock.calls.find(
-      (call: unknown[]) => call[0] === "devicechange"
+      (call: unknown[]) => call[0] === "devicechange",
     );
     expect(deviceChangeCall).toBeDefined();
     const handler = deviceChangeCall![1] as () => void;
@@ -338,7 +354,7 @@ describe("MicSelector — uncovered lines", () => {
     // After permission changes, useEffect re-runs and registers a new handler.
     // Find the LAST devicechange handler (registered after hasPermission=true).
     const deviceChangeCalls = mockAddEventListener.mock.calls.filter(
-      (call: unknown[]) => call[0] === "devicechange"
+      (call: unknown[]) => call[0] === "devicechange",
     );
     expect(deviceChangeCalls.length).toBeGreaterThanOrEqual(2);
     const latestHandler = deviceChangeCalls.at(-1)![1] as () => void;

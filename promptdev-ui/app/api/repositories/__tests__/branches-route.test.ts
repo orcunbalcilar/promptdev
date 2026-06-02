@@ -57,10 +57,6 @@ describe("GET /api/repositories/[slug]/branches", () => {
     const res = await GET(req, makeParams("my-repo"));
 
     expect(res.status).toBe(200);
-    expect(mockListBranches).toHaveBeenCalledWith(
-      "PROJ",
-      "my-repo",
-      "feature",
-    );
+    expect(mockListBranches).toHaveBeenCalledWith("PROJ", "my-repo", "feature");
   });
 });

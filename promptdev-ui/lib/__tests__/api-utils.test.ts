@@ -4,35 +4,51 @@ import { ApiError } from "@/lib/api";
 
 describe("formatApiError", () => {
   it("returns not found message for 404", () => {
-    expect(formatApiError(new ApiError("Not found", 404))).toBe("Resource not found.");
+    expect(formatApiError(new ApiError("Not found", 404))).toBe(
+      "Resource not found.",
+    );
   });
 
   it("returns auth message for 401", () => {
-    expect(formatApiError(new ApiError("Unauthorized", 401))).toBe("Authentication required. Please sign in.");
+    expect(formatApiError(new ApiError("Unauthorized", 401))).toBe(
+      "Authentication required. Please sign in.",
+    );
   });
 
   it("returns permission message for 403", () => {
-    expect(formatApiError(new ApiError("Forbidden", 403))).toBe("You don't have permission for this action.");
+    expect(formatApiError(new ApiError("Forbidden", 403))).toBe(
+      "You don't have permission for this action.",
+    );
   });
 
   it("returns rate limit message for 429", () => {
-    expect(formatApiError(new ApiError("Rate limited", 429))).toBe("Too many requests. Please try again later.");
+    expect(formatApiError(new ApiError("Rate limited", 429))).toBe(
+      "Too many requests. Please try again later.",
+    );
   });
 
   it("returns server error message for 5xx", () => {
-    expect(formatApiError(new ApiError("Server error", 500))).toBe("Server error. Please try again later.");
+    expect(formatApiError(new ApiError("Server error", 500))).toBe(
+      "Server error. Please try again later.",
+    );
   });
 
   it("returns details when available for other errors", () => {
-    expect(formatApiError(new ApiError("Bad request", 400, "Invalid field"))).toBe("Invalid field");
+    expect(
+      formatApiError(new ApiError("Bad request", 400, "Invalid field")),
+    ).toBe("Invalid field");
   });
 
   it("handles generic errors", () => {
-    expect(formatApiError(new Error("Something broke"))).toBe("Something broke");
+    expect(formatApiError(new Error("Something broke"))).toBe(
+      "Something broke",
+    );
   });
 
   it("handles unknown error types", () => {
-    expect(formatApiError("string error")).toBe("An unexpected error occurred.");
+    expect(formatApiError("string error")).toBe(
+      "An unexpected error occurred.",
+    );
   });
 });
 

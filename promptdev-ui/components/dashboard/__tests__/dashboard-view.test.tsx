@@ -35,15 +35,25 @@ vi.mock("sonner", () => ({
 
 // ResizeObserver mock for Radix UI Select
 globalThis.ResizeObserver = class ResizeObserver {
-  observe() { /* noop */ }
-  unobserve() { /* noop */ }
-  disconnect() { /* noop */ }
+  observe() {
+    /* noop */
+  }
+  unobserve() {
+    /* noop */
+  }
+  disconnect() {
+    /* noop */
+  }
 } as unknown as typeof ResizeObserver;
 
-Element.prototype.hasPointerCapture = Element.prototype.hasPointerCapture ?? (() => false);
-Element.prototype.setPointerCapture = Element.prototype.setPointerCapture ?? (() => {});
-Element.prototype.releasePointerCapture = Element.prototype.releasePointerCapture ?? (() => {});
-Element.prototype.scrollIntoView = Element.prototype.scrollIntoView ?? (() => {});
+Element.prototype.hasPointerCapture =
+  Element.prototype.hasPointerCapture ?? (() => false);
+Element.prototype.setPointerCapture =
+  Element.prototype.setPointerCapture ?? (() => {});
+Element.prototype.releasePointerCapture =
+  Element.prototype.releasePointerCapture ?? (() => {});
+Element.prototype.scrollIntoView =
+  Element.prototype.scrollIntoView ?? (() => {});
 
 vi.mock("react-dom", async (importOriginal) => {
   const actual = await importOriginal();
@@ -91,9 +101,7 @@ function createTask(overrides: Partial<Task> = {}): Task {
   };
 }
 
-function createPagedResponse(
-  tasks: Task[],
-): PagedResponse<Task> {
+function createPagedResponse(tasks: Task[]): PagedResponse<Task> {
   return {
     content: tasks,
     number: 0,
@@ -125,9 +133,7 @@ describe("DashboardView", () => {
     const emptyData = createPagedResponse([]);
     renderWithProviders(<DashboardView initialTasks={emptyData} />);
     expect(screen.getByText("No tasks yet")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Create your first task/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Create your first task/)).toBeInTheDocument();
   });
 
   it("renders stats bar with task counts", () => {
@@ -148,9 +154,7 @@ describe("DashboardView", () => {
     const tasks = [createTask()];
     const data = createPagedResponse(tasks);
     renderWithProviders(<DashboardView initialTasks={data} />);
-    expect(
-      screen.getByPlaceholderText("Search tasks..."),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Search tasks...")).toBeInTheDocument();
   });
 
   it("renders status and workspace filter selects", () => {
@@ -169,9 +173,7 @@ describe("DashboardView", () => {
     await waitFor(() => {
       expect(screen.getByText("Failed to load tasks")).toBeInTheDocument();
     });
-    expect(
-      screen.getByRole("button", { name: /retry/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
   });
 
   it("shows Clear button when search query is active", async () => {

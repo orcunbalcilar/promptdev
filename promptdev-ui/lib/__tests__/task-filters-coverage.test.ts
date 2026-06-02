@@ -1,29 +1,44 @@
 import { describe, it, expect } from "vitest";
-import { buildFilterPredicates, filterTasks, getActiveFilterCount } from "../task-filters";
+import {
+  buildFilterPredicates,
+  filterTasks,
+  getActiveFilterCount,
+} from "../task-filters";
 import type { Task } from "@/lib/api";
 
-const makeTask = (overrides: Partial<Task> = {}): Task => ({
-  id: "t1",
-  title: "Test Task",
-  prompt: "test prompt",
-  repositorySlug: "my-repo",
-  status: "COMPLETED" as Task["status"],
-  workspaceType: "PERSISTENT" as Task["workspaceType"],
-  modelId: "gpt-4",
-  createdAt: "2024-01-15T00:00:00Z",
-  updatedAt: "2024-01-15T00:00:00Z",
-  errorMessage: undefined,
-  iterative: false,
-  pullRequestUrl: undefined,
-  ...overrides,
-} as Task);
+const makeTask = (overrides: Partial<Task> = {}): Task =>
+  ({
+    id: "t1",
+    title: "Test Task",
+    prompt: "test prompt",
+    repositorySlug: "my-repo",
+    status: "COMPLETED" as Task["status"],
+    workspaceType: "PERSISTENT" as Task["workspaceType"],
+    modelId: "gpt-4",
+    createdAt: "2024-01-15T00:00:00Z",
+    updatedAt: "2024-01-15T00:00:00Z",
+    errorMessage: undefined,
+    iterative: false,
+    pullRequestUrl: undefined,
+    ...overrides,
+  }) as Task;
 
 describe("task-filters – branch coverage", () => {
   it("workspaceType filter (line 66)", () => {
-    const preds = buildFilterPredicates({ workspaceType: "PERSISTENT" as Task["workspaceType"] });
+    const preds = buildFilterPredicates({
+      workspaceType: "PERSISTENT" as Task["workspaceType"],
+    });
     expect(preds).toHaveLength(1);
-    expect(preds[0](makeTask({ workspaceType: "PERSISTENT" as Task["workspaceType"] }))).toBe(true);
-    expect(preds[0](makeTask({ workspaceType: "TEMPORARY" as Task["workspaceType"] }))).toBe(false);
+    expect(
+      preds[0](
+        makeTask({ workspaceType: "PERSISTENT" as Task["workspaceType"] }),
+      ),
+    ).toBe(true);
+    expect(
+      preds[0](
+        makeTask({ workspaceType: "TEMPORARY" as Task["workspaceType"] }),
+      ),
+    ).toBe(false);
   });
 
   it("modelId filter (line 67)", () => {
@@ -53,7 +68,9 @@ describe("task-filters – branch coverage", () => {
 
   it("hasPullRequest=true filter (line 72)", () => {
     const preds = buildFilterPredicates({ hasPullRequest: true });
-    expect(preds[0](makeTask({ pullRequestUrl: "https://github.com/pr/1" }))).toBe(true);
+    expect(
+      preds[0](makeTask({ pullRequestUrl: "https://github.com/pr/1" })),
+    ).toBe(true);
     expect(preds[0](makeTask({ pullRequestUrl: undefined }))).toBe(false);
   });
 
@@ -76,39 +93,58 @@ describe("task-filters – branch coverage", () => {
 
   it("filterTasks with combined filters", () => {
     const tasks = [
-      makeTask({ id: "t1", status: "COMPLETED" as Task["status"], iterative: true }),
-      makeTask({ id: "t2", status: "FAILED" as Task["status"], iterative: false }),
+      makeTask({
+        id: "t1",
+        status: "COMPLETED" as Task["status"],
+        iterative: true,
+      }),
+      makeTask({
+        id: "t2",
+        status: "FAILED" as Task["status"],
+        iterative: false,
+      }),
     ];
-    const result = filterTasks(tasks, { statuses: ["COMPLETED" as Task["status"]], isIterative: true });
+    const result = filterTasks(tasks, {
+      statuses: ["COMPLETED" as Task["status"]],
+      isIterative: true,
+    });
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("t1");
   });
 
   it("getActiveFilterCount counts all active filters", () => {
-    expect(getActiveFilterCount({
-      search: "test",
-      statuses: ["COMPLETED" as Task["status"]],
-      workspaceType: "PERSISTENT" as Task["workspaceType"],
-      modelId: "gpt-4",
-      dateRange: { from: new Date(), to: new Date() },
-      hasError: false,
-      isIterative: true,
-      hasPullRequest: true,
-      repositorySlug: "repo",
-    })).toBe(9);
+    expect(
+      getActiveFilterCount({
+        search: "test",
+        statuses: ["COMPLETED" as Task["status"]],
+        workspaceType: "PERSISTENT" as Task["workspaceType"],
+        modelId: "gpt-4",
+        dateRange: { from: new Date(), to: new Date() },
+        hasError: false,
+        isIterative: true,
+        hasPullRequest: true,
+        repositorySlug: "repo",
+      }),
+    ).toBe(9);
   });
 
   it("dateRange filter", () => {
     const from = new Date("2024-01-01");
     const to = new Date("2024-01-31");
     const preds = buildFilterPredicates({ dateRange: { from, to } });
-    expect(preds[0](makeTask({ createdAt: "2024-01-15T00:00:00Z" }))).toBe(true);
-    expect(preds[0](makeTask({ createdAt: "2024-02-15T00:00:00Z" }))).toBe(false);
+    expect(preds[0](makeTask({ createdAt: "2024-01-15T00:00:00Z" }))).toBe(
+      true,
+    );
+    expect(preds[0](makeTask({ createdAt: "2024-02-15T00:00:00Z" }))).toBe(
+      false,
+    );
   });
 
   it("search filter matches across multiple fields", () => {
     const preds = buildFilterPredicates({ search: "error" });
-    expect(preds[0](makeTask({ errorMessage: "some error occurred" }))).toBe(true);
+    expect(preds[0](makeTask({ errorMessage: "some error occurred" }))).toBe(
+      true,
+    );
     expect(preds[0](makeTask({ title: "Task with error" }))).toBe(true);
     expect(preds[0](makeTask({ prompt: "fix error" }))).toBe(true);
     expect(preds[0](makeTask())).toBe(false);

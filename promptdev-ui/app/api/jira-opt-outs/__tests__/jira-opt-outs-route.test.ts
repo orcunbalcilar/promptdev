@@ -44,7 +44,9 @@ describe("GET /api/jira-opt-outs", () => {
       error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
     });
 
-    const req = new NextRequest("http://localhost:3000/api/jira-opt-outs?userId=u1");
+    const req = new NextRequest(
+      "http://localhost:3000/api/jira-opt-outs?userId=u1",
+    );
     const res = await GET(req);
 
     expect(res.status).toBe(401);
@@ -81,7 +83,9 @@ describe("GET /api/jira-opt-outs", () => {
     ];
     mockGetOptOuts.mockResolvedValue(optOuts);
 
-    const req = new NextRequest("http://localhost:3000/api/jira-opt-outs?userId=u1");
+    const req = new NextRequest(
+      "http://localhost:3000/api/jira-opt-outs?userId=u1",
+    );
 
     const res = await GET(req);
 
@@ -110,7 +114,11 @@ describe("POST /api/jira-opt-outs", () => {
   });
 
   it("creates an opt-out and returns 201", async () => {
-    const optOut = { userId: "u1", jiraIssueKey: "PROJ-1", reason: "not relevant" };
+    const optOut = {
+      userId: "u1",
+      jiraIssueKey: "PROJ-1",
+      reason: "not relevant",
+    };
     mockCreateOptOut.mockResolvedValue(optOut);
 
     const req = new NextRequest("http://localhost:3000/api/jira-opt-outs", {
@@ -127,7 +135,11 @@ describe("POST /api/jira-opt-outs", () => {
     expect(res.status).toBe(201);
     const body = await res.json();
     expect(body).toEqual(optOut);
-    expect(mockCreateOptOut).toHaveBeenCalledWith("u1", "PROJ-1", "not relevant");
+    expect(mockCreateOptOut).toHaveBeenCalledWith(
+      "u1",
+      "PROJ-1",
+      "not relevant",
+    );
   });
 });
 

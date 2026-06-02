@@ -46,7 +46,7 @@ describe("ErrorPage", () => {
   it("should render the try again button", () => {
     render(<ErrorPage error={testError} reset={mockReset} />);
     expect(
-      screen.getByRole("button", { name: /try again/i })
+      screen.getByRole("button", { name: /try again/i }),
     ).toBeInTheDocument();
   });
 

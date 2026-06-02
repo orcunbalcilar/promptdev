@@ -136,9 +136,9 @@ describe("file-events", () => {
     });
 
     it("should prioritize keys in order (path before filePath)", () => {
-      expect(
-        extractFilePath({ path: "first.ts", filePath: "second.ts" }),
-      ).toBe("first.ts");
+      expect(extractFilePath({ path: "first.ts", filePath: "second.ts" })).toBe(
+        "first.ts",
+      );
     });
 
     it("should skip string values that don't look like file paths", () => {

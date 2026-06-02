@@ -24,7 +24,9 @@ describe("error-boundary.tsx branch coverage", () => {
 
   it("line 40: renders custom fallback when provided", () => {
     render(
-      <ErrorBoundary fallback={<div data-testid="custom-fallback">Custom Error</div>}>
+      <ErrorBoundary
+        fallback={<div data-testid="custom-fallback">Custom Error</div>}
+      >
         <ThrowError />
       </ErrorBoundary>,
     );
@@ -71,11 +73,7 @@ describe("model-selector.tsx branch coverage", () => {
 
   it("shows 'No models available' when models is empty", () => {
     render(
-      <ModelSelector
-        selectedModel=""
-        setSelectedModel={vi.fn()}
-        models={[]}
-      />,
+      <ModelSelector selectedModel="" setSelectedModel={vi.fn()} models={[]} />,
     );
     // The select should be disabled and show placeholder
     expect(screen.getByText("No models available")).toBeInTheDocument();

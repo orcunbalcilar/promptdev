@@ -6,10 +6,15 @@ vi.mock("@/components/ui/collapsible", () => ({
   Collapsible: ({ children, ...props }: { children: React.ReactNode }) => (
     <div {...props}>{children}</div>
   ),
-  CollapsibleContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CollapsibleTrigger: ({ children, ...props }: { children: React.ReactNode }) => (
-    <button {...props}>{children}</button>
+  CollapsibleContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
   ),
+  CollapsibleTrigger: ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode;
+  }) => <button {...props}>{children}</button>,
 }));
 
 import {
@@ -32,7 +37,7 @@ describe("ChainOfThought useChainOfThought error (line 29)", () => {
     const { container } = render(
       <ChainOfThought>
         <ChainOfThoughtHeader>Thinking...</ChainOfThoughtHeader>
-      </ChainOfThought>
+      </ChainOfThought>,
     );
 
     expect(container.textContent).toContain("Thinking...");

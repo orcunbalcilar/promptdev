@@ -1,5 +1,5 @@
-import { Card, CardContent } from '@/components/ui/card'
-import { TrendingUp } from 'lucide-react'
+import { Card, CardContent } from "@/components/ui/card";
+import { TrendingUp } from "lucide-react";
 
 export function MetricCard({
   title,
@@ -8,11 +8,11 @@ export function MetricCard({
   icon: Icon,
   trend,
 }: Readonly<{
-  title: string
-  value: string | number
-  subtitle?: string
-  icon: React.ComponentType<{ className?: string }>
-  trend?: 'up' | 'down' | 'neutral'
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  trend?: "up" | "down" | "neutral";
 }>) {
   return (
     <Card>
@@ -29,7 +29,7 @@ export function MetricCard({
             <Icon className="h-5 w-5 text-primary" />
           </div>
         </div>
-        {trend === 'up' && (
+        {trend === "up" && (
           <div className="flex items-center gap-1 mt-2 text-xs text-green-600">
             <TrendingUp className="h-3 w-3" />
             <span>Increasing</span>
@@ -37,5 +37,5 @@ export function MetricCard({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -35,7 +35,7 @@ describe("Reasoning component — uncovered lines", () => {
       return null;
     };
     expect(() => render(<Boom />)).toThrow(
-      "Reasoning components must be used within Reasoning"
+      "Reasoning components must be used within Reasoning",
     );
   });
 
@@ -45,7 +45,7 @@ describe("Reasoning component — uncovered lines", () => {
     const { rerender } = render(
       <Reasoning isStreaming={true} onOpenChange={onOpenChange}>
         <ReasoningTrigger />
-      </Reasoning>
+      </Reasoning>,
     );
 
     // The collapsible should be open when streaming
@@ -56,7 +56,7 @@ describe("Reasoning component — uncovered lines", () => {
     rerender(
       <Reasoning isStreaming={false} onOpenChange={onOpenChange}>
         <ReasoningTrigger />
-      </Reasoning>
+      </Reasoning>,
     );
 
     // Advance past the auto-close delay
@@ -75,7 +75,7 @@ describe("Reasoning component — uncovered lines", () => {
     const { rerender } = render(
       <Reasoning isStreaming={true}>
         <ReasoningTrigger />
-      </Reasoning>
+      </Reasoning>,
     );
 
     // Advance 3 seconds
@@ -84,7 +84,7 @@ describe("Reasoning component — uncovered lines", () => {
     rerender(
       <Reasoning isStreaming={false}>
         <ReasoningTrigger />
-      </Reasoning>
+      </Reasoning>,
     );
 
     // The trigger should show "Thought for 3 seconds"
@@ -100,7 +100,7 @@ describe("Reasoning component — uncovered lines", () => {
     render(
       <Reasoning defaultOpen={false} onOpenChange={onOpenChange}>
         <ReasoningTrigger />
-      </Reasoning>
+      </Reasoning>,
     );
 
     const trigger = screen.getByRole("button");
@@ -114,7 +114,7 @@ describe("Reasoning component — uncovered lines", () => {
     render(
       <Reasoning isStreaming={true}>
         <ReasoningTrigger />
-      </Reasoning>
+      </Reasoning>,
     );
 
     expect(screen.getByText("Thinking...")).toBeInTheDocument();
@@ -125,7 +125,7 @@ describe("Reasoning component — uncovered lines", () => {
     render(
       <Reasoning isStreaming={false}>
         <ReasoningTrigger />
-      </Reasoning>
+      </Reasoning>,
     );
 
     expect(screen.getByText("Thought for a few seconds")).toBeInTheDocument();
@@ -136,7 +136,7 @@ describe("Reasoning component — uncovered lines", () => {
     render(
       <Reasoning duration={5} isStreaming={false}>
         <ReasoningTrigger />
-      </Reasoning>
+      </Reasoning>,
     );
 
     expect(screen.getByText("Thought for 5 seconds")).toBeInTheDocument();
@@ -152,7 +152,7 @@ describe("Reasoning component — uncovered lines", () => {
         onOpenChange={onOpenChange}
       >
         <ReasoningTrigger />
-      </Reasoning>
+      </Reasoning>,
     );
 
     // Should NOT have been called with true because defaultOpen is explicitly false

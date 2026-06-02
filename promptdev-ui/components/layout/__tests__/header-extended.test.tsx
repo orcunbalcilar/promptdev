@@ -33,7 +33,9 @@ function renderWithProviders(ui: React.ReactElement) {
       mutations: { retry: false },
     },
   });
-  vi.spyOn(queryClient, "invalidateQueries").mockImplementation(mockInvalidateQueries);
+  vi.spyOn(queryClient, "invalidateQueries").mockImplementation(
+    mockInvalidateQueries,
+  );
   return render(
     <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
   );

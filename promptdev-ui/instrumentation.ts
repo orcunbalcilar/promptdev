@@ -7,9 +7,8 @@
  */
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    const { startScheduledTaskExecutor } = await import(
-      "./lib/scheduled-task-executor"
-    );
+    const { startScheduledTaskExecutor } =
+      await import("./lib/scheduled-task-executor");
     startScheduledTaskExecutor();
   }
 }

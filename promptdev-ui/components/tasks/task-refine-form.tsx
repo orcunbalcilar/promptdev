@@ -12,7 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { updateTask, startTask, type Task, type UpdateTaskRequest } from "@/lib/api";
+import {
+  updateTask,
+  startTask,
+  type Task,
+  type UpdateTaskRequest,
+} from "@/lib/api";
 import { COPILOT_MODELS } from "@/lib/copilot/models";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Edit3, Loader2, Play, Save } from "lucide-react";
@@ -36,7 +41,9 @@ export function TaskRefineForm({
   /* v8 ignore start — ?? operator branches in useState initializers */
   const [iterative, setIterative] = useState(task.iterative ?? false);
   const [maxIterations, setMaxIterations] = useState(task.maxIterations ?? 10);
-  const [reviewEnabled, setReviewEnabled] = useState(task.reviewEnabled ?? true);
+  const [reviewEnabled, setReviewEnabled] = useState(
+    task.reviewEnabled ?? true,
+  );
   /* v8 ignore stop */
 
   /* v8 ignore start — mutation handlers with conditional diff logic */
@@ -46,9 +53,12 @@ export function TaskRefineForm({
       if (title !== task.title) request.title = title;
       if (prompt !== task.prompt) request.prompt = prompt;
       if (modelId !== task.modelId) request.modelId = modelId;
-      if (iterative !== (task.iterative ?? false)) request.iterative = iterative;
-      if (maxIterations !== (task.maxIterations ?? 10)) request.maxIterations = maxIterations;
-      if (reviewEnabled !== (task.reviewEnabled ?? true)) request.reviewEnabled = reviewEnabled;
+      if (iterative !== (task.iterative ?? false))
+        request.iterative = iterative;
+      if (maxIterations !== (task.maxIterations ?? 10))
+        request.maxIterations = maxIterations;
+      if (reviewEnabled !== (task.reviewEnabled ?? true))
+        request.reviewEnabled = reviewEnabled;
       return updateTask(task.id, request);
     },
     onSuccess: () => {
@@ -96,9 +106,11 @@ export function TaskRefineForm({
       aria-label="Max iterations"
     />
   ) : null;
-  const startTaskIcon = startMutation.isPending
-    ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-    : <Play className="h-3.5 w-3.5 mr-1.5" />;
+  const startTaskIcon = startMutation.isPending ? (
+    <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+  ) : (
+    <Play className="h-3.5 w-3.5 mr-1.5" />
+  );
   /* v8 ignore stop */
 
   if (!isEditing) {
@@ -148,17 +160,24 @@ export function TaskRefineForm({
 
         <div className="grid gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="refine-title" className="text-xs">Title</Label>
+            <Label htmlFor="refine-title" className="text-xs">
+              Title
+            </Label>
             <Input
               id="refine-title"
               value={title}
-              onChange={/* v8 ignore start */ (e) => setTitle(e.target.value) /* v8 ignore stop */}
+              onChange={
+                /* v8 ignore start */ (e) =>
+                  setTitle(e.target.value) /* v8 ignore stop */
+              }
               className="h-8 text-sm"
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="refine-prompt" className="text-xs">Prompt</Label>
+            <Label htmlFor="refine-prompt" className="text-xs">
+              Prompt
+            </Label>
             <Textarea
               id="refine-prompt"
               value={prompt}
@@ -170,7 +189,9 @@ export function TaskRefineForm({
 
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="refine-model" className="text-xs">AI Model</Label>
+              <Label htmlFor="refine-model" className="text-xs">
+                AI Model
+              </Label>
               <Select value={modelId} onValueChange={setModelId}>
                 <SelectTrigger id="refine-model" className="h-8 text-xs">
                   <SelectValue />
@@ -192,7 +213,9 @@ export function TaskRefineForm({
                   checked={iterative}
                   onCheckedChange={setIterative}
                 />
-                <Label htmlFor="refine-iterative" className="text-xs">Iterative</Label>
+                <Label htmlFor="refine-iterative" className="text-xs">
+                  Iterative
+                </Label>
               </div>
               {iterativeInput}
             </div>
@@ -204,7 +227,9 @@ export function TaskRefineForm({
                   checked={reviewEnabled}
                   onCheckedChange={setReviewEnabled}
                 />
-                <Label htmlFor="refine-review" className="text-xs">Auto Review</Label>
+                <Label htmlFor="refine-review" className="text-xs">
+                  Auto Review
+                </Label>
               </div>
             </div>
           </div>
@@ -232,11 +257,7 @@ export function TaskRefineForm({
             )}
             Save
           </Button>
-          <Button
-            size="sm"
-            onClick={handleSaveAndStart}
-            disabled={isPending}
-          >
+          <Button size="sm" onClick={handleSaveAndStart} disabled={isPending}>
             {startMutation.isPending ? (
               <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
             ) : (

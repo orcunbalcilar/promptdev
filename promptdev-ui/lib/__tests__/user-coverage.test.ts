@@ -13,7 +13,8 @@ describe("user.ts – coverage (lines 96-135)", () => {
   it("getUserProfile calls fetch with correct URL", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      text: () => Promise.resolve(JSON.stringify({ id: "u1", email: "test@test.com" })),
+      text: () =>
+        Promise.resolve(JSON.stringify({ id: "u1", email: "test@test.com" })),
     });
 
     const result = await getUserProfile("u1");
@@ -70,7 +71,9 @@ describe("user.ts – coverage (lines 96-135)", () => {
       text: () => Promise.resolve(JSON.stringify({ id: "u1" })),
     });
 
-    await updateUserSettings("u1", { bitbucketToken: "token123" } as Parameters<typeof updateUserSettings>[1]);
+    await updateUserSettings("u1", { bitbucketToken: "token123" } as Parameters<
+      typeof updateUserSettings
+    >[1]);
 
     const [url, opts] = mockFetch.mock.calls[0];
     expect(url).toContain("/users/u1/settings");
@@ -84,7 +87,9 @@ describe("user.ts – coverage (lines 96-135)", () => {
       text: () => Promise.resolve("Not found"),
     });
 
-    await expect(getUserProfile("u1")).rejects.toThrow("User API request failed: 404");
+    await expect(getUserProfile("u1")).rejects.toThrow(
+      "User API request failed: 404",
+    );
   });
 
   it("returns empty object for empty response body", async () => {

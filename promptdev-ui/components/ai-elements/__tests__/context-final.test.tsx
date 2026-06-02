@@ -51,7 +51,7 @@ describe("Context — uncovered lines (different context item types)", () => {
   // Line 38: useContextValue throws outside Context
   it("throws when ContextTrigger used outside Context", () => {
     expect(() => render(<ContextTrigger />)).toThrow(
-      "Context components must be used within Context"
+      "Context components must be used within Context",
     );
   });
 
@@ -71,7 +71,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             <ContextInputUsage />
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.getByText("Input")).toBeInTheDocument();
@@ -92,7 +92,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             <ContextOutputUsage />
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.getByText("Output")).toBeInTheDocument();
@@ -118,7 +118,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             <ContextReasoningUsage />
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.getByText("Reasoning")).toBeInTheDocument();
@@ -144,7 +144,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             <ContextCacheUsage />
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.getByText("Cache")).toBeInTheDocument();
@@ -165,7 +165,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             <ContextInputUsage data-testid="input-usage" />
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.queryByText("Input")).not.toBeInTheDocument();
@@ -184,7 +184,7 @@ describe("Context — uncovered lines (different context item types)", () => {
         <ContextContent>
           <ContextContentFooter />
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.getByText("Total cost")).toBeInTheDocument();
@@ -198,7 +198,7 @@ describe("Context — uncovered lines (different context item types)", () => {
         <ContextContent>
           <ContextContentHeader />
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     // "50%" appears in both trigger and header, so use getAllByText
@@ -223,7 +223,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             </ContextInputUsage>
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.getByText("Custom Input Content")).toBeInTheDocument();
@@ -244,7 +244,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             <ContextInputUsage />
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.queryByText("Input")).not.toBeInTheDocument();
@@ -264,7 +264,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             <ContextInputUsage />
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.getByText("Input")).toBeInTheDocument();
@@ -287,7 +287,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             </ContextOutputUsage>
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.getByText("Custom Output")).toBeInTheDocument();
@@ -308,7 +308,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             <ContextOutputUsage />
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.queryByText("Output")).not.toBeInTheDocument();
@@ -328,7 +328,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             <ContextOutputUsage />
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.getByText("Output")).toBeInTheDocument();
@@ -340,7 +340,12 @@ describe("Context — uncovered lines (different context item types)", () => {
       <Context
         usedTokens={100}
         maxTokens={1000}
-        usage={{ inputTokens: 0, outputTokens: 0, totalTokens: 0, reasoningTokens: 30 }}
+        usage={{
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          reasoningTokens: 30,
+        }}
         modelId="gpt-4"
       >
         <ContextTrigger />
@@ -351,7 +356,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             </ContextReasoningUsage>
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.getByText("Custom Reasoning")).toBeInTheDocument();
@@ -363,7 +368,12 @@ describe("Context — uncovered lines (different context item types)", () => {
       <Context
         usedTokens={100}
         maxTokens={1000}
-        usage={{ inputTokens: 50, outputTokens: 50, totalTokens: 100, reasoningTokens: 0 }}
+        usage={{
+          inputTokens: 50,
+          outputTokens: 50,
+          totalTokens: 100,
+          reasoningTokens: 0,
+        }}
         modelId="gpt-4"
       >
         <ContextTrigger />
@@ -372,7 +382,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             <ContextReasoningUsage />
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.queryByText("Reasoning")).not.toBeInTheDocument();
@@ -384,7 +394,12 @@ describe("Context — uncovered lines (different context item types)", () => {
       <Context
         usedTokens={100}
         maxTokens={1000}
-        usage={{ inputTokens: 0, outputTokens: 0, totalTokens: 0, reasoningTokens: 30 }}
+        usage={{
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          reasoningTokens: 30,
+        }}
       >
         <ContextTrigger />
         <ContextContent>
@@ -392,7 +407,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             <ContextReasoningUsage />
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.getByText("Reasoning")).toBeInTheDocument();
@@ -404,7 +419,12 @@ describe("Context — uncovered lines (different context item types)", () => {
       <Context
         usedTokens={100}
         maxTokens={1000}
-        usage={{ inputTokens: 0, outputTokens: 0, totalTokens: 0, cachedInputTokens: 25 }}
+        usage={{
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          cachedInputTokens: 25,
+        }}
         modelId="gpt-4"
       >
         <ContextTrigger />
@@ -415,7 +435,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             </ContextCacheUsage>
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.getByText("Custom Cache")).toBeInTheDocument();
@@ -427,7 +447,12 @@ describe("Context — uncovered lines (different context item types)", () => {
       <Context
         usedTokens={100}
         maxTokens={1000}
-        usage={{ inputTokens: 50, outputTokens: 50, totalTokens: 100, cachedInputTokens: 0 }}
+        usage={{
+          inputTokens: 50,
+          outputTokens: 50,
+          totalTokens: 100,
+          cachedInputTokens: 0,
+        }}
         modelId="gpt-4"
       >
         <ContextTrigger />
@@ -436,7 +461,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             <ContextCacheUsage />
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.queryByText("Cache")).not.toBeInTheDocument();
@@ -448,7 +473,12 @@ describe("Context — uncovered lines (different context item types)", () => {
       <Context
         usedTokens={100}
         maxTokens={1000}
-        usage={{ inputTokens: 0, outputTokens: 0, totalTokens: 0, cachedInputTokens: 40 }}
+        usage={{
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          cachedInputTokens: 40,
+        }}
       >
         <ContextTrigger />
         <ContextContent>
@@ -456,7 +486,7 @@ describe("Context — uncovered lines (different context item types)", () => {
             <ContextCacheUsage />
           </ContextContentBody>
         </ContextContent>
-      </Context>
+      </Context>,
     );
 
     expect(screen.getByText("Cache")).toBeInTheDocument();

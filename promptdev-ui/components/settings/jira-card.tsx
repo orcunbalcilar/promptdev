@@ -124,7 +124,10 @@ export function JiraCard({ userId, profile }: SettingsCardProps) {
               id="jira-user"
               placeholder="your.username"
               value={username}
-              onChange={/* v8 ignore start */ (e) => setUsername(e.target.value) /* v8 ignore stop */}
+              onChange={
+                /* v8 ignore start */ (e) =>
+                  setUsername(e.target.value) /* v8 ignore stop */
+              }
             />
           </div>
           <TokenInput
@@ -182,7 +185,10 @@ export function JiraCard({ userId, profile }: SettingsCardProps) {
                   id="jira-auto-model"
                   placeholder="gpt-5.2"
                   value={autoTaskModelId}
-                  onChange={/* v8 ignore start */ (e) => setAutoTaskModelId(e.target.value) /* v8 ignore stop */}
+                  onChange={
+                    /* v8 ignore start */ (e) =>
+                      setAutoTaskModelId(e.target.value) /* v8 ignore stop */
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -246,7 +252,9 @@ export function JiraCard({ userId, profile }: SettingsCardProps) {
                       max={20}
                       value={autoTaskMaxIterations}
                       onChange={(e) =>
-                        setAutoTaskMaxIterations(Number.parseInt(e.target.value) || 1)
+                        setAutoTaskMaxIterations(
+                          Number.parseInt(e.target.value) || 1,
+                        )
                       }
                       className="max-w-30"
                     />
@@ -254,7 +262,9 @@ export function JiraCard({ userId, profile }: SettingsCardProps) {
                 )}
 
                 <div className="space-y-2 pt-2">
-                  <Label htmlFor="jira-auto-prompt">Custom Prompt Template</Label>
+                  <Label htmlFor="jira-auto-prompt">
+                    Custom Prompt Template
+                  </Label>
                   <Textarea
                     id="jira-auto-prompt"
                     placeholder="Implement the following Jira issue: {{summary}}..."
@@ -268,7 +278,9 @@ export function JiraCard({ userId, profile }: SettingsCardProps) {
                       {"{{issueKey}}"}
                     </code>
                     ,{" "}
-                    <code className="bg-muted px-1 rounded">{"{{summary}}"}</code>
+                    <code className="bg-muted px-1 rounded">
+                      {"{{summary}}"}
+                    </code>
                     ,{" "}
                     <code className="bg-muted px-1 rounded">
                       {"{{priority}}"}

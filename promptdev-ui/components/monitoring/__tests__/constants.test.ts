@@ -86,7 +86,9 @@ describe("formatDate", () => {
 
   it("includes month abbreviation", () => {
     // Mock toLocaleString to get deterministic output
-    const spy = vi.spyOn(Date.prototype, "toLocaleString").mockReturnValue("Jun 15, 02:30 PM");
+    const spy = vi
+      .spyOn(Date.prototype, "toLocaleString")
+      .mockReturnValue("Jun 15, 02:30 PM");
     const result = formatDate("2025-06-15T14:30:00Z");
     expect(result).toContain("Jun");
     spy.mockRestore();

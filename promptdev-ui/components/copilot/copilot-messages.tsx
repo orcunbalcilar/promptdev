@@ -19,10 +19,7 @@ import {
   MessageResponse,
 } from "@/components/ai-elements/message";
 
-import type {
-  CopilotMessage,
-  CopilotToolExecution,
-} from "@/lib/copilot/types";
+import type { CopilotMessage, CopilotToolExecution } from "@/lib/copilot/types";
 
 /** Tool execution display component */
 function ToolExecution({ tool }: Readonly<{ tool: CopilotToolExecution }>) {
@@ -96,9 +93,8 @@ export function CopilotMessageDisplay({
   const showStreamingContent = isLast && isStreaming;
 
   /* v8 ignore start — JSX key/fallback branches */
-  const reasoningText = isLast && streamingReasoning
-    ? streamingReasoning
-    : message.reasoning || "";
+  const reasoningText =
+    isLast && streamingReasoning ? streamingReasoning : message.reasoning || "";
   const toolKey = (tool: CopilotToolExecution, idx: number) =>
     tool.id ? `msg-${tool.id}` : `msg-tool-${idx}`;
   const activeToolKey = (tool: CopilotToolExecution, idx: number) =>
@@ -115,9 +111,7 @@ export function CopilotMessageDisplay({
             defaultOpen={isLast && isStreaming}
           >
             <ReasoningTrigger />
-            <ReasoningContent>
-              {reasoningText}
-            </ReasoningContent>
+            <ReasoningContent>{reasoningText}</ReasoningContent>
           </Reasoning>
         )}
 
@@ -127,11 +121,11 @@ export function CopilotMessageDisplay({
         ))}
 
         {/* Active tools (for streaming message) */}
-        {isLast && activeTools.length > 0 &&
+        {isLast &&
+          activeTools.length > 0 &&
           activeTools.map((tool, idx) => (
             <ToolExecution key={activeToolKey(tool, idx)} tool={tool} />
-          ))
-        }
+          ))}
 
         {/* Message content */}
         {showStreamingContent ? (

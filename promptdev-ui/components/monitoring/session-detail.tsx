@@ -1,9 +1,21 @@
-'use client'
+"use client";
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Tool,
+  ToolHeader,
+  ToolContent,
+  ToolInput,
+  ToolOutput,
+} from "@/components/ai-elements/tool";
 import {
   StackTrace,
   StackTraceHeader,
@@ -13,16 +25,16 @@ import {
   StackTraceContent,
   StackTraceFrames,
   StackTraceExpandButton,
-} from '@/components/ai-elements/stack-trace'
+} from "@/components/ai-elements/stack-trace";
 import {
   ProgressBar,
   ProgressBarLabel,
   ProgressBarValue,
   ProgressBarTrack,
   ProgressBarFill,
-} from '@/components/ai-elements/progress-bar'
-import { StatusIndicator } from '@/components/ai-elements/status-indicator'
-import { useQuery } from '@tanstack/react-query'
+} from "@/components/ai-elements/progress-bar";
+import { StatusIndicator } from "@/components/ai-elements/status-indicator";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Activity,
@@ -32,49 +44,62 @@ import {
   Loader2,
   Wrench,
   XCircle,
-} from 'lucide-react'
+} from "lucide-react";
 import {
   getSessionOperations,
   type MonitoringSession,
   type MonitoringOperation,
-} from '@/lib/monitoring'
-import { STATUS_CONFIG, OP_TYPE_CONFIG, formatTokens, formatDuration, formatDate } from './constants'
+} from "@/lib/monitoring";
+import {
+  STATUS_CONFIG,
+  OP_TYPE_CONFIG,
+  formatTokens,
+  formatDuration,
+  formatDate,
+} from "./constants";
 
 export function SessionDetail({
   session,
   onBack,
 }: Readonly<{
-  session: MonitoringSession
-  onBack: () => void
+  session: MonitoringSession;
+  onBack: () => void;
 }>) {
   const { data: operations, isLoading } = useQuery<MonitoringOperation[]>({
-    queryKey: ['session-operations', session.sdkSessionId],
+    queryKey: ["session-operations", session.sdkSessionId],
     queryFn: () => getSessionOperations(session.sdkSessionId),
-  })
+  });
 
-  const statusCfg = STATUS_CONFIG[session.status] ?? STATUS_CONFIG.ENDED
-  const StatusIcon = statusCfg.icon
+  const statusCfg = STATUS_CONFIG[session.status] ?? STATUS_CONFIG.ENDED;
+  const StatusIcon = statusCfg.icon;
 
   // Derive progress from session status and operations
   const sessionProgress = (() => {
-    if (session.status === 'ENDED') return 100
-    if (session.status === 'ERROR') return 100
-    if (!operations?.length) return 0
+    if (session.status === "ENDED") return 100;
+    if (session.status === "ERROR") return 100;
+    if (!operations?.length) return 0;
     const completedOps = operations.filter(
-      (op) => op.operationType === 'TOOL_EXECUTION_END' || op.operationType === 'SESSION_DESTROYED' || op.operationType === 'MESSAGE_RECEIVED'
-    ).length
-    const totalOps = operations.length
+      (op) =>
+        op.operationType === "TOOL_EXECUTION_END" ||
+        op.operationType === "SESSION_DESTROYED" ||
+        op.operationType === "MESSAGE_RECEIVED",
+    ).length;
+    const totalOps = operations.length;
     /* v8 ignore start — totalOps always > 0 here (empty case handled above) */
-    return totalOps > 0 ? Math.round((completedOps / totalOps) * 100) : 0
+    return totalOps > 0 ? Math.round((completedOps / totalOps) * 100) : 0;
     /* v8 ignore stop */
-  })()
+  })();
 
   // Derive status indicator from session status
-  const sessionStatusIndicator: 'streaming' | 'submitted' | 'error' | 'complete' = (() => {
-    if (session.status === 'ACTIVE') return 'streaming'
-    if (session.status === 'ERROR') return 'error'
-    return 'complete'
-  })()
+  const sessionStatusIndicator:
+    | "streaming"
+    | "submitted"
+    | "error"
+    | "complete" = (() => {
+    if (session.status === "ACTIVE") return "streaming";
+    if (session.status === "ERROR") return "error";
+    return "complete";
+  })();
 
   return (
     <div className="space-y-6">
@@ -125,7 +150,9 @@ export function SessionDetail({
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Duration</p>
-              <p className="font-medium">{formatDuration(session.createdAt, session.endedAt)}</p>
+              <p className="font-medium">
+                {formatDuration(session.createdAt, session.endedAt)}
+              </p>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Created</p>
@@ -144,15 +171,21 @@ export function SessionDetail({
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Input Tokens</p>
-              <p className="text-xl font-bold">{formatTokens(session.totalInputTokens)}</p>
+              <p className="text-xl font-bold">
+                {formatTokens(session.totalInputTokens)}
+              </p>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Output Tokens</p>
-              <p className="text-xl font-bold">{formatTokens(session.totalOutputTokens)}</p>
+              <p className="text-xl font-bold">
+                {formatTokens(session.totalOutputTokens)}
+              </p>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Errors</p>
-              <p className="text-xl font-bold text-destructive">{session.errorCount}</p>
+              <p className="text-xl font-bold text-destructive">
+                {session.errorCount}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -166,7 +199,8 @@ export function SessionDetail({
             Operations Timeline
           </CardTitle>
           <CardDescription>
-            All operations recorded in this session ({operations?.length ?? 0} total)
+            All operations recorded in this session ({operations?.length ?? 0}{" "}
+            total)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -174,7 +208,7 @@ export function SessionDetail({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 // ── Internal sub-components ─────────────────────────────────────
@@ -183,60 +217,67 @@ function OperationsList({
   operations,
   isLoading,
 }: Readonly<{
-  operations: MonitoringOperation[] | undefined
-  isLoading: boolean
+  operations: MonitoringOperation[] | undefined;
+  isLoading: boolean;
 }>) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
   if (!operations?.length) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         No operations recorded for this session.
       </div>
-    )
+    );
   }
   return (
     <div className="space-y-2">
       {operations.map((op) => {
-        if (op.operationType.includes('TOOL')) {
-          return <ToolOperation key={op.id} op={op} />
+        if (op.operationType.includes("TOOL")) {
+          return <ToolOperation key={op.id} op={op} />;
         }
-        if (op.operationType === 'ERROR' || op.operationType === 'TOOL_EXECUTION_ERROR' || (op.success === false && op.errorMessage)) {
-          return <ErrorOperation key={op.id} op={op} />
+        if (
+          op.operationType === "ERROR" ||
+          op.operationType === "TOOL_EXECUTION_ERROR" ||
+          (op.success === false && op.errorMessage)
+        ) {
+          return <ErrorOperation key={op.id} op={op} />;
         }
-        return <DefaultOperation key={op.id} op={op} />
+        return <DefaultOperation key={op.id} op={op} />;
       })}
     </div>
-  )
+  );
 }
 
 /* v8 ignore start — icon-selection helper used only in JSX */
 function getOperationIcon(op: MonitoringOperation) {
-  if (op.success === false) return <XCircle className="h-4 w-4 text-destructive" />
-  if (op.operationType.includes('ERROR')) return <AlertTriangle className="h-4 w-4 text-destructive" />
-  if (op.operationType.includes('TOOL')) return <Wrench className="h-4 w-4 text-amber-500" />
-  return <CheckCircle2 className="h-4 w-4 text-green-500" />
+  if (op.success === false)
+    return <XCircle className="h-4 w-4 text-destructive" />;
+  if (op.operationType.includes("ERROR"))
+    return <AlertTriangle className="h-4 w-4 text-destructive" />;
+  if (op.operationType.includes("TOOL"))
+    return <Wrench className="h-4 w-4 text-amber-500" />;
+  return <CheckCircle2 className="h-4 w-4 text-green-500" />;
 }
 /* v8 ignore stop */
 
 function getToolState(op: MonitoringOperation) {
-  if (op.success === false || op.operationType === 'TOOL_EXECUTION_ERROR') {
-    return 'output-error' as const
+  if (op.success === false || op.operationType === "TOOL_EXECUTION_ERROR") {
+    return "output-error" as const;
   }
-  if (op.operationType === 'TOOL_EXECUTION_END') {
-    return 'output-available' as const
+  if (op.operationType === "TOOL_EXECUTION_END") {
+    return "output-available" as const;
   }
-  return 'input-available' as const
+  return "input-available" as const;
 }
 
 /* v8 ignore start — ToolOperation JSX branches */
 function ToolOperation({ op }: Readonly<{ op: MonitoringOperation }>) {
-  const state = getToolState(op)
+  const state = getToolState(op);
 
   return (
     <Tool>
@@ -246,9 +287,7 @@ function ToolOperation({ op }: Readonly<{ op: MonitoringOperation }>) {
         state={state}
       />
       <ToolContent>
-        {op.message && (
-          <ToolInput input={{ message: op.message }} />
-        )}
+        {op.message && <ToolInput input={{ message: op.message }} />}
         {(op.errorMessage || op.message) && (
           <ToolOutput
             output={op.errorMessage ? undefined : (op.message ?? undefined)}
@@ -269,14 +308,14 @@ function ToolOperation({ op }: Readonly<{ op: MonitoringOperation }>) {
         )}
       </ToolContent>
     </Tool>
-  )
+  );
 }
 /* v8 ignore stop */
 
 function ErrorOperation({ op }: Readonly<{ op: MonitoringOperation }>) {
   const traceText = op.errorMessage
     ? `${op.operationType}: ${op.errorMessage}`
-    : op.message ?? op.operationType
+    : (op.message ?? op.operationType);
 
   return (
     <StackTrace trace={traceText} defaultOpen={false}>
@@ -297,20 +336,18 @@ function ErrorOperation({ op }: Readonly<{ op: MonitoringOperation }>) {
         )}
       </StackTraceContent>
     </StackTrace>
-  )
+  );
 }
 
 function DefaultOperation({ op }: Readonly<{ op: MonitoringOperation }>) {
   return (
     <div className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-      <div className="mt-0.5">
-        {getOperationIcon(op)}
-      </div>
+      <div className="mt-0.5">{getOperationIcon(op)}</div>
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
-            className={OP_TYPE_CONFIG[op.operationType] ?? 'bg-muted'}
+            className={OP_TYPE_CONFIG[op.operationType] ?? "bg-muted"}
           >
             {op.operationType}
           </Badge>
@@ -345,5 +382,5 @@ function DefaultOperation({ op }: Readonly<{ op: MonitoringOperation }>) {
         {formatDate(op.timestamp)}
       </span>
     </div>
-  )
+  );
 }

@@ -76,7 +76,12 @@ describe("copilot/types - runtime shape checks", () => {
 
   describe("ToolResultType values", () => {
     it("should accept valid ToolResultType strings", () => {
-      const values: ToolResultType[] = ["success", "failure", "rejected", "denied"];
+      const values: ToolResultType[] = [
+        "success",
+        "failure",
+        "rejected",
+        "denied",
+      ];
       expect(values).toHaveLength(4);
     });
   });
@@ -207,7 +212,12 @@ describe("copilot/types - runtime shape checks", () => {
         type: "tool.execution_complete",
         timestamp: "",
         sessionId: "s1",
-        data: { toolName: "read_file", toolId: "t1", output: "ok", duration: 42 },
+        data: {
+          toolName: "read_file",
+          toolId: "t1",
+          output: "ok",
+          duration: 42,
+        },
       };
       expect(event.data.duration).toBe(42);
     });
@@ -409,7 +419,9 @@ describe("copilot/types - runtime shape checks", () => {
     it("should allow attachments", () => {
       const req: SendMessageRequest = {
         prompt: "Check this",
-        attachments: [{ type: "file", path: "/tmp/foo.ts", displayName: "foo.ts" }],
+        attachments: [
+          { type: "file", path: "/tmp/foo.ts", displayName: "foo.ts" },
+        ],
       };
       expect(req.attachments).toHaveLength(1);
     });

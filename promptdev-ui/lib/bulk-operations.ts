@@ -16,12 +16,18 @@ export interface BulkResult {
 
 const OPERATION_VALIDATORS: Record<BulkOperation, (task: Task) => boolean> = {
   start: (task) => task.status === "PENDING",
-  cancel: (task) => ["IN_PROGRESS", "QUEUED", "TRIAGING", "REVIEWING", "VALIDATING"].includes(task.status),
+  cancel: (task) =>
+    ["IN_PROGRESS", "QUEUED", "TRIAGING", "REVIEWING", "VALIDATING"].includes(
+      task.status,
+    ),
   retry: (task) => ["FAILED", "CANCELLED"].includes(task.status),
   delete: () => true,
 };
 
-export function getEligibleTasks(tasks: Task[], operation: BulkOperation): Task[] {
+export function getEligibleTasks(
+  tasks: Task[],
+  operation: BulkOperation,
+): Task[] {
   return tasks.filter(OPERATION_VALIDATORS[operation]);
 }
 
@@ -51,7 +57,7 @@ export async function executeBulkOperation(
   for (let i = 0; i < taskIds.length; i += CONCURRENCY) {
     const batch = taskIds.slice(i, i + CONCURRENCY);
     const results = await Promise.allSettled(batch.map((id) => handler(id)));
-    
+
     for (let j = 0; j < results.length; j++) {
       if (results[j].status === "fulfilled") {
         result.succeeded++;
@@ -59,7 +65,9 @@ export async function executeBulkOperation(
         result.failed++;
         result.errors.push({
           taskId: batch[j],
-          error: (results[j] as PromiseRejectedResult).reason?.message ?? "Unknown error",
+          error:
+            (results[j] as PromiseRejectedResult).reason?.message ??
+            "Unknown error",
         });
       }
     }

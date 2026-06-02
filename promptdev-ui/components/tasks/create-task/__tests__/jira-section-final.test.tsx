@@ -53,9 +53,7 @@ describe("JiraSection", () => {
     );
 
     await waitFor(() => {
-      expect(mockSetTitle).toHaveBeenCalledWith(
-        "[PROJ-123] Fix the login bug",
-      );
+      expect(mockSetTitle).toHaveBeenCalledWith("[PROJ-123] Fix the login bug");
     });
     expect(mockSetPrompt).toHaveBeenCalledWith(
       expect.stringContaining("Fix the login bug"),

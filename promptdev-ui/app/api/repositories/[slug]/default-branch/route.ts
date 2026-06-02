@@ -8,12 +8,18 @@ export async function GET(
   const { slug } = await params;
   const projectKey = request.nextUrl.searchParams.get("projectKey");
   if (!projectKey) {
-    return NextResponse.json({ error: "projectKey is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "projectKey is required" },
+      { status: 400 },
+    );
   }
   try {
     const branch = await bitbucketService.getDefaultBranch(projectKey, slug);
     return NextResponse.json(branch);
   } catch {
-    return NextResponse.json({ error: "Default branch not found" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Default branch not found" },
+      { status: 404 },
+    );
   }
 }

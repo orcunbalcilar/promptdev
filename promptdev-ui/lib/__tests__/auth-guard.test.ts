@@ -2,13 +2,15 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Session } from "next-auth";
 
 // Use vi.hoisted so these are available inside vi.mock factories (which are hoisted)
-const { mockAuth, mockSelect, mockFrom, mockWhere, mockLimit } = vi.hoisted(() => ({
-  mockAuth: vi.fn(),
-  mockSelect: vi.fn(),
-  mockFrom: vi.fn(),
-  mockWhere: vi.fn(),
-  mockLimit: vi.fn(),
-}));
+const { mockAuth, mockSelect, mockFrom, mockWhere, mockLimit } = vi.hoisted(
+  () => ({
+    mockAuth: vi.fn(),
+    mockSelect: vi.fn(),
+    mockFrom: vi.fn(),
+    mockWhere: vi.fn(),
+    mockLimit: vi.fn(),
+  }),
+);
 
 vi.mock("@/auth", () => ({
   auth: mockAuth,
@@ -31,10 +33,18 @@ vi.mock("drizzle-orm", () => ({
   eq: (col: string, val: string) => ({ col, val }),
 }));
 
-import { requireAuth, requireOwnership, requireTaskOwnership } from "../auth-guard";
+import {
+  requireAuth,
+  requireOwnership,
+  requireTaskOwnership,
+} from "../auth-guard";
 
 function fakeSession(overrides: Partial<Session> = {}): Session {
-  return { user: { id: "user-1", name: "Test" }, expires: "", ...overrides } as Session;
+  return {
+    user: { id: "user-1", name: "Test" },
+    expires: "",
+    ...overrides,
+  } as Session;
 }
 
 describe("auth-guard", () => {

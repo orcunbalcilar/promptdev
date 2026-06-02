@@ -21,7 +21,9 @@ vi.mock("recharts", async (importOriginal) => {
   const actual = await importOriginal<typeof import("recharts")>();
   return {
     ...actual,
-    ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+      <div>{children}</div>
+    ),
     AreaChart: () => <div data-testid="area-chart" />,
     Area: () => null,
     BarChart: () => <div data-testid="bar-chart" />,

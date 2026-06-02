@@ -36,8 +36,8 @@ export function Header() {
   return (
     <header className="header-bar backdrop-blur-xl supports-backdrop-filter:bg-background/60 sticky top-0 z-50 border-b border-border/40 bg-background/80">
       <div className="container mx-auto px-6 h-14 flex items-center justify-between">
-        <div 
-          className="flex items-center gap-3 cursor-pointer" 
+        <div
+          className="flex items-center gap-3 cursor-pointer"
           onClick={() => router.push("/")}
         >
           <div className="relative">

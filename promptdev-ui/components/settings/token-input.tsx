@@ -41,7 +41,7 @@ export function TokenInput({
         <Input
           id={id}
           type={showToken ? "text" : "password"}
-          placeholder={isSet ? "••••••••" : placeholder ?? "Enter token"}
+          placeholder={isSet ? "••••••••" : (placeholder ?? "Enter token")}
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />

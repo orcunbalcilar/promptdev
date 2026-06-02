@@ -4,17 +4,31 @@ import React from "react";
 
 vi.mock("@/components/ui/collapsible", () => ({
   Collapsible: ({ children, ...props }: { children: React.ReactNode }) => (
-    <div data-testid="collapsible" {...props}>{children}</div>
+    <div data-testid="collapsible" {...props}>
+      {children}
+    </div>
   ),
-  CollapsibleContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CollapsibleTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  CollapsibleContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CollapsibleTrigger: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 vi.mock("@/components/ui/tooltip", () => ({
-  Tooltip: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  TooltipContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  TooltipProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  TooltipTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  Tooltip: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  TooltipContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  TooltipProvider: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  TooltipTrigger: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 
 // We need to import the hook and test the throw
@@ -34,7 +48,7 @@ describe("WebPreview useWebPreview error (line 40)", () => {
     const { container } = render(
       <WebPreview defaultUrl="https://example.com">
         <div>Content</div>
-      </WebPreview>
+      </WebPreview>,
     );
 
     expect(container.textContent).toContain("Content");

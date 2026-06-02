@@ -21,7 +21,7 @@ describe("RootLayout", () => {
     render(
       <RootLayout>
         <div data-testid="page-content">Page</div>
-      </RootLayout>
+      </RootLayout>,
     );
     expect(screen.getByTestId("providers")).toBeInTheDocument();
     expect(screen.getByTestId("page-content")).toBeInTheDocument();
@@ -33,7 +33,7 @@ describe("RootLayout", () => {
       <RootLayout>
         <div data-testid="child-a">A</div>
         <div data-testid="child-b">B</div>
-      </RootLayout>
+      </RootLayout>,
     );
     expect(screen.getByTestId("child-a")).toBeInTheDocument();
     expect(screen.getByTestId("child-b")).toBeInTheDocument();
@@ -43,7 +43,7 @@ describe("RootLayout", () => {
     render(
       <RootLayout>
         <span>nested</span>
-      </RootLayout>
+      </RootLayout>,
     );
     const providers = screen.getByTestId("providers");
     expect(providers.textContent).toContain("nested");
@@ -53,7 +53,7 @@ describe("RootLayout", () => {
     render(
       <RootLayout>
         <div>child</div>
-      </RootLayout>
+      </RootLayout>,
     );
     const providers = screen.getByTestId("providers");
     expect(providers).toBeInTheDocument();

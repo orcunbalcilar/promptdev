@@ -3,12 +3,32 @@ import { render, screen } from "@testing-library/react";
 import React from "react";
 
 vi.mock("@/components/ui/collapsible", () => ({
-  Collapsible: ({ children, open, onOpenChange, ...props }: { children: React.ReactNode; open?: boolean; onOpenChange?: (v: boolean) => void }) => (
-    <div data-testid="collapsible" {...props}>{children}</div>
+  Collapsible: ({
+    children,
+    open,
+    onOpenChange,
+    ...props
+  }: {
+    children: React.ReactNode;
+    open?: boolean;
+    onOpenChange?: (v: boolean) => void;
+  }) => (
+    <div data-testid="collapsible" {...props}>
+      {children}
+    </div>
   ),
-  CollapsibleContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  CollapsibleTrigger: ({ children, ...props }: { children: React.ReactNode }) => (
-    <button data-testid="collapsible-trigger" {...props}>{children}</button>
+  CollapsibleContent: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  CollapsibleTrigger: ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode;
+  }) => (
+    <button data-testid="collapsible-trigger" {...props}>
+      {children}
+    </button>
   ),
 }));
 
@@ -27,7 +47,7 @@ describe("FileTree togglePath (line 67 - onExpandedChange callback)", () => {
         selectedPath="src/file.ts"
       >
         <div>File tree content</div>
-      </FileTree>
+      </FileTree>,
     );
 
     expect(screen.getByRole("tree")).toBeTruthy();
@@ -39,7 +59,7 @@ describe("FileTree togglePath (line 67 - onExpandedChange callback)", () => {
     render(
       <FileTree expanded={expanded}>
         <div>Controlled tree</div>
-      </FileTree>
+      </FileTree>,
     );
 
     expect(screen.getByText("Controlled tree")).toBeTruthy();

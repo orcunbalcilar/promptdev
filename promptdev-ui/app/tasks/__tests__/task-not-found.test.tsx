@@ -34,7 +34,7 @@ describe("TaskNotFound", () => {
   it("should display a descriptive message", () => {
     render(<TaskNotFound />);
     expect(
-      screen.getByText(/this task doesn't exist or has been deleted/i)
+      screen.getByText(/this task doesn't exist or has been deleted/i),
     ).toBeInTheDocument();
   });
 

@@ -1,13 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { SessionHistorySidebar, type SessionHistoryItem } from "../session-history-sidebar";
+import {
+  SessionHistorySidebar,
+  type SessionHistoryItem,
+} from "../session-history-sidebar";
 
 // Radix ScrollArea uses ResizeObserver which jsdom doesn't provide
 globalThis.ResizeObserver = class ResizeObserver {
-  observe() { /* noop */ }
-  unobserve() { /* noop */ }
-  disconnect() { /* noop */ }
+  observe() {
+    /* noop */
+  }
+  unobserve() {
+    /* noop */
+  }
+  disconnect() {
+    /* noop */
+  }
 } as unknown as typeof ResizeObserver;
 
 const mockSessions: SessionHistoryItem[] = [
@@ -50,7 +59,9 @@ describe("SessionHistorySidebar", () => {
 
   it("should show loading state initially", () => {
     // Make fetch never resolve
-    globalThis.fetch = vi.fn().mockReturnValue(new Promise(() => {})) as unknown as typeof fetch;
+    globalThis.fetch = vi
+      .fn()
+      .mockReturnValue(new Promise(() => {})) as unknown as typeof fetch;
 
     render(<SessionHistorySidebar {...mockProps} />);
 
@@ -81,7 +92,9 @@ describe("SessionHistorySidebar", () => {
     const searchInput = screen.getByPlaceholderText("Search sessions...");
     await user.type(searchInput, "Bug");
 
-    expect(screen.queryByText("Code review discussion")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Code review discussion"),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Bug investigation")).toBeInTheDocument();
   });
 
@@ -109,7 +122,9 @@ describe("SessionHistorySidebar", () => {
 
     await user.click(screen.getByText("Code review discussion"));
 
-    expect(mockProps.onResumeSession).toHaveBeenCalledWith("session-abc-123-def");
+    expect(mockProps.onResumeSession).toHaveBeenCalledWith(
+      "session-abc-123-def",
+    );
   });
 
   it("should call onNewSession when clicking the plus button", async () => {
@@ -123,9 +138,10 @@ describe("SessionHistorySidebar", () => {
 
     // Click the + button (new session)
     const plusButtons = screen.getAllByRole("button");
-    const newSessionBtn = plusButtons.find((btn) =>
-      btn.querySelector("[class*='lucide-plus']") !== null ||
-      btn.getAttribute("class")?.includes("h-7"),
+    const newSessionBtn = plusButtons.find(
+      (btn) =>
+        btn.querySelector("[class*='lucide-plus']") !== null ||
+        btn.getAttribute("class")?.includes("h-7"),
     );
     if (newSessionBtn) {
       await user.click(newSessionBtn);
@@ -135,7 +151,10 @@ describe("SessionHistorySidebar", () => {
 
   it("should highlight active session", async () => {
     render(
-      <SessionHistorySidebar {...mockProps} activeSessionId="session-abc-123-def" />,
+      <SessionHistorySidebar
+        {...mockProps}
+        activeSessionId="session-abc-123-def"
+      />,
     );
 
     await waitFor(() => {
@@ -143,12 +162,16 @@ describe("SessionHistorySidebar", () => {
     });
 
     // The active session container should have bg-accent class
-    const sessionEl = screen.getByText("Code review discussion").closest("[class*='cursor-pointer']");
+    const sessionEl = screen
+      .getByText("Code review discussion")
+      .closest("[class*='cursor-pointer']");
     expect(sessionEl).toHaveClass("bg-accent");
   });
 
   it("should handle fetch failures gracefully", async () => {
-    globalThis.fetch = vi.fn().mockRejectedValue(new Error("Network error")) as unknown as typeof fetch;
+    globalThis.fetch = vi
+      .fn()
+      .mockRejectedValue(new Error("Network error")) as unknown as typeof fetch;
 
     render(<SessionHistorySidebar {...mockProps} />);
 
@@ -162,7 +185,12 @@ describe("SessionHistorySidebar", () => {
       ok: true,
       json: () =>
         Promise.resolve({
-          sessions: [{ sessionId: "very-long-session-id-12345", modifiedTime: new Date().toISOString() }],
+          sessions: [
+            {
+              sessionId: "very-long-session-id-12345",
+              modifiedTime: new Date().toISOString(),
+            },
+          ],
         }),
     }) as unknown as typeof fetch;
 

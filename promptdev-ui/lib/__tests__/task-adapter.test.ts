@@ -44,7 +44,7 @@ describe("adaptTask", () => {
     };
 
     const result = adaptTask(response as any);
-    
+
     expect(result.prompt).toBe("");
     expect(result.sourceBranch).toBe("");
     expect(result.targetBranch).toBe("");
@@ -96,7 +96,7 @@ describe("adaptTask", () => {
     };
 
     const result = adaptTask(response as any);
-    
+
     expect(result.prompt).toBe("My prompt");
     expect(result.sourceBranch).toBe("main");
     expect(result.modelId).toBe("gpt-4");

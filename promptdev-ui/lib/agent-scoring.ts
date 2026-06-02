@@ -15,7 +15,9 @@ export interface ModelScore {
 }
 
 function computeDuration(task: Task): number | null {
-  const end = task.completedAt ?? (["FAILED", "CANCELLED"].includes(task.status) ? task.updatedAt : null);
+  const end =
+    task.completedAt ??
+    (["FAILED", "CANCELLED"].includes(task.status) ? task.updatedAt : null);
   if (!end) return null;
   return new Date(end).getTime() - new Date(task.createdAt).getTime();
 }
@@ -23,32 +25,39 @@ function computeDuration(task: Task): number | null {
 export function scoreModel(modelId: string, tasks: Task[]): ModelScore {
   const modelTasks = tasks.filter((t) => t.modelId === modelId);
   const completed = modelTasks.filter((t) => t.status === "COMPLETED");
-  const failed = modelTasks.filter((t) => ["FAILED", "CANCELLED"].includes(t.status));
-  
+  const failed = modelTasks.filter((t) =>
+    ["FAILED", "CANCELLED"].includes(t.status),
+  );
+
   const durations = modelTasks
     .map(computeDuration)
     .filter((d): d is number => d !== null);
-  
-  const avgDuration = durations.length > 0
-    ? durations.reduce((s, d) => s + d, 0) / durations.length
-    : 0;
+
+  const avgDuration =
+    durations.length > 0
+      ? durations.reduce((s, d) => s + d, 0) / durations.length
+      : 0;
 
   const iterations = modelTasks
     .filter((t) => t.currentIteration != null)
     .map((t) => t.currentIteration!);
-  
-  const avgIterations = iterations.length > 0
-    ? iterations.reduce((s, i) => s + i, 0) / iterations.length
-    : 0;
 
-  const successRate = modelTasks.length > 0
-    ? (completed.length / modelTasks.length) * 100
-    : 0;
+  const avgIterations =
+    iterations.length > 0
+      ? iterations.reduce((s, i) => s + i, 0) / iterations.length
+      : 0;
+
+  const successRate =
+    modelTasks.length > 0 ? (completed.length / modelTasks.length) * 100 : 0;
 
   // Composite score: 60% success rate + 20% speed (inverse) + 20% efficiency (fewer iterations)
-  const speedScore = avgDuration > 0 ? Math.max(0, 100 - (avgDuration / 60000)) : 50;
-  const efficiencyScore = avgIterations > 0 ? Math.max(0, 100 - (avgIterations * 10)) : 50;
-  const score = Math.round(successRate * 0.6 + speedScore * 0.2 + efficiencyScore * 0.2);
+  const speedScore =
+    avgDuration > 0 ? Math.max(0, 100 - avgDuration / 60000) : 50;
+  const efficiencyScore =
+    avgIterations > 0 ? Math.max(0, 100 - avgIterations * 10) : 50;
+  const score = Math.round(
+    successRate * 0.6 + speedScore * 0.2 + efficiencyScore * 0.2,
+  );
 
   return {
     modelId,

@@ -10,7 +10,10 @@ vi.mock("./services/task-service", () => ({
   updateTask: vi.fn().mockResolvedValue({}),
 }));
 
-import { startScheduledTaskExecutor, stopScheduledTaskExecutor } from "../scheduled-task-executor";
+import {
+  startScheduledTaskExecutor,
+  stopScheduledTaskExecutor,
+} from "../scheduled-task-executor";
 
 describe("scheduled-task-executor – coverage (lines 33-34)", () => {
   beforeEach(() => {

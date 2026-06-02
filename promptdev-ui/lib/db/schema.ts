@@ -20,7 +20,9 @@ import { relations } from "drizzle-orm";
 // ── Users ──────────────────────────────────────────────────────
 
 export const users = pgTable("users", {
-  id: uuid("id").primaryKey().$defaultFn(() => randomUUID()),
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
   provider: varchar("provider", { length: 255 }).notNull(),
   providerAccountId: varchar("provider_account_id", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).notNull(),
@@ -50,8 +52,12 @@ export const users = pgTable("users", {
   jiraAutoTaskEnabled: boolean("jira_auto_task_enabled").default(true),
   jiraAutoTaskModelId: varchar("jira_auto_task_model_id", { length: 255 }),
   jiraAutoTaskRepository: varchar("jira_auto_task_repository", { length: 255 }),
-  jiraAutoTaskSourceBranch: varchar("jira_auto_task_source_branch", { length: 255 }),
-  jiraAutoTaskTargetBranch: varchar("jira_auto_task_target_branch", { length: 255 }),
+  jiraAutoTaskSourceBranch: varchar("jira_auto_task_source_branch", {
+    length: 255,
+  }),
+  jiraAutoTaskTargetBranch: varchar("jira_auto_task_target_branch", {
+    length: 255,
+  }),
   jiraAutoTaskPrompt: text("jira_auto_task_prompt"),
   jiraAutoTaskIterative: boolean("jira_auto_task_iterative"),
   jiraAutoTaskMaxIterations: integer("jira_auto_task_max_iterations"),
@@ -60,19 +66,27 @@ export const users = pgTable("users", {
   // Custom system prompt
   customSystemPrompt: text("custom_system_prompt"),
 
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date()),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });
 
 // ── Tasks ──────────────────────────────────────────────────────
 
 export const tasks = pgTable("tasks", {
-  id: uuid("id").primaryKey().$defaultFn(() => randomUUID()),
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
   title: varchar("title", { length: 255 }).notNull(),
   prompt: text("prompt"),
   repositorySlug: varchar("repository_slug", { length: 255 }).notNull(),
   projectKey: varchar("project_key", { length: 255 }),
-  workspaceType: varchar("workspace_type", { length: 20 }).notNull().default("BITBUCKET"),
+  workspaceType: varchar("workspace_type", { length: 20 })
+    .notNull()
+    .default("BITBUCKET"),
   workspacePath: varchar("workspace_path", { length: 1024 }),
   sourceBranch: varchar("source_branch", { length: 255 }),
   targetBranch: varchar("target_branch", { length: 255 }),
@@ -118,16 +132,24 @@ export const tasks = pgTable("tasks", {
   additionalRepositories: text("additional_repositories"),
   systemPrompt: text("system_prompt"),
 
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date()),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date()),
   completedAt: timestamp("completed_at", { withTimezone: true }),
 });
 
 // ── Task Events ────────────────────────────────────────────────
 
 export const taskEvents = pgTable("task_events", {
-  id: uuid("id").primaryKey().$defaultFn(() => randomUUID()),
-  taskId: uuid("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  taskId: uuid("task_id")
+    .notNull()
+    .references(() => tasks.id, { onDelete: "cascade" }),
   eventType: varchar("event_type", { length: 50 }).notNull(),
   message: text("message"),
   details: text("details"),
@@ -138,19 +160,25 @@ export const taskEvents = pgTable("task_events", {
   toolName: varchar("tool_name", { length: 255 }),
   toolInput: text("tool_input"),
   toolOutput: text("tool_output"),
-  timestamp: timestamp("timestamp", { withTimezone: true }).notNull().$defaultFn(() => new Date()),
+  timestamp: timestamp("timestamp", { withTimezone: true })
+    .notNull()
+    .$defaultFn(() => new Date()),
 });
 
 // ── Scheduled Jobs ─────────────────────────────────────────────
 
 export const scheduledJobs = pgTable("scheduled_jobs", {
-  id: uuid("id").primaryKey().$defaultFn(() => randomUUID()),
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   cronExpression: varchar("cron_expression", { length: 255 }).notNull(),
   promptTemplate: text("prompt_template").notNull(),
   jobType: varchar("job_type", { length: 30 }).notNull().default("MAINTENANCE"),
-  workspaceType: varchar("workspace_type", { length: 20 }).notNull().default("BITBUCKET"),
+  workspaceType: varchar("workspace_type", { length: 20 })
+    .notNull()
+    .default("BITBUCKET"),
   workspaceRef: varchar("workspace_ref", { length: 1024 }).notNull(),
   projectKey: varchar("project_key", { length: 255 }),
   sourceBranch: varchar("source_branch", { length: 255 }).default("main"),
@@ -161,26 +189,36 @@ export const scheduledJobs = pgTable("scheduled_jobs", {
   lastRunAt: timestamp("last_run_at", { withTimezone: true }),
   nextRunAt: timestamp("next_run_at", { withTimezone: true }),
   lastTaskId: uuid("last_task_id"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date()),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });
 
 // ── Copilot Sessions (Monitoring) ──────────────────────────────
 
 export const copilotSessions = pgTable("copilot_sessions", {
-  id: uuid("id").primaryKey().$defaultFn(() => randomUUID()),
+  id: uuid("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
   sdkSessionId: varchar("sdk_session_id", { length: 255 }).notNull().unique(),
   model: varchar("model", { length: 255 }).notNull(),
   reasoningEffort: varchar("reasoning_effort", { length: 50 }),
   taskId: uuid("task_id").references(() => tasks.id),
   status: varchar("status", { length: 20 }).notNull().default("ACTIVE"),
   totalInputTokens: bigint("total_input_tokens", { mode: "number" }).default(0),
-  totalOutputTokens: bigint("total_output_tokens", { mode: "number" }).default(0),
+  totalOutputTokens: bigint("total_output_tokens", { mode: "number" }).default(
+    0,
+  ),
   messageCount: integer("message_count").default(0),
   toolExecutionCount: integer("tool_execution_count").default(0),
   errorCount: integer("error_count").default(0),
   source: varchar("source", { length: 50 }).default("web"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
   endedAt: timestamp("ended_at", { withTimezone: true }),
 });
 
@@ -189,7 +227,9 @@ export const copilotSessions = pgTable("copilot_sessions", {
 export const copilotOperations = pgTable(
   "copilot_operations",
   {
-    id: uuid("id").primaryKey().$defaultFn(() => randomUUID()),
+    id: uuid("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
     sessionId: uuid("session_id").references(() => copilotSessions.id),
     taskId: uuid("task_id").references(() => tasks.id),
     operationType: varchar("operation_type", { length: 50 }).notNull(),
@@ -204,7 +244,9 @@ export const copilotOperations = pgTable(
     errorMessage: text("error_message"),
     source: varchar("source", { length: 50 }).default("web"),
     clientInfo: varchar("client_info", { length: 255 }),
-    timestamp: timestamp("timestamp", { withTimezone: true }).notNull().$defaultFn(() => new Date()),
+    timestamp: timestamp("timestamp", { withTimezone: true })
+      .notNull()
+      .$defaultFn(() => new Date()),
   },
   (table) => [
     index("idx_operations_session").on(table.sessionId),
@@ -218,11 +260,17 @@ export const copilotOperations = pgTable(
 export const jiraIssueOptOuts = pgTable(
   "jira_issue_opt_outs",
   {
-    id: uuid("id").primaryKey().$defaultFn(() => randomUUID()),
-    userId: uuid("user_id").notNull().references(() => users.id),
+    id: uuid("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
     jiraIssueKey: varchar("jira_issue_key", { length: 255 }).notNull(),
     reason: varchar("reason", { length: 500 }),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
     uniqueIndex("uq_user_jira_issue").on(table.userId, table.jiraIssueKey),
@@ -246,19 +294,37 @@ export const taskEventsRelations = relations(taskEvents, ({ one }) => ({
   task: one(tasks, { fields: [taskEvents.taskId], references: [tasks.id] }),
 }));
 
-export const copilotSessionsRelations = relations(copilotSessions, ({ one, many }) => ({
-  task: one(tasks, { fields: [copilotSessions.taskId], references: [tasks.id] }),
-  operations: many(copilotOperations),
-}));
-
-export const copilotOperationsRelations = relations(copilotOperations, ({ one }) => ({
-  session: one(copilotSessions, {
-    fields: [copilotOperations.sessionId],
-    references: [copilotSessions.id],
+export const copilotSessionsRelations = relations(
+  copilotSessions,
+  ({ one, many }) => ({
+    task: one(tasks, {
+      fields: [copilotSessions.taskId],
+      references: [tasks.id],
+    }),
+    operations: many(copilotOperations),
   }),
-  task: one(tasks, { fields: [copilotOperations.taskId], references: [tasks.id] }),
-}));
+);
 
-export const jiraIssueOptOutsRelations = relations(jiraIssueOptOuts, ({ one }) => ({
-  user: one(users, { fields: [jiraIssueOptOuts.userId], references: [users.id] }),
-}));
+export const copilotOperationsRelations = relations(
+  copilotOperations,
+  ({ one }) => ({
+    session: one(copilotSessions, {
+      fields: [copilotOperations.sessionId],
+      references: [copilotSessions.id],
+    }),
+    task: one(tasks, {
+      fields: [copilotOperations.taskId],
+      references: [tasks.id],
+    }),
+  }),
+);
+
+export const jiraIssueOptOutsRelations = relations(
+  jiraIssueOptOuts,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [jiraIssueOptOuts.userId],
+      references: [users.id],
+    }),
+  }),
+);

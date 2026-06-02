@@ -25,7 +25,10 @@ export function isJiraConfigured(): boolean {
   return !!baseUrl;
 }
 
-async function jiraApiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+async function jiraApiFetch<T>(
+  path: string,
+  options?: RequestInit,
+): Promise<T> {
   const { baseUrl } = getJiraConfig();
   if (!baseUrl) throw new Error("JIRA_URL is not configured");
 
@@ -92,7 +95,9 @@ export async function searchIssues(
 }
 
 export async function getIssue(issueKey: string): Promise<JiraIssueResult> {
-  return jiraApiFetch<JiraIssueResult>(`/issue/${encodeURIComponent(issueKey)}`);
+  return jiraApiFetch<JiraIssueResult>(
+    `/issue/${encodeURIComponent(issueKey)}`,
+  );
 }
 
 export async function getTransitions(
@@ -107,20 +112,29 @@ export async function transitionIssue(
   issueKey: string,
   transitionId: string,
 ): Promise<void> {
-  await jiraApiFetch<void>(`/issue/${encodeURIComponent(issueKey)}/transitions`, {
-    method: "POST",
-    body: JSON.stringify({ transition: { id: transitionId } }),
-  });
+  await jiraApiFetch<void>(
+    `/issue/${encodeURIComponent(issueKey)}/transitions`,
+    {
+      method: "POST",
+      body: JSON.stringify({ transition: { id: transitionId } }),
+    },
+  );
 }
 
-export async function addComment(issueKey: string, comment: string): Promise<void> {
+export async function addComment(
+  issueKey: string,
+  comment: string,
+): Promise<void> {
   await jiraApiFetch<void>(`/issue/${encodeURIComponent(issueKey)}/comment`, {
     method: "POST",
     body: JSON.stringify({ body: comment }),
   });
 }
 
-export async function assignIssue(issueKey: string, username: string): Promise<void> {
+export async function assignIssue(
+  issueKey: string,
+  username: string,
+): Promise<void> {
   await jiraApiFetch<void>(`/issue/${encodeURIComponent(issueKey)}/assignee`, {
     method: "PUT",
     body: JSON.stringify({ name: username }),

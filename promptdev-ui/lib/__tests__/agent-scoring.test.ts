@@ -117,7 +117,12 @@ describe("agent-scoring", () => {
   describe("branch coverage – computeDuration edge cases", () => {
     it("returns null duration for IN_PROGRESS tasks without completedAt", () => {
       const tasks = [
-        makeTask({ modelId: "m1", status: "IN_PROGRESS", completedAt: undefined, updatedAt: undefined }),
+        makeTask({
+          modelId: "m1",
+          status: "IN_PROGRESS",
+          completedAt: undefined,
+          updatedAt: undefined,
+        }),
       ];
       const score = scoreModel("m1", tasks);
       // No durations -> avgDuration = 0 -> speedScore = 50
@@ -154,9 +159,7 @@ describe("agent-scoring", () => {
     });
 
     it("handles tasks with no currentIteration (avgIterations defaults)", () => {
-      const tasks = [
-        makeTask({ modelId: "m1", currentIteration: undefined }),
-      ];
+      const tasks = [makeTask({ modelId: "m1", currentIteration: undefined })];
       const score = scoreModel("m1", tasks);
       // No iterations -> avgIterations = 0 -> efficiencyScore = 50
       expect(score.avgIterations).toBe(0);

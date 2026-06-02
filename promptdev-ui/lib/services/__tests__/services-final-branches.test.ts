@@ -17,7 +17,7 @@ describe("bitbucket-service.ts branch coverage", () => {
 
   it("lines 88-95: listProjects returns empty array when response.values is undefined", async () => {
     vi.doMock("@/lib/services/bitbucket-service", async (importOriginal) => {
-      const actual = await importOriginal() as Record<string, unknown>;
+      const actual = (await importOriginal()) as Record<string, unknown>;
       return actual;
     });
 
@@ -80,10 +80,12 @@ describe("workspace-service.ts line 72 — rmSync fallback in removeGitWorktree"
   });
 
   it("removeGitWorktree uses rmSync fallback when git worktree remove fails", async () => {
-    const mockExecFileSync = vi.fn().mockImplementation((_cmd: string, args: string[]) => {
-      if (args.includes("worktree")) throw new Error("worktree failed");
-      return "";
-    });
+    const mockExecFileSync = vi
+      .fn()
+      .mockImplementation((_cmd: string, args: string[]) => {
+        if (args.includes("worktree")) throw new Error("worktree failed");
+        return "";
+      });
     const mockExistsSync = vi.fn().mockReturnValue(true);
     const mockRmSync = vi.fn();
     const mockMkdirSync = vi.fn();
@@ -150,7 +152,10 @@ describe("task-service.ts branch coverage", () => {
     vi.doMock("@/lib/db/schema", () => ({
       tasks: { id: "tasks.id" },
       taskEvents: { taskId: "taskEvents.taskId" },
-      jiraIssueOptOuts: { userId: "jiraIssueOptOuts.userId", jiraIssueKey: "jiraIssueOptOuts.jiraIssueKey" },
+      jiraIssueOptOuts: {
+        userId: "jiraIssueOptOuts.userId",
+        jiraIssueKey: "jiraIssueOptOuts.jiraIssueKey",
+      },
       users: {},
     }));
     vi.doMock("drizzle-orm", () => ({
@@ -177,7 +182,9 @@ describe("task-service.ts branch coverage", () => {
     }));
 
     const { cancelTask } = await import("@/lib/services/task-service");
-    await expect(cancelTask("t1")).rejects.toThrow("Cannot cancel task in status: COMPLETED");
+    await expect(cancelTask("t1")).rejects.toThrow(
+      "Cannot cancel task in status: COMPLETED",
+    );
   });
 
   it("line 527: cancelTask throws for CANCELLED tasks", async () => {
@@ -191,20 +198,31 @@ describe("task-service.ts branch coverage", () => {
       users: {},
     }));
     vi.doMock("drizzle-orm", () => ({
-      eq: vi.fn(), desc: vi.fn(), inArray: vi.fn(), and: vi.fn(),
-      gt: vi.fn(), not: vi.fn(), sql: vi.fn(), ilike: vi.fn(), or: vi.fn(),
+      eq: vi.fn(),
+      desc: vi.fn(),
+      inArray: vi.fn(),
+      and: vi.fn(),
+      gt: vi.fn(),
+      not: vi.fn(),
+      sql: vi.fn(),
+      ilike: vi.fn(),
+      or: vi.fn(),
     }));
     vi.doMock("@/lib/services/sse-service", () => ({
-      broadcastTaskUpdate: vi.fn(), sendTaskEvent: vi.fn(),
+      broadcastTaskUpdate: vi.fn(),
+      sendTaskEvent: vi.fn(),
     }));
     vi.doMock("@/lib/services/bitbucket-service", () => ({
-      createPullRequest: vi.fn(), getPullRequestWebUrl: vi.fn(),
+      createPullRequest: vi.fn(),
+      getPullRequestWebUrl: vi.fn(),
     }));
     vi.doMock("@/lib/services/workspace-service", () => ({
       resolveIncrementedPath: vi.fn(),
     }));
 
     const { cancelTask } = await import("@/lib/services/task-service");
-    await expect(cancelTask("t1")).rejects.toThrow("Cannot cancel task in status: CANCELLED");
+    await expect(cancelTask("t1")).rejects.toThrow(
+      "Cannot cancel task in status: CANCELLED",
+    );
   });
 });

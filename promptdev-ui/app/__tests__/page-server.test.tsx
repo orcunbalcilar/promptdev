@@ -50,9 +50,9 @@ beforeEach(() => {
   mockAdaptTask.mockImplementation((t: unknown) => t);
 });
 
-function searchParams(
-  params: Record<string, string | undefined> = {},
-): { searchParams: Promise<Record<string, string | string[] | undefined>> } {
+function searchParams(params: Record<string, string | undefined> = {}): {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+} {
   return { searchParams: Promise.resolve(params) };
 }
 

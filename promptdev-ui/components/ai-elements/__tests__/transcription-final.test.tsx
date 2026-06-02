@@ -16,7 +16,18 @@ describe("Transcription useTranscription error (line 26)", () => {
     // Since useTranscription is not exported, we test by rendering Transcription
     // with proper segments to cover the component
     const segments = [
-      { id: 0, start: 0, end: 5, text: "Hello world", seek: 0, tokens: [], temperature: 0, avgLogprob: 0, compressionRatio: 0, noSpeechProb: 0 },
+      {
+        id: 0,
+        start: 0,
+        end: 5,
+        text: "Hello world",
+        seek: 0,
+        tokens: [],
+        temperature: 0,
+        avgLogprob: 0,
+        compressionRatio: 0,
+        noSpeechProb: 0,
+      },
     ];
 
     const { container } = render(
@@ -26,7 +37,7 @@ describe("Transcription useTranscription error (line 26)", () => {
             {segment.text}
           </div>
         )}
-      </mod.Transcription>
+      </mod.Transcription>,
     );
 
     expect(container.textContent).toContain("Hello world");

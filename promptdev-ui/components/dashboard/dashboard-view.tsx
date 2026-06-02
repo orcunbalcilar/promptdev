@@ -74,17 +74,18 @@ export function DashboardView({ initialTasks }: DashboardViewProps) {
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (statusFilter !== "all") params.set("status", statusFilter);
     if (workspaceFilter !== "all") params.set("workspaceType", workspaceFilter);
-    
+
     router.push(`/?${params.toString()}`, { scroll: false });
   }, [debouncedSearch, statusFilter, workspaceFilter, router]);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["tasks", debouncedSearch, statusFilter, workspaceFilter],
-    queryFn: () => getTasks(0, 100, {
-      search: debouncedSearch,
-      status: statusFilter,
-      workspaceType: workspaceFilter
-    }),
+    queryFn: () =>
+      getTasks(0, 100, {
+        search: debouncedSearch,
+        status: statusFilter,
+        workspaceType: workspaceFilter,
+      }),
     initialData: initialTasks,
     staleTime: realtimeQueryOptions.staleTime,
     gcTime: realtimeQueryOptions.gcTime,
@@ -113,7 +114,7 @@ export function DashboardView({ initialTasks }: DashboardViewProps) {
           const action = navId
             ? { label: "View", onClick: () => router.push(`/tasks/${navId}`) }
             : undefined;
-          
+
           if (updatedTask.status === "COMPLETED")
             toast.success(`Task completed: ${title}`, { action });
           if (updatedTask.status === "FAILED")
@@ -175,7 +176,12 @@ export function DashboardView({ initialTasks }: DashboardViewProps) {
     );
   }
 
-  if (tasks.length === 0 && !searchQuery && statusFilter === "all" && workspaceFilter === "all") {
+  if (
+    tasks.length === 0 &&
+    !searchQuery &&
+    statusFilter === "all" &&
+    workspaceFilter === "all"
+  ) {
     return (
       <div className="text-center py-24 space-y-4 h-full flex flex-col items-center justify-center">
         <div className="bg-linear-to-br from-primary/10 to-primary/5 p-8 rounded-2xl w-fit mx-auto">
@@ -209,12 +215,9 @@ export function DashboardView({ initialTasks }: DashboardViewProps) {
             />
           </svg>
         </div>
-        <h2 className="text-2xl font-semibold tracking-tight">
-          No tasks yet
-        </h2>
+        <h2 className="text-2xl font-semibold tracking-tight">No tasks yet</h2>
         <p className="text-muted-foreground max-w-sm mx-auto">
-          Create your first task to get started with AI-powered
-          development.
+          Create your first task to get started with AI-powered development.
         </p>
         <div className="pt-4">
           <CreateTaskDialog />
@@ -270,10 +273,7 @@ export function DashboardView({ initialTasks }: DashboardViewProps) {
             ))}
           </SelectContent>
         </Select>
-        <Select
-          value={workspaceFilter}
-          onValueChange={setWorkspaceFilter}
-        >
+        <Select value={workspaceFilter} onValueChange={setWorkspaceFilter}>
           <SelectTrigger className="w-37.5 h-9 text-sm">
             <SelectValue placeholder="Workspace" />
           </SelectTrigger>
@@ -302,10 +302,7 @@ export function DashboardView({ initialTasks }: DashboardViewProps) {
         )}
       </div>
 
-      <KanbanBoard
-        tasks={tasks}
-        onTaskClick={handleTaskClick}
-      />
+      <KanbanBoard tasks={tasks} onTaskClick={handleTaskClick} />
     </div>
   );
 }

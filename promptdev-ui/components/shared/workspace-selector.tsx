@@ -67,7 +67,7 @@ export function WorkspaceSelector({
   setNewProjectDir,
   allowNewProject = false,
 }: Readonly<WorkspaceSelectorProps>) {
-/* v8 ignore stop */
+  /* v8 ignore stop */
   return (
     <>
       {/* Workspace Type */}

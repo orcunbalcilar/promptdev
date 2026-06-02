@@ -6,7 +6,13 @@ const mockMkdirSync = vi.hoisted(() => vi.fn());
 const mockRmSync = vi.hoisted(() => vi.fn());
 const mockReaddirSync = vi.hoisted(() => vi.fn().mockReturnValue([]));
 const mockStatSync = vi.hoisted(() =>
-  vi.fn().mockReturnValue({ size: 0, mtimeMs: Date.now(), isDirectory: () => false }),
+  vi
+    .fn()
+    .mockReturnValue({
+      size: 0,
+      mtimeMs: Date.now(),
+      isDirectory: () => false,
+    }),
 );
 const mockExecFileSync = vi.hoisted(() => vi.fn().mockReturnValue(""));
 
@@ -47,7 +53,13 @@ beforeEach(() => {
   mockMkdirSync.mockReset();
   mockRmSync.mockReset();
   mockReaddirSync.mockReset().mockReturnValue([]);
-  mockStatSync.mockReset().mockReturnValue({ size: 0, mtimeMs: Date.now(), isDirectory: () => false });
+  mockStatSync
+    .mockReset()
+    .mockReturnValue({
+      size: 0,
+      mtimeMs: Date.now(),
+      isDirectory: () => false,
+    });
   mockExecFileSync.mockReset().mockReturnValue("");
 });
 
@@ -171,11 +183,9 @@ describe("workspace-service - extended coverage", () => {
           { name: "file1.ts", isDirectory: () => false },
           { name: "subdir", isDirectory: () => true },
         ])
-        .mockReturnValueOnce([
-          { name: "file2.ts", isDirectory: () => false },
-        ]);
+        .mockReturnValueOnce([{ name: "file2.ts", isDirectory: () => false }]);
       mockStatSync
-        .mockReturnValueOnce({ size: 1024 * 1024 })     // 1MB
+        .mockReturnValueOnce({ size: 1024 * 1024 }) // 1MB
         .mockReturnValueOnce({ size: 2 * 1024 * 1024 }); // 2MB
 
       const result = getWorkspaceSizeMb("task-1");

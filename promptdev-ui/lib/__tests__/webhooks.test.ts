@@ -1,4 +1,8 @@
-import { buildWebhookPayload, shouldTriggerWebhook, ALL_WEBHOOK_EVENTS } from "@/lib/webhooks";
+import {
+  buildWebhookPayload,
+  shouldTriggerWebhook,
+  ALL_WEBHOOK_EVENTS,
+} from "@/lib/webhooks";
 import type { WebhookConfig } from "@/lib/webhooks";
 import type { Task } from "@/lib/api";
 
@@ -73,7 +77,9 @@ describe("webhooks", () => {
     });
 
     it("should not trigger when disabled", () => {
-      expect(shouldTriggerWebhook({ ...config, enabled: false }, "task.completed")).toBe(false);
+      expect(
+        shouldTriggerWebhook({ ...config, enabled: false }, "task.completed"),
+      ).toBe(false);
     });
   });
 

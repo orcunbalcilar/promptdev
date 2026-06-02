@@ -52,7 +52,11 @@ function mockFetchForSession(sessionId: string) {
     if (url.includes("/api/copilot/models")) {
       return { ok: true, json: async () => ({ models: [] }) };
     }
-    if (url.includes("/api/copilot/sessions") && !url.includes("/messages") && !url.includes("/stream")) {
+    if (
+      url.includes("/api/copilot/sessions") &&
+      !url.includes("/messages") &&
+      !url.includes("/stream")
+    ) {
       return {
         ok: true,
         json: async () => ({
@@ -76,11 +80,15 @@ function wrapper({ children }: { children: React.ReactNode }) {
 }
 
 function setupAutoConnectHook() {
-  return renderHook(() => useCopilotSession({ autoConnect: true }), { wrapper });
+  return renderHook(() => useCopilotSession({ autoConnect: true }), {
+    wrapper,
+  });
 }
 
 function setupNoConnectHook() {
-  return renderHook(() => useCopilotSession({ autoConnect: false }), { wrapper });
+  return renderHook(() => useCopilotSession({ autoConnect: false }), {
+    wrapper,
+  });
 }
 
 describe("useCopilotSession – uncovered lines", () => {

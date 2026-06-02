@@ -5,7 +5,15 @@ const mockExistsSync = vi.hoisted(() => vi.fn().mockReturnValue(false));
 const mockMkdirSync = vi.hoisted(() => vi.fn());
 const mockRmSync = vi.hoisted(() => vi.fn());
 const mockReaddirSync = vi.hoisted(() => vi.fn().mockReturnValue([]));
-const mockStatSync = vi.hoisted(() => vi.fn().mockReturnValue({ size: 0, mtimeMs: Date.now(), isDirectory: () => false }));
+const mockStatSync = vi.hoisted(() =>
+  vi
+    .fn()
+    .mockReturnValue({
+      size: 0,
+      mtimeMs: Date.now(),
+      isDirectory: () => false,
+    }),
+);
 const mockExecFileSync = vi.hoisted(() => vi.fn().mockReturnValue(""));
 
 vi.mock("node:fs", () => ({
@@ -143,18 +151,36 @@ describe("workspace-service", () => {
       mockExistsSync.mockReturnValue(false);
 
       expect(() =>
-        cloneRepository("task-1", "https://git.example.com/repo.git", "user", "token", "main"),
+        cloneRepository(
+          "task-1",
+          "https://git.example.com/repo.git",
+          "user",
+          "token",
+          "main",
+        ),
       ).toThrow("Workspace does not exist");
     });
 
     it("should clone with authenticated URL", () => {
       mockExistsSync.mockReturnValue(true);
 
-      cloneRepository("task-1", "https://git.example.com/repo.git", "user", "token", "main");
+      cloneRepository(
+        "task-1",
+        "https://git.example.com/repo.git",
+        "user",
+        "token",
+        "main",
+      );
 
       expect(mockExecFileSync).toHaveBeenCalledWith(
         "git",
-        ["clone", "--branch", "main", expect.stringContaining("user:token"), "."],
+        [
+          "clone",
+          "--branch",
+          "main",
+          expect.stringContaining("user:token"),
+          ".",
+        ],
         expect.objectContaining({ encoding: "utf-8" }),
       );
     });
@@ -168,7 +194,13 @@ describe("workspace-service", () => {
         })
         .mockReturnValue("");
 
-      cloneRepository("task-1", "https://git.example.com/repo.git", "user", "token", "feature");
+      cloneRepository(
+        "task-1",
+        "https://git.example.com/repo.git",
+        "user",
+        "token",
+        "feature",
+      );
 
       expect(mockExecFileSync).toHaveBeenCalledTimes(3);
     });
@@ -176,18 +208,28 @@ describe("workspace-service", () => {
 
   describe("buildAuthenticatedUrl", () => {
     it("should embed username and password in URL", () => {
-      const result = buildAuthenticatedUrl("https://git.example.com/repo.git", "user", "token");
+      const result = buildAuthenticatedUrl(
+        "https://git.example.com/repo.git",
+        "user",
+        "token",
+      );
       expect(result).toBe("https://user:token@git.example.com/repo.git");
     });
 
     it("should return original URL when no credentials", () => {
-      expect(buildAuthenticatedUrl("https://git.example.com/repo.git", undefined, undefined)).toBe(
-        "https://git.example.com/repo.git",
-      );
+      expect(
+        buildAuthenticatedUrl(
+          "https://git.example.com/repo.git",
+          undefined,
+          undefined,
+        ),
+      ).toBe("https://git.example.com/repo.git");
     });
 
     it("should handle invalid URLs gracefully", () => {
-      expect(buildAuthenticatedUrl("not-a-url", "user", "token")).toBe("not-a-url");
+      expect(buildAuthenticatedUrl("not-a-url", "user", "token")).toBe(
+        "not-a-url",
+      );
     });
   });
 
@@ -198,9 +240,7 @@ describe("workspace-service", () => {
     });
 
     it("should increment path when base exists", () => {
-      mockExistsSync
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(false);
+      mockExistsSync.mockReturnValueOnce(true).mockReturnValueOnce(false);
       expect(resolveIncrementedPath("/tmp/project")).toBe("/tmp/project-1");
     });
 
@@ -214,9 +254,7 @@ describe("workspace-service", () => {
     });
 
     it("should handle already-numbered paths", () => {
-      mockExistsSync
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(false);
+      mockExistsSync.mockReturnValueOnce(true).mockReturnValueOnce(false);
       expect(resolveIncrementedPath("/tmp/project-5")).toBe("/tmp/project-6");
     });
   });

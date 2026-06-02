@@ -17,7 +17,9 @@ export default function GlobalError({
     <html lang="en">
       <body>
         <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-8">
-          <h2 className="text-xl font-semibold text-red-600">Something went wrong</h2>
+          <h2 className="text-xl font-semibold text-red-600">
+            Something went wrong
+          </h2>
           <p className="text-gray-600 text-center max-w-md">{error.message}</p>
           <button
             onClick={reset}

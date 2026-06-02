@@ -1,10 +1,10 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { ResumeForm } from '../resume-form'
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ResumeForm } from "../resume-form";
 
-describe('ResumeForm', () => {
-  it('renders heading', () => {
+describe("ResumeForm", () => {
+  it("renders heading", () => {
     render(
       <ResumeForm
         resumePrompt=""
@@ -13,11 +13,11 @@ describe('ResumeForm', () => {
         onResume={vi.fn()}
         onClose={vi.fn()}
       />,
-    )
-    expect(screen.getByText('Resume Session')).toBeInTheDocument()
-  })
+    );
+    expect(screen.getByText("Resume Session")).toBeInTheDocument();
+  });
 
-  it('renders textarea with placeholder', () => {
+  it("renders textarea with placeholder", () => {
     render(
       <ResumeForm
         resumePrompt=""
@@ -26,11 +26,13 @@ describe('ResumeForm', () => {
         onResume={vi.fn()}
         onClose={vi.fn()}
       />,
-    )
-    expect(screen.getByPlaceholderText(/describe what you want/i)).toBeInTheDocument()
-  })
+    );
+    expect(
+      screen.getByPlaceholderText(/describe what you want/i),
+    ).toBeInTheDocument();
+  });
 
-  it('renders cancel and resume buttons', () => {
+  it("renders cancel and resume buttons", () => {
     render(
       <ResumeForm
         resumePrompt="fix bugs"
@@ -39,12 +41,14 @@ describe('ResumeForm', () => {
         onResume={vi.fn()}
         onClose={vi.fn()}
       />,
-    )
-    expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /resume task/i })).toBeInTheDocument()
-  })
+    );
+    expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /resume task/i }),
+    ).toBeInTheDocument();
+  });
 
-  it('disables resume button when prompt is empty', () => {
+  it("disables resume button when prompt is empty", () => {
     render(
       <ResumeForm
         resumePrompt=""
@@ -53,11 +57,11 @@ describe('ResumeForm', () => {
         onResume={vi.fn()}
         onClose={vi.fn()}
       />,
-    )
-    expect(screen.getByRole('button', { name: /resume task/i })).toBeDisabled()
-  })
+    );
+    expect(screen.getByRole("button", { name: /resume task/i })).toBeDisabled();
+  });
 
-  it('disables resume button when whitespace only', () => {
+  it("disables resume button when whitespace only", () => {
     render(
       <ResumeForm
         resumePrompt="   "
@@ -66,11 +70,11 @@ describe('ResumeForm', () => {
         onResume={vi.fn()}
         onClose={vi.fn()}
       />,
-    )
-    expect(screen.getByRole('button', { name: /resume task/i })).toBeDisabled()
-  })
+    );
+    expect(screen.getByRole("button", { name: /resume task/i })).toBeDisabled();
+  });
 
-  it('enables resume button when prompt has content', () => {
+  it("enables resume button when prompt has content", () => {
     render(
       <ResumeForm
         resumePrompt="fix the tests"
@@ -79,11 +83,13 @@ describe('ResumeForm', () => {
         onResume={vi.fn()}
         onClose={vi.fn()}
       />,
-    )
-    expect(screen.getByRole('button', { name: /resume task/i })).not.toBeDisabled()
-  })
+    );
+    expect(
+      screen.getByRole("button", { name: /resume task/i }),
+    ).not.toBeDisabled();
+  });
 
-  it('disables resume button when isResuming is true', () => {
+  it("disables resume button when isResuming is true", () => {
     render(
       <ResumeForm
         resumePrompt="fix the tests"
@@ -92,13 +98,13 @@ describe('ResumeForm', () => {
         onResume={vi.fn()}
         onClose={vi.fn()}
       />,
-    )
-    expect(screen.getByRole('button', { name: /resume task/i })).toBeDisabled()
-  })
+    );
+    expect(screen.getByRole("button", { name: /resume task/i })).toBeDisabled();
+  });
 
-  it('calls onResume when resume button clicked', async () => {
-    const user = userEvent.setup()
-    const onResume = vi.fn()
+  it("calls onResume when resume button clicked", async () => {
+    const user = userEvent.setup();
+    const onResume = vi.fn();
     render(
       <ResumeForm
         resumePrompt="improve error handling"
@@ -107,14 +113,14 @@ describe('ResumeForm', () => {
         onResume={onResume}
         onClose={vi.fn()}
       />,
-    )
-    await user.click(screen.getByRole('button', { name: /resume task/i }))
-    expect(onResume).toHaveBeenCalledOnce()
-  })
+    );
+    await user.click(screen.getByRole("button", { name: /resume task/i }));
+    expect(onResume).toHaveBeenCalledOnce();
+  });
 
-  it('calls onClose when cancel button clicked', async () => {
-    const user = userEvent.setup()
-    const onClose = vi.fn()
+  it("calls onClose when cancel button clicked", async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
     render(
       <ResumeForm
         resumePrompt=""
@@ -123,14 +129,14 @@ describe('ResumeForm', () => {
         onResume={vi.fn()}
         onClose={onClose}
       />,
-    )
-    await user.click(screen.getByRole('button', { name: /cancel/i }))
-    expect(onClose).toHaveBeenCalledOnce()
-  })
+    );
+    await user.click(screen.getByRole("button", { name: /cancel/i }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
 
-  it('calls setResumePrompt on textarea change', async () => {
-    const user = userEvent.setup()
-    const setResumePrompt = vi.fn()
+  it("calls setResumePrompt on textarea change", async () => {
+    const user = userEvent.setup();
+    const setResumePrompt = vi.fn();
     render(
       <ResumeForm
         resumePrompt=""
@@ -139,8 +145,11 @@ describe('ResumeForm', () => {
         onResume={vi.fn()}
         onClose={vi.fn()}
       />,
-    )
-    await user.type(screen.getByPlaceholderText(/describe what you want/i), 'hello')
-    expect(setResumePrompt).toHaveBeenCalled()
-  })
-})
+    );
+    await user.type(
+      screen.getByPlaceholderText(/describe what you want/i),
+      "hello",
+    );
+    expect(setResumePrompt).toHaveBeenCalled();
+  });
+});

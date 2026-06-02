@@ -19,46 +19,86 @@ vi.mock("@/components/ui/button", () => ({
 }));
 
 vi.mock("@/components/ui/command", () => ({
-  Command: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-    <div data-testid="command" {...props}>{children}</div>
+  Command: ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => (
+    <div data-testid="command" {...props}>
+      {children}
+    </div>
   ),
-  CommandDialog: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-    <div {...props}>{children}</div>
-  ),
-  CommandEmpty: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-    <div {...props}>{children}</div>
-  ),
-  CommandGroup: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-    <div {...props}>{children}</div>
-  ),
+  CommandDialog: ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => <div {...props}>{children}</div>,
+  CommandEmpty: ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => <div {...props}>{children}</div>,
+  CommandGroup: ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => <div {...props}>{children}</div>,
   CommandInput: (props: Record<string, unknown>) => (
     <input data-testid="command-input" {...props} />
   ),
-  CommandItem: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-    <div {...props}>{children}</div>
-  ),
-  CommandList: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-    <div {...props}>{children}</div>
-  ),
+  CommandItem: ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => <div {...props}>{children}</div>,
+  CommandList: ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => <div {...props}>{children}</div>,
   CommandSeparator: () => <hr />,
-  CommandShortcut: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-    <span {...props}>{children}</span>
-  ),
+  CommandShortcut: ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => <span {...props}>{children}</span>,
 }));
 
 vi.mock("@/components/ui/dialog", () => ({
   Dialog: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="dialog">{children}</div>
   ),
-  DialogContent: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-    <div {...props}>{children}</div>
-  ),
+  DialogContent: ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => <div {...props}>{children}</div>,
   DialogTitle: ({ children }: { children: React.ReactNode }) => (
     <span>{children}</span>
   ),
-  DialogTrigger: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-    <div {...props}>{children}</div>
-  ),
+  DialogTrigger: ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => <div {...props}>{children}</div>,
 }));
 
 vi.mock("@/components/ui/spinner", () => ({
@@ -141,7 +181,7 @@ describe("VoiceSelector — uncovered lines", () => {
             <VoiceSelectorItem value="nova">Nova</VoiceSelectorItem>
           </VoiceSelectorList>
         </VoiceSelectorContent>
-      </VoiceSelector>
+      </VoiceSelector>,
     );
 
     expect(screen.getByText("Select Voice")).toBeInTheDocument();
@@ -194,7 +234,7 @@ describe("VoiceSelector — uncovered lines", () => {
   // VoiceSelectorGender — custom children override icon
   it("renders custom children instead of icon", () => {
     render(
-      <VoiceSelectorGender value="male">Custom Label</VoiceSelectorGender>
+      <VoiceSelectorGender value="male">Custom Label</VoiceSelectorGender>,
     );
     expect(screen.getByText("Custom Label")).toBeInTheDocument();
     expect(screen.queryByTestId("icon-mars")).not.toBeInTheDocument();
@@ -209,7 +249,7 @@ describe("VoiceSelector — uncovered lines", () => {
         <VoiceSelectorTrigger>
           <button>Trigger</button>
         </VoiceSelectorTrigger>
-      </VoiceSelector>
+      </VoiceSelector>,
     );
 
     expect(screen.getByText("Trigger")).toBeInTheDocument();

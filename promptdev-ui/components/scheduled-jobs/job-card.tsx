@@ -79,10 +79,13 @@ export function JobCard({ job }: Readonly<{ job: ScheduledJob }>) {
   const recentHistory = history.slice(0, 3);
 
   /* v8 ignore start — pending icon and status variant for JSX */
-  const runNowIcon = runNowMutation.isPending
-    ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-    : <Play className="h-3 w-3 mr-1" />;
-  const getTaskVariant = (status: string) => STATUS_VARIANT[status] ?? "outline";
+  const runNowIcon = runNowMutation.isPending ? (
+    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+  ) : (
+    <Play className="h-3 w-3 mr-1" />
+  );
+  const getTaskVariant = (status: string) =>
+    STATUS_VARIANT[status] ?? "outline";
   /* v8 ignore stop */
 
   return (

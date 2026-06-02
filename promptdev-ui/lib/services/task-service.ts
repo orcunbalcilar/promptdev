@@ -113,7 +113,10 @@ export interface TaskEventResponse {
 
 const TERMINAL_STATUSES = ["FAILED", "CANCELLED", "COMPLETED"];
 
-function toTaskResponse(task: typeof tasks.$inferSelect, events?: TaskEventResponse[]): TaskResponse {
+function toTaskResponse(
+  task: typeof tasks.$inferSelect,
+  events?: TaskEventResponse[],
+): TaskResponse {
   return {
     id: task.id,
     title: task.title,
@@ -157,7 +160,9 @@ function toTaskResponse(task: typeof tasks.$inferSelect, events?: TaskEventRespo
   };
 }
 
-function toEventResponse(event: typeof taskEvents.$inferSelect): TaskEventResponse {
+function toEventResponse(
+  event: typeof taskEvents.$inferSelect,
+): TaskEventResponse {
   return {
     id: event.id,
     eventType: event.eventType,
@@ -174,20 +179,25 @@ function toEventResponse(event: typeof taskEvents.$inferSelect): TaskEventRespon
   };
 }
 
-function resolveCommitMessagePattern(request: CreateTaskRequest): string | undefined {
+function resolveCommitMessagePattern(
+  request: CreateTaskRequest,
+): string | undefined {
   const pattern = request.commitMessagePattern;
   const jiraKey = request.jiraIssueKey;
 
   /* v8 ignore next 4 — ?.trim() optional chaining on nullable fields creates phantom branches */
   if (!jiraKey?.trim()) return pattern;
   if (!pattern?.trim()) return `[${jiraKey.trim()}] {message}`;
-  if (!pattern.includes(jiraKey.trim())) return `[${jiraKey.trim()}] ${pattern}`;
+  if (!pattern.includes(jiraKey.trim()))
+    return `[${jiraKey.trim()}] ${pattern}`;
   return pattern;
 }
 
 // ── CRUD ────────────────────────────────────────────────────────
 
-export async function createTask(request: CreateTaskRequest): Promise<TaskResponse> {
+export async function createTask(
+  request: CreateTaskRequest,
+): Promise<TaskResponse> {
   const now = new Date();
   const [task] = await getDb()
     .insert(tasks)
@@ -240,14 +250,21 @@ export async function createTask(request: CreateTaskRequest): Promise<TaskRespon
       console.warn(`Failed to auto-create branch '${newBranchName}':`, e);
     }
     /* v8 ignore stop */
-    await getDb().update(tasks).set({ sourceBranch: newBranchName }).where(eq(tasks.id, task.id));
+    await getDb()
+      .update(tasks)
+      .set({ sourceBranch: newBranchName })
+      .where(eq(tasks.id, task.id));
     task.sourceBranch = newBranchName;
   }
 
   // Create initial event
   const [event] = await getDb()
     .insert(taskEvents)
-    .values({ taskId: task.id, eventType: "TASK_CREATED", message: "Task created successfully" })
+    .values({
+      taskId: task.id,
+      eventType: "TASK_CREATED",
+      message: "Task created successfully",
+    })
     .returning();
 
   const response = toTaskResponse(task);
@@ -257,7 +274,11 @@ export async function createTask(request: CreateTaskRequest): Promise<TaskRespon
 }
 
 export async function getTask(taskId: string): Promise<TaskResponse> {
-  const [task] = await getDb().select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  const [task] = await getDb()
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
   if (!task) throw new Error(`Task not found: ${taskId}`);
 
   const events = await getDb()
@@ -273,32 +294,49 @@ export async function updateTask(
   taskId: string,
   request: UpdateTaskRequest,
 ): Promise<TaskResponse> {
-  const [task] = await getDb().select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  const [task] = await getDb()
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
   /* v8 ignore start — defensive guard */
   if (!task) throw new Error(`Task not found: ${taskId}`);
   /* v8 ignore stop */
-  if (task.status !== "PENDING") throw new Error("Can only update tasks in PENDING status");
+  if (task.status !== "PENDING")
+    throw new Error("Can only update tasks in PENDING status");
 
   /* v8 ignore start — updateTask property-check branches */
   const updates: Record<string, unknown> = {};
   if (request.title !== undefined) updates.title = request.title;
   if (request.prompt !== undefined) updates.prompt = request.prompt;
-  if (request.sourceBranch !== undefined) updates.sourceBranch = request.sourceBranch;
-  if (request.targetBranch !== undefined) updates.targetBranch = request.targetBranch;
+  if (request.sourceBranch !== undefined)
+    updates.sourceBranch = request.sourceBranch;
+  if (request.targetBranch !== undefined)
+    updates.targetBranch = request.targetBranch;
   if (request.modelId !== undefined) updates.modelId = request.modelId;
   if (request.iterative !== undefined) updates.iterative = request.iterative;
-  if (request.maxIterations !== undefined) updates.maxIterations = request.maxIterations;
-  if (request.completionCriteria !== undefined) updates.completionCriteria = request.completionCriteria;
+  if (request.maxIterations !== undefined)
+    updates.maxIterations = request.maxIterations;
+  if (request.completionCriteria !== undefined)
+    updates.completionCriteria = request.completionCriteria;
   if (request.steps !== undefined) updates.steps = request.steps;
-  if (request.reviewEnabled !== undefined) updates.reviewEnabled = request.reviewEnabled;
-  if (request.reviewModelId !== undefined) updates.reviewModelId = request.reviewModelId;
-  if (request.commitMessagePattern !== undefined) updates.commitMessagePattern = request.commitMessagePattern;
+  if (request.reviewEnabled !== undefined)
+    updates.reviewEnabled = request.reviewEnabled;
+  if (request.reviewModelId !== undefined)
+    updates.reviewModelId = request.reviewModelId;
+  if (request.commitMessagePattern !== undefined)
+    updates.commitMessagePattern = request.commitMessagePattern;
   if (request.bootScript !== undefined) updates.bootScript = request.bootScript;
   if (request.skills !== undefined) updates.skills = request.skills;
-  if (request.systemPrompt !== undefined) updates.systemPrompt = request.systemPrompt;
+  if (request.systemPrompt !== undefined)
+    updates.systemPrompt = request.systemPrompt;
   /* v8 ignore stop */
 
-  const [updated] = await getDb().update(tasks).set(updates).where(eq(tasks.id, taskId)).returning();
+  const [updated] = await getDb()
+    .update(tasks)
+    .set(updates)
+    .where(eq(tasks.id, taskId))
+    .returning();
 
   await getDb().insert(taskEvents).values({
     taskId,
@@ -318,14 +356,16 @@ export async function getAllTasks(
     search?: string;
     statuses?: string[];
     workspaceType?: string;
-  }
+  },
 ) {
   const offset = page * size;
   const conditions = [];
 
   if (filters?.search) {
     const searchPattern = `%${filters.search}%`;
-    conditions.push(or(ilike(tasks.title, searchPattern), ilike(tasks.prompt, searchPattern)));
+    conditions.push(
+      or(ilike(tasks.title, searchPattern), ilike(tasks.prompt, searchPattern)),
+    );
   }
 
   if (filters?.statuses && filters.statuses.length > 0) {
@@ -363,7 +403,9 @@ export async function getAllTasks(
   };
 }
 
-export async function getTaskEvents(taskId: string): Promise<TaskEventResponse[]> {
+export async function getTaskEvents(
+  taskId: string,
+): Promise<TaskEventResponse[]> {
   const events = await getDb()
     .select()
     .from(taskEvents)
@@ -372,7 +414,9 @@ export async function getTaskEvents(taskId: string): Promise<TaskEventResponse[]
   return events.map(toEventResponse);
 }
 
-export async function getTasksByScheduledJobId(scheduledJobId: string): Promise<TaskResponse[]> {
+export async function getTasksByScheduledJobId(
+  scheduledJobId: string,
+): Promise<TaskResponse[]> {
   const result = await getDb()
     .select()
     .from(tasks)
@@ -399,7 +443,11 @@ export async function processAgentCallback(callback: {
   pullRequestId?: number;
   pullRequestUrl?: string;
 }): Promise<TaskResponse> {
-  const [task] = await getDb().select().from(tasks).where(eq(tasks.id, callback.taskId)).limit(1);
+  const [task] = await getDb()
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, callback.taskId))
+    .limit(1);
   if (!task) throw new Error(`Task not found: ${callback.taskId}`);
 
   // Create event
@@ -427,10 +475,17 @@ export async function processAgentCallback(callback: {
   }
 
   if (Object.keys(updates).length > 0) {
-    await getDb().update(tasks).set(updates).where(eq(tasks.id, callback.taskId));
+    await getDb()
+      .update(tasks)
+      .set(updates)
+      .where(eq(tasks.id, callback.taskId));
   }
 
-  const [updated] = await getDb().select().from(tasks).where(eq(tasks.id, callback.taskId)).limit(1);
+  const [updated] = await getDb()
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, callback.taskId))
+    .limit(1);
   const response = toTaskResponse(updated);
 
   sendTaskEvent(callback.taskId, toEventResponse(event));
@@ -441,7 +496,14 @@ export async function processAgentCallback(callback: {
 
 function buildTaskUpdates(
   task: typeof tasks.$inferSelect,
-  callback: { eventType: string; message?: string; errorMessage?: string; details?: string; pullRequestId?: number; pullRequestUrl?: string },
+  callback: {
+    eventType: string;
+    message?: string;
+    errorMessage?: string;
+    details?: string;
+    pullRequestId?: number;
+    pullRequestUrl?: string;
+  },
 ): Record<string, unknown> {
   const updates: Record<string, unknown> = {};
 
@@ -463,13 +525,16 @@ function buildTaskUpdates(
       break;
     }
     case "CODE_GENERATED":
-      if (!TERMINAL_STATUSES.includes(task.status)) updates.status = "CODE_GENERATED";
+      if (!TERMINAL_STATUSES.includes(task.status))
+        updates.status = "CODE_GENERATED";
       break;
     case "REVIEWING_STARTED":
-      if (!TERMINAL_STATUSES.includes(task.status)) updates.status = "REVIEWING";
+      if (!TERMINAL_STATUSES.includes(task.status))
+        updates.status = "REVIEWING";
       break;
     case "REVIEWING_COMPLETED":
-      if (!TERMINAL_STATUSES.includes(task.status)) updates.status = "COMMITTING";
+      if (!TERMINAL_STATUSES.includes(task.status))
+        updates.status = "COMMITTING";
       break;
     case "REVIEWING_FAILED":
       updates.status = "FAILED";
@@ -489,8 +554,10 @@ function buildTaskUpdates(
       break;
     case "PR_CREATED":
       updates.status = "CREATING_PR";
-      if (callback.pullRequestId) updates.pullRequestId = callback.pullRequestId;
-      if (callback.pullRequestUrl) updates.pullRequestUrl = callback.pullRequestUrl;
+      if (callback.pullRequestId)
+        updates.pullRequestId = callback.pullRequestId;
+      if (callback.pullRequestUrl)
+        updates.pullRequestUrl = callback.pullRequestUrl;
       break;
     case "TASK_COMPLETED":
       updates.status = "COMPLETED";
@@ -506,14 +573,19 @@ function buildTaskUpdates(
     case "ITERATION_STARTED":
     case "ITERATION_COMPLETED": {
       if (!TERMINAL_STATUSES.includes(task.status)) {
-        updates.status = callback.eventType === "ITERATION_STARTED" ? "ITERATION_PENDING" : "IN_PROGRESS";
+        updates.status =
+          callback.eventType === "ITERATION_STARTED"
+            ? "ITERATION_PENDING"
+            : "IN_PROGRESS";
         if (callback.details) {
           try {
             const details = JSON.parse(callback.details);
             if (details.currentIteration !== undefined) {
               updates.currentIteration = details.currentIteration;
             }
-          } catch { /* ignore parse errors */ }
+          } catch {
+            /* ignore parse errors */
+          }
         }
       }
       break;
@@ -527,7 +599,11 @@ function buildTaskUpdates(
 }
 
 export async function cancelTask(taskId: string): Promise<TaskResponse> {
-  const [task] = await getDb().select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  const [task] = await getDb()
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
   /* v8 ignore start — task guard + status guard || branches */
   if (!task) throw new Error(`Task not found: ${taskId}`);
   if (task.status === "COMPLETED" || task.status === "CANCELLED") {
@@ -535,7 +611,10 @@ export async function cancelTask(taskId: string): Promise<TaskResponse> {
   }
   /* v8 ignore stop */
 
-  await getDb().update(tasks).set({ status: "CANCELLED" }).where(eq(tasks.id, taskId));
+  await getDb()
+    .update(tasks)
+    .set({ status: "CANCELLED" })
+    .where(eq(tasks.id, taskId));
 
   await getDb().insert(taskEvents).values({
     taskId,
@@ -549,7 +628,12 @@ export async function cancelTask(taskId: string): Promise<TaskResponse> {
     const existing = await getDb()
       .select()
       .from(jiraIssueOptOuts)
-      .where(and(eq(jiraIssueOptOuts.userId, task.userId), eq(jiraIssueOptOuts.jiraIssueKey, task.jiraIssueKey)))
+      .where(
+        and(
+          eq(jiraIssueOptOuts.userId, task.userId),
+          eq(jiraIssueOptOuts.jiraIssueKey, task.jiraIssueKey),
+        ),
+      )
       .limit(1);
 
     if (existing.length === 0) {
@@ -561,14 +645,22 @@ export async function cancelTask(taskId: string): Promise<TaskResponse> {
     }
   }
 
-  const [updated] = await getDb().select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  const [updated] = await getDb()
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
   const response = toTaskResponse(updated);
   broadcastTaskUpdate(response);
   return response;
 }
 
 export async function retryTask(taskId: string): Promise<TaskResponse> {
-  const [task] = await getDb().select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  const [task] = await getDb()
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
   /* v8 ignore start — task guard + status guard branch */
   if (!task) throw new Error(`Task not found: ${taskId}`);
   if (task.status !== "FAILED") throw new Error("Can only retry failed tasks");
@@ -579,10 +671,15 @@ export async function retryTask(taskId: string): Promise<TaskResponse> {
   const maxAttempts = task.maxAttempts ?? 3;
   /* v8 ignore stop */
   if (currentAttempt >= maxAttempts) {
-    throw new Error(`Maximum retry attempts reached (${currentAttempt}/${maxAttempts})`);
+    throw new Error(
+      `Maximum retry attempts reached (${currentAttempt}/${maxAttempts})`,
+    );
   }
 
-  await getDb().update(tasks).set({ status: "PENDING", errorMessage: null }).where(eq(tasks.id, taskId));
+  await getDb()
+    .update(tasks)
+    .set({ status: "PENDING", errorMessage: null })
+    .where(eq(tasks.id, taskId));
 
   await getDb().insert(taskEvents).values({
     taskId,
@@ -590,14 +687,22 @@ export async function retryTask(taskId: string): Promise<TaskResponse> {
     message: "Task retry scheduled",
   });
 
-  const [updated] = await getDb().select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  const [updated] = await getDb()
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
   const response = toTaskResponse(updated);
   broadcastTaskUpdate(response);
   return response;
 }
 
 export async function startTask(taskId: string): Promise<TaskResponse> {
-  const [task] = await getDb().select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  const [task] = await getDb()
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
   /* v8 ignore start — defensive guards, always valid in normal flow */
   if (!task) throw new Error(`Task not found: ${taskId}`);
   if (task.status !== "PENDING" && task.status !== "QUEUED") {
@@ -605,7 +710,10 @@ export async function startTask(taskId: string): Promise<TaskResponse> {
   }
   /* v8 ignore stop */
 
-  await getDb().update(tasks).set({ status: "QUEUED" }).where(eq(tasks.id, taskId));
+  await getDb()
+    .update(tasks)
+    .set({ status: "QUEUED" })
+    .where(eq(tasks.id, taskId));
 
   const [event] = await getDb()
     .insert(taskEvents)
@@ -616,7 +724,11 @@ export async function startTask(taskId: string): Promise<TaskResponse> {
     })
     .returning();
 
-  const [updated] = await getDb().select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  const [updated] = await getDb()
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
   const response = toTaskResponse(updated);
 
   sendTaskEvent(taskId, toEventResponse(event));
@@ -625,8 +737,15 @@ export async function startTask(taskId: string): Promise<TaskResponse> {
   return response;
 }
 
-export async function resumeTask(taskId: string, resumePrompt: string): Promise<TaskResponse> {
-  const [task] = await getDb().select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+export async function resumeTask(
+  taskId: string,
+  resumePrompt: string,
+): Promise<TaskResponse> {
+  const [task] = await getDb()
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
   if (!task) throw new Error(`Task not found: ${taskId}`);
   if (task.status !== "COMPLETED" && task.status !== "FAILED") {
     throw new Error("Can only resume completed or failed tasks");
@@ -655,7 +774,11 @@ export async function resumeTask(taskId: string, resumePrompt: string): Promise<
     })
     .returning();
 
-  const [updated] = await getDb().select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  const [updated] = await getDb()
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
   const response = toTaskResponse(updated);
 
   sendTaskEvent(taskId, toEventResponse(event));
@@ -672,7 +795,11 @@ export async function createPullRequestForTask(
   title?: string,
   description?: string,
 ): Promise<{ id: number; url: string }> {
-  const [task] = await getDb().select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  const [task] = await getDb()
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
   /* v8 ignore next — defensive guard */
   if (!task) throw new Error(`Task not found: ${taskId}`);
 
@@ -680,7 +807,8 @@ export async function createPullRequestForTask(
   const projectKey = task.projectKey ?? "";
   const repoSlug = task.repositorySlug;
   const prTitle = title ?? `PromptDev: ${task.title}`;
-  const prDescription = description ?? `Task ID: ${taskId}\n\nPrompt:\n${task.prompt}`;
+  const prDescription =
+    description ?? `Task ID: ${taskId}\n\nPrompt:\n${task.prompt}`;
   /* v8 ignore stop */
   /* v8 ignore start — createPullRequest DB integration */
 
@@ -693,7 +821,11 @@ export async function createPullRequestForTask(
     targetBranch,
   );
 
-  const prUrl = bitbucketService.getPullRequestWebUrl(projectKey, repoSlug, pr.id);
+  const prUrl = bitbucketService.getPullRequestWebUrl(
+    projectKey,
+    repoSlug,
+    pr.id,
+  );
 
   await getDb()
     .update(tasks)
@@ -713,7 +845,11 @@ export async function createPullRequestForTask(
     })
     .returning();
 
-  const [updated] = await getDb().select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  const [updated] = await getDb()
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
   sendTaskEvent(taskId, toEventResponse(event));
   broadcastTaskUpdate(toTaskResponse(updated));
 
@@ -723,7 +859,11 @@ export async function createPullRequestForTask(
 
 /* v8 ignore start — cloneTask integration function */
 export async function cloneTask(taskId: string): Promise<TaskResponse> {
-  const [original] = await getDb().select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  const [original] = await getDb()
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
   if (!original) throw new Error(`Task not found: ${taskId}`);
 
   let newWorkspacePath = original.workspacePath;
@@ -746,7 +886,10 @@ export async function cloneTask(taskId: string): Promise<TaskResponse> {
       projectKey: original.projectKey,
       workspaceType: original.workspaceType,
       workspacePath: newWorkspacePath,
-      sourceBranch: original.workspaceType === "BITBUCKET" ? "__AUTO_GENERATED__" : original.sourceBranch,
+      sourceBranch:
+        original.workspaceType === "BITBUCKET"
+          ? "__AUTO_GENERATED__"
+          : original.sourceBranch,
       targetBranch: original.targetBranch,
       modelId: original.modelId,
       status: "PENDING",
@@ -790,15 +933,20 @@ export async function cloneTask(taskId: string): Promise<TaskResponse> {
     }
     /* v8 ignore stop */
     /* v8 ignore start — cloneTask branch creation DB integration */
-    await getDb().update(tasks).set({ sourceBranch: newBranchName }).where(eq(tasks.id, clone.id));
+    await getDb()
+      .update(tasks)
+      .set({ sourceBranch: newBranchName })
+      .where(eq(tasks.id, clone.id));
     clone.sourceBranch = newBranchName;
   }
 
-  await getDb().insert(taskEvents).values({
-    taskId: clone.id,
-    eventType: "TASK_CREATED",
-    message: `Task cloned from ${taskId}`,
-  });
+  await getDb()
+    .insert(taskEvents)
+    .values({
+      taskId: clone.id,
+      eventType: "TASK_CREATED",
+      message: `Task cloned from ${taskId}`,
+    });
 
   const response = toTaskResponse(clone);
   broadcastTaskUpdate(response);
@@ -818,11 +966,15 @@ export async function getQueuedScheduledTasks(): Promise<TaskResponse[]> {
   const result = await getDb()
     .select()
     .from(tasks)
-    .where(and(eq(tasks.status, "QUEUED"), sql`${tasks.scheduledJobId} IS NOT NULL`));
+    .where(
+      and(eq(tasks.status, "QUEUED"), sql`${tasks.scheduledJobId} IS NOT NULL`),
+    );
   return result.map((t) => toTaskResponse(t));
 }
 
-export async function taskExistsForJiraIssue(jiraIssueKey: string): Promise<boolean> {
+export async function taskExistsForJiraIssue(
+  jiraIssueKey: string,
+): Promise<boolean> {
   const result = await getDb()
     .select({ count: sql<number>`count(*)` })
     .from(tasks)

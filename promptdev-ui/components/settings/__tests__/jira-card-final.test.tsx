@@ -5,9 +5,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Mock ResizeObserver for Radix UI
 globalThis.ResizeObserver = class ResizeObserver {
-  observe() { /* noop */ }
-  unobserve() { /* noop */ }
-  disconnect() { /* noop */ }
+  observe() {
+    /* noop */
+  }
+  unobserve() {
+    /* noop */
+  }
+  disconnect() {
+    /* noop */
+  }
 } as unknown as typeof ResizeObserver;
 
 vi.mock("@/lib/user", () => ({
@@ -63,7 +69,9 @@ describe("JiraCard", () => {
     // Line 125: autoTaskEnabled && renders the auto-task configuration grid
     renderWithQuery(<JiraCard userId="u1" profile={baseProfile} />);
     expect(screen.getByText("Jira Server Configuration")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("https://jira.example.com")).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue("https://jira.example.com"),
+    ).toBeInTheDocument();
     expect(screen.getByDisplayValue("PROJ")).toBeInTheDocument();
     expect(screen.getByText("Auto-Task Creation")).toBeInTheDocument();
     // Auto-task fields visible when enabled
@@ -80,12 +88,15 @@ describe("JiraCard", () => {
     });
     await userEvent.click(saveButtons[0]);
 
-    expect(mockedUpdate).toHaveBeenCalledWith("u1", expect.objectContaining({
-      jiraUrl: "https://jira.example.com",
-      jiraProjectKey: "PROJ",
-      jiraUsername: "user1",
-      jiraAutoTaskEnabled: true,
-    }));
+    expect(mockedUpdate).toHaveBeenCalledWith(
+      "u1",
+      expect.objectContaining({
+        jiraUrl: "https://jira.example.com",
+        jiraProjectKey: "PROJ",
+        jiraUsername: "user1",
+        jiraAutoTaskEnabled: true,
+      }),
+    );
   });
 
   it("hides auto-task section when autoTaskEnabled is false (branch: !autoTaskEnabled)", () => {

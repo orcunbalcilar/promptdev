@@ -28,7 +28,7 @@ export interface TaskGraph {
 export function buildTaskGraph(tasks: Task[]): TaskGraph {
   const nodes: TaskNode[] = [];
   const edges: TaskEdge[] = [];
-  
+
   // Group tasks by repository
   const byRepo = new Map<string, Task[]>();
   for (const task of tasks) {
@@ -40,7 +40,8 @@ export function buildTaskGraph(tasks: Task[]): TaskGraph {
   let level = 0;
   for (const [, repoTasks] of byRepo) {
     const sorted = [...repoTasks].sort(
-      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
 
     for (let i = 0; i < sorted.length; i++) {

@@ -72,9 +72,7 @@ describe("TaskRefineForm", () => {
     expect(
       screen.getByRole("button", { name: /Start Task/i }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Refine/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Refine/i })).toBeInTheDocument();
   });
 
   it("switches to editing mode and shows iterative input (line 184)", async () => {
@@ -85,9 +83,7 @@ describe("TaskRefineForm", () => {
     await userEvent.click(screen.getByRole("button", { name: /Refine/i }));
 
     // Now in editing mode
-    expect(
-      screen.getByText("Refine Task Before Starting"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Refine Task Before Starting")).toBeInTheDocument();
     expect(screen.getByLabelText("Title")).toBeInTheDocument();
 
     // Toggle iterative switch
@@ -102,9 +98,7 @@ describe("TaskRefineForm", () => {
     mockedStartTask.mockResolvedValue({} as Task);
     renderWithQuery(<TaskRefineForm task={mockTask} onStarted={onStarted} />);
 
-    await userEvent.click(
-      screen.getByRole("button", { name: /Start Task/i }),
-    );
+    await userEvent.click(screen.getByRole("button", { name: /Start Task/i }));
 
     await waitFor(() => {
       expect(mockedStartTask).toHaveBeenCalledWith("t1");
@@ -125,9 +119,7 @@ describe("TaskRefineForm", () => {
     mockedStartTask.mockRejectedValue(new Error("Start failed"));
     renderWithQuery(<TaskRefineForm task={mockTask} onStarted={onStarted} />);
 
-    await userEvent.click(
-      screen.getByRole("button", { name: /Start Task/i }),
-    );
+    await userEvent.click(screen.getByRole("button", { name: /Start Task/i }));
 
     await waitFor(() => {
       expect(showErrorToast).toHaveBeenCalledWith(

@@ -8,38 +8,45 @@
 // ── Task Templates ─────────────────────────────────────────────────
 
 export interface SDLCTemplate {
-  id: string
-  name: string
-  description: string
-  category: SDLCCategory
-  icon: string
-  promptTemplate: string
-  systemMessage: string
-  reasoningEffort: 'low' | 'medium' | 'high' | 'xhigh'
-  estimatedDuration: string
-  tags: string[]
+  id: string;
+  name: string;
+  description: string;
+  category: SDLCCategory;
+  icon: string;
+  promptTemplate: string;
+  systemMessage: string;
+  reasoningEffort: "low" | "medium" | "high" | "xhigh";
+  estimatedDuration: string;
+  tags: string[];
 }
 
 export type SDLCCategory =
-  | 'feature'
-  | 'bugfix'
-  | 'refactor'
-  | 'testing'
-  | 'review'
-  | 'documentation'
-  | 'security'
-  | 'performance'
+  | "feature"
+  | "bugfix"
+  | "refactor"
+  | "testing"
+  | "review"
+  | "documentation"
+  | "security"
+  | "performance";
 
-export const SDLC_CATEGORIES: Record<SDLCCategory, { label: string; icon: string; color: string }> = {
-  feature: { label: 'Feature Development', icon: '✨', color: 'text-green-600' },
-  bugfix: { label: 'Bug Fix', icon: '🐛', color: 'text-red-600' },
-  refactor: { label: 'Refactoring', icon: '🔄', color: 'text-blue-600' },
-  testing: { label: 'Testing', icon: '🧪', color: 'text-purple-600' },
-  review: { label: 'Code Review', icon: '👀', color: 'text-amber-600' },
-  documentation: { label: 'Documentation', icon: '📝', color: 'text-cyan-600' },
-  security: { label: 'Security Audit', icon: '🔒', color: 'text-orange-600' },
-  performance: { label: 'Performance', icon: '⚡', color: 'text-yellow-600' },
-}
+export const SDLC_CATEGORIES: Record<
+  SDLCCategory,
+  { label: string; icon: string; color: string }
+> = {
+  feature: {
+    label: "Feature Development",
+    icon: "✨",
+    color: "text-green-600",
+  },
+  bugfix: { label: "Bug Fix", icon: "🐛", color: "text-red-600" },
+  refactor: { label: "Refactoring", icon: "🔄", color: "text-blue-600" },
+  testing: { label: "Testing", icon: "🧪", color: "text-purple-600" },
+  review: { label: "Code Review", icon: "👀", color: "text-amber-600" },
+  documentation: { label: "Documentation", icon: "📝", color: "text-cyan-600" },
+  security: { label: "Security Audit", icon: "🔒", color: "text-orange-600" },
+  performance: { label: "Performance", icon: "⚡", color: "text-yellow-600" },
+};
 
 // ── System Prompts (declared before templates) ───────────────────
 
@@ -185,155 +192,167 @@ Common optimizations:
 - Optimize images and assets
 - Implement lazy loading
 - Use Web Workers for CPU-intensive operations`,
-}
+};
 
 export const SDLC_TEMPLATES: SDLCTemplate[] = [
   // ── Feature Development ──────────────────────────────────────
   {
-    id: 'feature-implement',
-    name: 'Implement Feature',
-    description: 'Build a new feature end-to-end with proper architecture',
-    category: 'feature',
-    icon: '✨',
-    promptTemplate: 'Implement the following feature in repository {{repo}}:\n\n{{description}}\n\nRequirements:\n- Follow existing code patterns and conventions\n- Add proper error handling\n- Include tests for all new code\n- Update documentation as needed',
+    id: "feature-implement",
+    name: "Implement Feature",
+    description: "Build a new feature end-to-end with proper architecture",
+    category: "feature",
+    icon: "✨",
+    promptTemplate:
+      "Implement the following feature in repository {{repo}}:\n\n{{description}}\n\nRequirements:\n- Follow existing code patterns and conventions\n- Add proper error handling\n- Include tests for all new code\n- Update documentation as needed",
     systemMessage: SYSTEM_PROMPTS.featureDevelopment,
-    reasoningEffort: 'high',
-    estimatedDuration: '15-45 min',
-    tags: ['feature', 'implementation', 'full-stack'],
+    reasoningEffort: "high",
+    estimatedDuration: "15-45 min",
+    tags: ["feature", "implementation", "full-stack"],
   },
   {
-    id: 'feature-api-endpoint',
-    name: 'Add API Endpoint',
-    description: 'Create a new REST API endpoint with validation and tests',
-    category: 'feature',
-    icon: '🔌',
-    promptTemplate: 'Create a new API endpoint in {{repo}}:\n\nEndpoint: {{method}} {{path}}\nDescription: {{description}}\n\nRequirements:\n- Input validation\n- Proper error responses\n- Unit tests\n- API documentation',
+    id: "feature-api-endpoint",
+    name: "Add API Endpoint",
+    description: "Create a new REST API endpoint with validation and tests",
+    category: "feature",
+    icon: "🔌",
+    promptTemplate:
+      "Create a new API endpoint in {{repo}}:\n\nEndpoint: {{method}} {{path}}\nDescription: {{description}}\n\nRequirements:\n- Input validation\n- Proper error responses\n- Unit tests\n- API documentation",
     systemMessage: SYSTEM_PROMPTS.apiDevelopment,
-    reasoningEffort: 'medium',
-    estimatedDuration: '10-20 min',
-    tags: ['api', 'endpoint', 'rest'],
+    reasoningEffort: "medium",
+    estimatedDuration: "10-20 min",
+    tags: ["api", "endpoint", "rest"],
   },
 
   // ── Bug Fixes ────────────────────────────────────────────────
   {
-    id: 'bugfix-investigate',
-    name: 'Investigate & Fix Bug',
-    description: 'Investigate a bug, find root cause, and implement fix',
-    category: 'bugfix',
-    icon: '🐛',
-    promptTemplate: 'Investigate and fix the following bug in {{repo}}:\n\nBug Description: {{description}}\n\nSteps to Reproduce:\n{{steps}}\n\nExpected Behavior: {{expected}}\nActual Behavior: {{actual}}',
+    id: "bugfix-investigate",
+    name: "Investigate & Fix Bug",
+    description: "Investigate a bug, find root cause, and implement fix",
+    category: "bugfix",
+    icon: "🐛",
+    promptTemplate:
+      "Investigate and fix the following bug in {{repo}}:\n\nBug Description: {{description}}\n\nSteps to Reproduce:\n{{steps}}\n\nExpected Behavior: {{expected}}\nActual Behavior: {{actual}}",
     systemMessage: SYSTEM_PROMPTS.bugFix,
-    reasoningEffort: 'high',
-    estimatedDuration: '10-30 min',
-    tags: ['bug', 'fix', 'debug'],
+    reasoningEffort: "high",
+    estimatedDuration: "10-30 min",
+    tags: ["bug", "fix", "debug"],
   },
 
   // ── Refactoring ──────────────────────────────────────────────
   {
-    id: 'refactor-component',
-    name: 'Refactor Component',
-    description: 'Refactor a component for better readability and maintainability',
-    category: 'refactor',
-    icon: '🔄',
-    promptTemplate: 'Refactor the following in {{repo}}:\n\nTarget: {{target}}\nGoals:\n- {{goals}}\n\nConstraints:\n- Maintain existing behavior (no functional changes)\n- Keep backward compatibility\n- Improve test coverage if needed',
+    id: "refactor-component",
+    name: "Refactor Component",
+    description:
+      "Refactor a component for better readability and maintainability",
+    category: "refactor",
+    icon: "🔄",
+    promptTemplate:
+      "Refactor the following in {{repo}}:\n\nTarget: {{target}}\nGoals:\n- {{goals}}\n\nConstraints:\n- Maintain existing behavior (no functional changes)\n- Keep backward compatibility\n- Improve test coverage if needed",
     systemMessage: SYSTEM_PROMPTS.refactoring,
-    reasoningEffort: 'high',
-    estimatedDuration: '10-25 min',
-    tags: ['refactor', 'clean-code', 'maintainability'],
+    reasoningEffort: "high",
+    estimatedDuration: "10-25 min",
+    tags: ["refactor", "clean-code", "maintainability"],
   },
   {
-    id: 'refactor-performance',
-    name: 'Performance Optimization',
-    description: 'Optimize code for better performance',
-    category: 'performance',
-    icon: '⚡',
-    promptTemplate: 'Optimize performance in {{repo}}:\n\nTarget: {{target}}\nCurrent Issue: {{issue}}\n\nFocus Areas:\n- Reduce unnecessary re-renders\n- Optimize data fetching\n- Minimize bundle size\n- Improve load times',
+    id: "refactor-performance",
+    name: "Performance Optimization",
+    description: "Optimize code for better performance",
+    category: "performance",
+    icon: "⚡",
+    promptTemplate:
+      "Optimize performance in {{repo}}:\n\nTarget: {{target}}\nCurrent Issue: {{issue}}\n\nFocus Areas:\n- Reduce unnecessary re-renders\n- Optimize data fetching\n- Minimize bundle size\n- Improve load times",
     systemMessage: SYSTEM_PROMPTS.performance,
-    reasoningEffort: 'high',
-    estimatedDuration: '15-30 min',
-    tags: ['performance', 'optimization', 'speed'],
+    reasoningEffort: "high",
+    estimatedDuration: "15-30 min",
+    tags: ["performance", "optimization", "speed"],
   },
 
   // ── Testing ──────────────────────────────────────────────────
   {
-    id: 'testing-unit',
-    name: 'Generate Unit Tests',
-    description: 'Generate comprehensive unit tests for existing code',
-    category: 'testing',
-    icon: '🧪',
-    promptTemplate: 'Generate unit tests for {{target}} in {{repo}}:\n\nCover:\n- Happy path scenarios\n- Edge cases and boundary values\n- Error handling paths\n- Input validation\n\nUse the existing testing framework and patterns in the project.',
+    id: "testing-unit",
+    name: "Generate Unit Tests",
+    description: "Generate comprehensive unit tests for existing code",
+    category: "testing",
+    icon: "🧪",
+    promptTemplate:
+      "Generate unit tests for {{target}} in {{repo}}:\n\nCover:\n- Happy path scenarios\n- Edge cases and boundary values\n- Error handling paths\n- Input validation\n\nUse the existing testing framework and patterns in the project.",
     systemMessage: SYSTEM_PROMPTS.testing,
-    reasoningEffort: 'medium',
-    estimatedDuration: '10-20 min',
-    tags: ['testing', 'unit-tests', 'coverage'],
+    reasoningEffort: "medium",
+    estimatedDuration: "10-20 min",
+    tags: ["testing", "unit-tests", "coverage"],
   },
   {
-    id: 'testing-integration',
-    name: 'Add Integration Tests',
-    description: 'Create integration tests for API endpoints or workflows',
-    category: 'testing',
-    icon: '🔗',
-    promptTemplate: 'Create integration tests for {{target}} in {{repo}}:\n\nTest Scenarios:\n{{scenarios}}\n\nInclude:\n- Setup and teardown\n- Database/API mocking where needed\n- Assertion of side effects\n- Error scenario coverage',
+    id: "testing-integration",
+    name: "Add Integration Tests",
+    description: "Create integration tests for API endpoints or workflows",
+    category: "testing",
+    icon: "🔗",
+    promptTemplate:
+      "Create integration tests for {{target}} in {{repo}}:\n\nTest Scenarios:\n{{scenarios}}\n\nInclude:\n- Setup and teardown\n- Database/API mocking where needed\n- Assertion of side effects\n- Error scenario coverage",
     systemMessage: SYSTEM_PROMPTS.testing,
-    reasoningEffort: 'medium',
-    estimatedDuration: '15-25 min',
-    tags: ['testing', 'integration', 'e2e'],
+    reasoningEffort: "medium",
+    estimatedDuration: "15-25 min",
+    tags: ["testing", "integration", "e2e"],
   },
 
   // ── Code Review ──────────────────────────────────────────────
   {
-    id: 'review-code',
-    name: 'Code Review',
-    description: 'Perform a thorough code review with actionable feedback',
-    category: 'review',
-    icon: '👀',
-    promptTemplate: 'Perform a thorough code review of {{target}} in {{repo}}:\n\nReview Criteria:\n- Code quality and readability\n- Performance implications\n- Security concerns\n- Error handling completeness\n- Test coverage\n- Documentation quality\n\nProvide specific, actionable feedback with code suggestions.',
+    id: "review-code",
+    name: "Code Review",
+    description: "Perform a thorough code review with actionable feedback",
+    category: "review",
+    icon: "👀",
+    promptTemplate:
+      "Perform a thorough code review of {{target}} in {{repo}}:\n\nReview Criteria:\n- Code quality and readability\n- Performance implications\n- Security concerns\n- Error handling completeness\n- Test coverage\n- Documentation quality\n\nProvide specific, actionable feedback with code suggestions.",
     systemMessage: SYSTEM_PROMPTS.codeReview,
-    reasoningEffort: 'xhigh',
-    estimatedDuration: '5-15 min',
-    tags: ['review', 'quality', 'feedback'],
+    reasoningEffort: "xhigh",
+    estimatedDuration: "5-15 min",
+    tags: ["review", "quality", "feedback"],
   },
 
   // ── Documentation ────────────────────────────────────────────
   {
-    id: 'docs-api',
-    name: 'Generate API Docs',
-    description: 'Generate API documentation from code',
-    category: 'documentation',
-    icon: '📝',
-    promptTemplate: 'Generate comprehensive API documentation for {{target}} in {{repo}}:\n\nInclude:\n- Endpoint descriptions\n- Request/response schemas\n- Example requests and responses\n- Error codes and their meanings\n- Authentication requirements',
+    id: "docs-api",
+    name: "Generate API Docs",
+    description: "Generate API documentation from code",
+    category: "documentation",
+    icon: "📝",
+    promptTemplate:
+      "Generate comprehensive API documentation for {{target}} in {{repo}}:\n\nInclude:\n- Endpoint descriptions\n- Request/response schemas\n- Example requests and responses\n- Error codes and their meanings\n- Authentication requirements",
     systemMessage: SYSTEM_PROMPTS.documentation,
-    reasoningEffort: 'medium',
-    estimatedDuration: '10-20 min',
-    tags: ['documentation', 'api-docs', 'openapi'],
+    reasoningEffort: "medium",
+    estimatedDuration: "10-20 min",
+    tags: ["documentation", "api-docs", "openapi"],
   },
   {
-    id: 'docs-readme',
-    name: 'Update README',
-    description: 'Update or create README with setup and usage instructions',
-    category: 'documentation',
-    icon: '📄',
-    promptTemplate: 'Update the README for {{repo}}:\n\nInclude:\n- Project description\n- Setup instructions (prerequisites, installation, configuration)\n- Usage examples\n- API reference (if applicable)\n- Contributing guidelines\n- License information',
+    id: "docs-readme",
+    name: "Update README",
+    description: "Update or create README with setup and usage instructions",
+    category: "documentation",
+    icon: "📄",
+    promptTemplate:
+      "Update the README for {{repo}}:\n\nInclude:\n- Project description\n- Setup instructions (prerequisites, installation, configuration)\n- Usage examples\n- API reference (if applicable)\n- Contributing guidelines\n- License information",
     systemMessage: SYSTEM_PROMPTS.documentation,
-    reasoningEffort: 'low',
-    estimatedDuration: '5-10 min',
-    tags: ['documentation', 'readme', 'setup'],
+    reasoningEffort: "low",
+    estimatedDuration: "5-10 min",
+    tags: ["documentation", "readme", "setup"],
   },
 
   // ── Security ─────────────────────────────────────────────────
   {
-    id: 'security-audit',
-    name: 'Security Audit',
-    description: 'Perform a security audit and fix vulnerabilities',
-    category: 'security',
-    icon: '🔒',
-    promptTemplate: 'Perform a security audit of {{target}} in {{repo}}:\n\nCheck for:\n- Injection vulnerabilities (SQL, XSS, command)\n- Authentication/authorization issues\n- Sensitive data exposure\n- Insecure dependencies\n- CSRF protection\n- Input validation gaps\n\nProvide fixes for any issues found.',
+    id: "security-audit",
+    name: "Security Audit",
+    description: "Perform a security audit and fix vulnerabilities",
+    category: "security",
+    icon: "🔒",
+    promptTemplate:
+      "Perform a security audit of {{target}} in {{repo}}:\n\nCheck for:\n- Injection vulnerabilities (SQL, XSS, command)\n- Authentication/authorization issues\n- Sensitive data exposure\n- Insecure dependencies\n- CSRF protection\n- Input validation gaps\n\nProvide fixes for any issues found.",
     systemMessage: SYSTEM_PROMPTS.security,
-    reasoningEffort: 'xhigh',
-    estimatedDuration: '10-25 min',
-    tags: ['security', 'audit', 'vulnerabilities'],
+    reasoningEffort: "xhigh",
+    estimatedDuration: "10-25 min",
+    tags: ["security", "audit", "vulnerabilities"],
   },
-]
+];
 
 // ── Template helpers ───────────────────────────────────────────────
 
@@ -344,19 +363,22 @@ export function fillTemplate(
   template: string,
   variables: Record<string, string>,
 ): string {
-  return template.replaceAll(/\{\{(\w+)\}\}/g, (_, key) => variables[key] ?? `{{${key}}}`)
+  return template.replaceAll(
+    /\{\{(\w+)\}\}/g,
+    (_, key) => variables[key] ?? `{{${key}}}`,
+  );
 }
 
 /**
  * Get templates by category.
  */
 export function getTemplatesByCategory(category: SDLCCategory): SDLCTemplate[] {
-  return SDLC_TEMPLATES.filter(t => t.category === category)
+  return SDLC_TEMPLATES.filter((t) => t.category === category);
 }
 
 /**
  * Get template by ID.
  */
 export function getTemplateById(id: string): SDLCTemplate | undefined {
-  return SDLC_TEMPLATES.find(t => t.id === id)
+  return SDLC_TEMPLATES.find((t) => t.id === id);
 }

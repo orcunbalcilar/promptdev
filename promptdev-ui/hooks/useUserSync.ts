@@ -15,7 +15,11 @@ import { syncUser, getUserProfile, type UserProfile } from "@/lib/user";
 export function useUserSync() {
   const { data: session, status } = useSession();
 
-  const { data: syncedUser, isLoading, error } = useQuery<UserProfile>({
+  const {
+    data: syncedUser,
+    isLoading,
+    error,
+  } = useQuery<UserProfile>({
     queryKey: ["userSync", session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) {
@@ -28,7 +32,10 @@ export function useUserSync() {
       /* v8 ignore start -- always truthy after null check on line 22 */
       const userId = session.user.id || "";
       /* v8 ignore stop */
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          userId,
+        );
 
       if (isUuid) {
         try {
@@ -41,7 +48,7 @@ export function useUserSync() {
 
       // Extract OAuth provider info from session
       const sessionWithProvider = session as typeof session & {
-        user?: typeof session.user & { provider?: string }
+        user?: typeof session.user & { provider?: string };
       };
       /* v8 ignore start -- defensive fallbacks for always-present session fields */
       const provider = sessionWithProvider.user?.provider || "github";
@@ -74,7 +81,8 @@ export function useUserSync() {
   return {
     userId: syncedUser?.id,
     profile: syncedUser,
-    isLoading: status === "loading" || (status === "authenticated" && isLoading),
+    isLoading:
+      status === "loading" || (status === "authenticated" && isLoading),
     error,
     isAuthenticated: status === "authenticated",
   };

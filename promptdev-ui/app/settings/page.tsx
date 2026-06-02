@@ -36,7 +36,11 @@ export default function SettingsPage() {
     error: userSyncError,
   } = useUserSync();
 
-  const { data: profile, isLoading, error: profileError } = useQuery({
+  const {
+    data: profile,
+    isLoading,
+    error: profileError,
+  } = useQuery({
     queryKey: ["userProfile", userId],
     queryFn: () => getUserProfile(userId!),
     enabled: !!userId,

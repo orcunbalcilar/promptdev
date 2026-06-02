@@ -130,7 +130,9 @@ const STATUS_BORDER: Partial<Record<TaskStatus, string>> = {
 export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
   /* v8 ignore start -- task.status always exists in statusConfig; pop() always returns on non-empty split */
   const config = statusConfig[task.status] ?? statusConfig.PENDING;
-  const modelDisplayName = task.modelId ? (task.modelId.split('/').pop() ?? task.modelId) : undefined;
+  const modelDisplayName = task.modelId
+    ? (task.modelId.split("/").pop() ?? task.modelId)
+    : undefined;
   /* v8 ignore stop */
   const StatusIcon = config.icon;
   const isAnimating = [
@@ -160,7 +162,10 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
           </CardTitle>
           <Badge
             variant={config.variant}
-            className={cn("shrink-0 flex gap-1 text-[10px] h-5", config.className)}
+            className={cn(
+              "shrink-0 flex gap-1 text-[10px] h-5",
+              config.className,
+            )}
           >
             <StatusIcon
               className={cn("h-3 w-3", isAnimating && "animate-spin")}
@@ -199,7 +204,10 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
             </Badge>
           )}
           {task.modelId && (
-            <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 gap-0.5 max-w-20 truncate">
+            <Badge
+              variant="outline"
+              className="text-[9px] px-1 py-0 h-4 gap-0.5 max-w-20 truncate"
+            >
               <Bot className="h-2 w-2 shrink-0" />
               <span className="truncate">{modelDisplayName}</span>
             </Badge>
@@ -218,21 +226,30 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
               <GitPullRequest className="h-3 w-3" />
             </a>
           )}
-          {(task.completedAt ?? (task.updatedAt && ['FAILED', 'CANCELLED'].includes(task.status))) && task.createdAt && (
-            <span className="flex items-center gap-0.5 tabular-nums" title="Duration">
-              <Clock className="h-2.5 w-2.5" />
-              {(() => {
-                const endTime = task.completedAt ?? task.updatedAt;
-                const ms = new Date(endTime).getTime() - new Date(task.createdAt).getTime();
-                const mins = Math.floor(ms / 60000);
-                const secs = Math.floor((ms % 60000) / 1000);
-                return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-              })()}
-            </span>
-          )}
-          {!task.completedAt && ['IN_PROGRESS', 'REVIEWING', 'TRIAGING', 'VALIDATING'].includes(task.status) && (
-            <span className="live-dot" title="Running" />
-          )}
+          {(task.completedAt ??
+            (task.updatedAt &&
+              ["FAILED", "CANCELLED"].includes(task.status))) &&
+            task.createdAt && (
+              <span
+                className="flex items-center gap-0.5 tabular-nums"
+                title="Duration"
+              >
+                <Clock className="h-2.5 w-2.5" />
+                {(() => {
+                  const endTime = task.completedAt ?? task.updatedAt;
+                  const ms =
+                    new Date(endTime).getTime() -
+                    new Date(task.createdAt).getTime();
+                  const mins = Math.floor(ms / 60000);
+                  const secs = Math.floor((ms % 60000) / 1000);
+                  return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+                })()}
+              </span>
+            )}
+          {!task.completedAt &&
+            ["IN_PROGRESS", "REVIEWING", "TRIAGING", "VALIDATING"].includes(
+              task.status,
+            ) && <span className="live-dot" title="Running" />}
           <time
             dateTime={task.createdAt}
             title={new Date(task.createdAt).toLocaleString()}

@@ -99,7 +99,9 @@ describe("bitbucket-service", () => {
 
   describe("listBranches", () => {
     it("should fetch branches for a repo", async () => {
-      const branches = [{ id: "refs/heads/main", displayId: "main", isDefault: true }];
+      const branches = [
+        { id: "refs/heads/main", displayId: "main", isDefault: true },
+      ];
       mockFetch.mockReturnValue(mockJsonResponse({ values: branches }));
 
       const result = await listBranches("PROJ", "my-repo");
@@ -125,7 +127,11 @@ describe("bitbucket-service", () => {
 
   describe("getDefaultBranch", () => {
     it("should fetch default branch", async () => {
-      const branch = { id: "refs/heads/main", displayId: "main", isDefault: true };
+      const branch = {
+        id: "refs/heads/main",
+        displayId: "main",
+        isDefault: true,
+      };
       mockFetch.mockReturnValue(mockJsonResponse(branch));
 
       const result = await getDefaultBranch("PROJ", "my-repo");
@@ -147,7 +153,11 @@ describe("bitbucket-service", () => {
 
   describe("createBranch", () => {
     it("should POST new branch", async () => {
-      const branch = { id: "refs/heads/feature", displayId: "feature", isDefault: false };
+      const branch = {
+        id: "refs/heads/feature",
+        displayId: "feature",
+        isDefault: false,
+      };
       mockFetch.mockReturnValue(mockJsonResponse(branch));
 
       const result = await createBranch("PROJ", "my-repo", "feature", "main");
@@ -165,7 +175,12 @@ describe("bitbucket-service", () => {
 
   describe("createPullRequest", () => {
     it("should POST new pull request", async () => {
-      const pr = { id: 42, title: "My PR", state: "OPEN", links: { self: [{ href: "..." }] } };
+      const pr = {
+        id: 42,
+        title: "My PR",
+        state: "OPEN",
+        links: { self: [{ href: "..." }] },
+      };
       mockFetch.mockReturnValue(mockJsonResponse(pr));
 
       const result = await createPullRequest(
@@ -211,7 +226,9 @@ describe("bitbucket-service", () => {
     it("should throw when BITBUCKET_URL is not configured", async () => {
       delete process.env.BITBUCKET_URL;
       // Need to re-import because config is read at call time
-      await expect(listProjects()).rejects.toThrow("BITBUCKET_URL is not configured");
+      await expect(listProjects()).rejects.toThrow(
+        "BITBUCKET_URL is not configured",
+      );
     });
   });
 
@@ -258,7 +275,10 @@ describe("bitbucket-service", () => {
 
       await listProjects();
 
-      const headers = mockFetch.mock.calls[0][1]?.headers as Record<string, string>;
+      const headers = mockFetch.mock.calls[0][1]?.headers as Record<
+        string,
+        string
+      >;
       expect(headers.Authorization).toBeUndefined();
     });
   });

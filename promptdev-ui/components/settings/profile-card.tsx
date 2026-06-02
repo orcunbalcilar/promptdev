@@ -46,20 +46,14 @@ export function ProfileCard({ profile, session }: ProfileCardProps) {
       <CardContent className="space-y-3">
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16">
-            <AvatarImage
-              src={avatarSrc}
-            />
+            <AvatarImage src={avatarSrc} />
             <AvatarFallback className="text-lg">
               {profile.name?.charAt(0)?.toUpperCase() ?? "U"}
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-medium text-lg">
-              {nameDisplay}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {emailDisplay}
-            </p>
+            <p className="font-medium text-lg">{nameDisplay}</p>
+            <p className="text-sm text-muted-foreground">{emailDisplay}</p>
             <Badge variant="secondary" className="mt-1 capitalize">
               {providerBadge}
             </Badge>

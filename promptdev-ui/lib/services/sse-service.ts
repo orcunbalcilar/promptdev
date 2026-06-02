@@ -20,7 +20,10 @@ interface SseEvent {
  * Broadcast a task update to all global SSE subscribers.
  */
 export function broadcastTaskUpdate(taskResponse: unknown): void {
-  emitter.emit("sse", { type: "task-update", data: taskResponse } satisfies SseEvent);
+  emitter.emit("sse", {
+    type: "task-update",
+    data: taskResponse,
+  } satisfies SseEvent);
 }
 
 /**

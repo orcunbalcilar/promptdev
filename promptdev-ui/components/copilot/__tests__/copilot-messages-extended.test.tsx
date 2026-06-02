@@ -34,13 +34,7 @@ vi.mock("@/components/ai-elements/tool", () => ({
   ToolContent: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
-  ToolHeader: ({
-    title,
-    state,
-  }: {
-    title: string;
-    state: string;
-  }) => (
+  ToolHeader: ({ title, state }: { title: string; state: string }) => (
     <div data-testid="tool-header" data-state={state}>
       {title}
     </div>
@@ -75,10 +69,7 @@ import {
   CopilotMessageDisplay,
   StreamingAssistantMessage,
 } from "@/components/copilot/copilot-messages";
-import type {
-  CopilotMessage,
-  CopilotToolExecution,
-} from "@/lib/copilot/types";
+import type { CopilotMessage, CopilotToolExecution } from "@/lib/copilot/types";
 
 function makeTool(
   overrides: Partial<CopilotToolExecution> = {},
@@ -93,9 +84,7 @@ function makeTool(
   };
 }
 
-function makeMessage(
-  overrides: Partial<CopilotMessage> = {},
-): CopilotMessage {
+function makeMessage(overrides: Partial<CopilotMessage> = {}): CopilotMessage {
   return {
     id: "msg-1",
     role: "assistant",
@@ -120,9 +109,7 @@ describe("ToolExecution - state mapping (uncovered lines 32-34, 38-40)", () => {
       />,
     );
 
-    const header = container.querySelector(
-      '[data-state="input-streaming"]',
-    );
+    const header = container.querySelector('[data-state="input-streaming"]');
     expect(header).toBeTruthy();
   });
 
@@ -140,9 +127,7 @@ describe("ToolExecution - state mapping (uncovered lines 32-34, 38-40)", () => {
       />,
     );
 
-    const header = container.querySelector(
-      '[data-state="input-available"]',
-    );
+    const header = container.querySelector('[data-state="input-available"]');
     expect(header).toBeTruthy();
   });
 
@@ -160,9 +145,7 @@ describe("ToolExecution - state mapping (uncovered lines 32-34, 38-40)", () => {
       />,
     );
 
-    const header = container.querySelector(
-      '[data-state="output-available"]',
-    );
+    const header = container.querySelector('[data-state="output-available"]');
     expect(header).toBeTruthy();
   });
 
@@ -186,9 +169,7 @@ describe("ToolExecution - state mapping (uncovered lines 32-34, 38-40)", () => {
       />,
     );
 
-    const header = container.querySelector(
-      '[data-state="output-error"]',
-    );
+    const header = container.querySelector('[data-state="output-error"]');
     expect(header).toBeTruthy();
   });
 
@@ -211,9 +192,7 @@ describe("ToolExecution - state mapping (uncovered lines 32-34, 38-40)", () => {
       />,
     );
 
-    const header = container.querySelector(
-      '[data-state="input-streaming"]',
-    );
+    const header = container.querySelector('[data-state="input-streaming"]');
     expect(header).toBeTruthy();
   });
 });

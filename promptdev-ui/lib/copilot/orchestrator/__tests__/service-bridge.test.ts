@@ -206,9 +206,7 @@ describe("service-bridge", () => {
 
     it("should fall back to temp path on error", async () => {
       vi.mocked(taskService.getTask).mockRejectedValue(new Error("fail"));
-      const consoleSpy = vi
-        .spyOn(console, "warn")
-        .mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
       const result = await createWorkspace("task-1");
 
@@ -254,9 +252,7 @@ describe("service-bridge", () => {
           throw new Error("Permission denied");
         },
       );
-      const consoleSpy = vi
-        .spyOn(console, "warn")
-        .mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
       expect(() => cleanupWorkspace("task-1")).not.toThrow();
       consoleSpy.mockRestore();

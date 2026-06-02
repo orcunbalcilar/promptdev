@@ -28,7 +28,10 @@ import { GET as projectIssuesGET } from "@/app/api/jira/projects/[projectKey]/is
 
 const mockRequireAuth = requireAuth as ReturnType<typeof vi.fn>;
 
-function makeRequest(url: string, init?: { method?: string; body?: string; headers?: Record<string, string> }) {
+function makeRequest(
+  url: string,
+  init?: { method?: string; body?: string; headers?: Record<string, string> },
+) {
   return new NextRequest(`http://localhost:3000${url}`, init);
 }
 
@@ -59,7 +62,9 @@ describe("GET /api/jira/issues/search", () => {
     const result = { issues: [{ key: "TEST-1" }], total: 1 };
     vi.mocked(jiraService.searchIssues).mockResolvedValue(result);
 
-    const req = makeRequest("/api/jira/issues/search?jql=project%3DTEST&maxResults=10");
+    const req = makeRequest(
+      "/api/jira/issues/search?jql=project%3DTEST&maxResults=10",
+    );
     const res = await searchIssuesGET(req);
     const body = await res.json();
 
@@ -69,7 +74,10 @@ describe("GET /api/jira/issues/search", () => {
   });
 
   it("uses default maxResults of 50", async () => {
-    vi.mocked(jiraService.searchIssues).mockResolvedValue({ issues: [], total: 0 });
+    vi.mocked(jiraService.searchIssues).mockResolvedValue({
+      issues: [],
+      total: 0,
+    });
 
     const req = makeRequest("/api/jira/issues/search");
     await searchIssuesGET(req);
@@ -222,7 +230,10 @@ describe("GET /api/jira/projects/[projectKey]/issues", () => {
   });
 
   it("uses default maxResults of 50", async () => {
-    vi.mocked(jiraService.getIssuesByProject).mockResolvedValue({ issues: [], total: 0 });
+    vi.mocked(jiraService.getIssuesByProject).mockResolvedValue({
+      issues: [],
+      total: 0,
+    });
 
     const req = makeRequest("/api/jira/projects/PROJ/issues");
     await projectIssuesGET(req, makeProjectParams("PROJ"));

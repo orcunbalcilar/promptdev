@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { getFavorites, toggleFavorite, isFavorite, clearFavorites } from "../favorites";
+import {
+  getFavorites,
+  toggleFavorite,
+  isFavorite,
+  clearFavorites,
+} from "../favorites";
 
 describe("favorites – coverage (branches on lines 8, 27-39)", () => {
   beforeEach(() => {

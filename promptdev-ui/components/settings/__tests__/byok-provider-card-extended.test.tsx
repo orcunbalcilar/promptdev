@@ -69,9 +69,7 @@ describe("ByokProviderCard - error handling", () => {
       <ByokProviderCard userId="u1" profile={makeProfile()} />,
     );
 
-    await user.click(
-      screen.getByRole("button", { name: /save provider/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /save provider/i }));
 
     await waitFor(() => {
       expect(mockShowErrorToast).toHaveBeenCalledWith(
@@ -125,13 +123,8 @@ describe("ByokProviderCard - sends all fields on save", () => {
       screen.getByLabelText("Base URL"),
       "https://my-resource.openai.azure.com",
     );
-    await user.type(
-      screen.getByLabelText("Azure API Version"),
-      "2024-10-21",
-    );
-    await user.click(
-      screen.getByRole("button", { name: /save provider/i }),
-    );
+    await user.type(screen.getByLabelText("Azure API Version"), "2024-10-21");
+    await user.click(screen.getByRole("button", { name: /save provider/i }));
 
     expect(mockUpdateSettings).toHaveBeenCalledWith(
       "u1",
@@ -151,14 +144,10 @@ describe("ByokProviderCard - success toast", () => {
       <ByokProviderCard userId="u1" profile={makeProfile()} />,
     );
 
-    await user.click(
-      screen.getByRole("button", { name: /save provider/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /save provider/i }));
 
     await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith(
-        "Provider settings saved",
-      );
+      expect(toast.success).toHaveBeenCalledWith("Provider settings saved");
     });
   });
 });

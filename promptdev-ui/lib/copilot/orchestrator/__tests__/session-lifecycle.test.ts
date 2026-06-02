@@ -114,14 +114,7 @@ describe("session-lifecycle", () => {
     });
 
     it("should not create PR for LOCAL workspace", async () => {
-      await handleSessionIdle(
-        "task-1",
-        "session-1",
-        BASE_TASK,
-        "Done",
-        1,
-        1,
-      );
+      await handleSessionIdle("task-1", "session-1", BASE_TASK, "Done", 1, 1);
 
       expect(createPullRequest).not.toHaveBeenCalled();
     });
@@ -199,14 +192,7 @@ describe("session-lifecycle", () => {
         jiraIssueKey: "PROJ-123",
       };
 
-      await handleSessionIdle(
-        "task-1",
-        "session-1",
-        jiraTask,
-        "Done",
-        3,
-        7,
-      );
+      await handleSessionIdle("task-1", "session-1", jiraTask, "Done", 3, 7);
 
       expect(addJiraComment).toHaveBeenCalledWith(
         "PROJ-123",

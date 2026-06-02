@@ -18,11 +18,12 @@ describe("TestErrorStack (line 488)", () => {
           <TestError>
             <TestErrorMessage>Assertion failed</TestErrorMessage>
             <TestErrorStack>
-              Error: expected true to be false{"\n"}  at Object.test (test.ts:10:5)
+              Error: expected true to be false{"\n"} at Object.test
+              (test.ts:10:5)
             </TestErrorStack>
           </TestError>
         </TestResultsContent>
-      </TestResults>
+      </TestResults>,
     );
 
     expect(screen.getByText(/Assertion failed/)).toBeTruthy();
@@ -31,7 +32,9 @@ describe("TestErrorStack (line 488)", () => {
 
   it("renders TestErrorStack with custom className", () => {
     const { container } = render(
-      <TestErrorStack className="custom-stack">Stack trace here</TestErrorStack>
+      <TestErrorStack className="custom-stack">
+        Stack trace here
+      </TestErrorStack>,
     );
 
     const pre = container.querySelector("pre");
@@ -42,7 +45,7 @@ describe("TestErrorStack (line 488)", () => {
 
   it("renders TestErrorMessage with custom className", () => {
     const { container } = render(
-      <TestErrorMessage className="custom-msg">Error msg</TestErrorMessage>
+      <TestErrorMessage className="custom-msg">Error msg</TestErrorMessage>,
     );
 
     const p = container.querySelector("p");

@@ -24,7 +24,10 @@ import { POST as syncPOST } from "@/app/api/users/sync/route";
 const mockRequireAuth = requireAuth as ReturnType<typeof vi.fn>;
 const mockRequireOwnership = requireOwnership as ReturnType<typeof vi.fn>;
 
-function makeRequest(url: string, init?: { method?: string; body?: string; headers?: Record<string, string> }) {
+function makeRequest(
+  url: string,
+  init?: { method?: string; body?: string; headers?: Record<string, string> },
+) {
   return new NextRequest(`http://localhost:3000${url}`, init);
 }
 
@@ -192,7 +195,9 @@ describe("POST /api/users/sync", () => {
   it("returns 401 when not authenticated", async () => {
     mockRequireAuth.mockResolvedValue({ error: authError });
 
-    const req = makeRequest("/api/users/sync?provider=github", { method: "POST" });
+    const req = makeRequest("/api/users/sync?provider=github", {
+      method: "POST",
+    });
     const res = await syncPOST(req);
 
     expect(res.status).toBe(401);

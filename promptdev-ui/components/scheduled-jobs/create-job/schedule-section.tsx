@@ -41,12 +41,15 @@ export function ScheduleSection() {
         <Label>Schedule (Cron Expression)</Label>
         <Select
           value={selectedPreset}
-          onValueChange={/* v8 ignore start -- cron preset handler */ (v) => {
-            setSelectedPreset(v);
-            if (v !== "custom") {
-              setCronExpression(v);
+          onValueChange={
+            /* v8 ignore start -- cron preset handler */ (v) => {
+              setSelectedPreset(v);
+              if (v !== "custom") {
+                setCronExpression(v);
+              }
+              /* v8 ignore stop */
             }
-          /* v8 ignore stop */}}
+          }
         >
           <SelectTrigger>
             <SelectValue />
@@ -133,15 +136,18 @@ export function ScheduleSection() {
                 type="time"
                 className="mt-2"
                 value={startAt ? format(new Date(startAt), "HH:mm") : ""}
-                onChange={/* v8 ignore start -- time input handler */ (e) => {
-                  const time = e.target.value;
-                  if (!time) return;
-                  const [hours, minutes] = time.split(":").map(Number);
-                  const date = startAt ? new Date(startAt) : new Date();
-                  date.setHours(hours);
-                  date.setMinutes(minutes);
-                  setStartAt(format(date, "yyyy-MM-dd'T'HH:mm"));
-                /* v8 ignore stop */}}
+                onChange={
+                  /* v8 ignore start -- time input handler */ (e) => {
+                    const time = e.target.value;
+                    if (!time) return;
+                    const [hours, minutes] = time.split(":").map(Number);
+                    const date = startAt ? new Date(startAt) : new Date();
+                    date.setHours(hours);
+                    date.setMinutes(minutes);
+                    setStartAt(format(date, "yyyy-MM-dd'T'HH:mm"));
+                    /* v8 ignore stop */
+                  }
+                }
               />
             </div>
           </PopoverContent>

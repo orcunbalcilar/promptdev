@@ -62,6 +62,8 @@ describe("task-refine-form.tsx branch coverage", () => {
 
   it("renders non-editing state with Start button", () => {
     renderWith(<TaskRefineForm task={baseTask} onStarted={vi.fn()} />);
-    expect(screen.getByRole("button", { name: /start task/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /start task/i }),
+    ).toBeInTheDocument();
   });
 });

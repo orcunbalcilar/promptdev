@@ -41,10 +41,7 @@ const baseSessions: PaginatedResponse<MonitoringSession> = {
 describe("sessions-table.tsx branch coverage", () => {
   it("falls back to ENDED config for unknown status (line 49)", () => {
     render(
-      <SessionsTable
-        sessions={baseSessions}
-        onSelectSession={() => {}}
-      />,
+      <SessionsTable sessions={baseSessions} onSelectSession={() => {}} />,
     );
     // Should render without crashing — fallback to ENDED styling
     // sdkSessionId is truncated: .slice(0,12) + "..."
@@ -55,14 +52,14 @@ describe("sessions-table.tsx branch coverage", () => {
     const activeSessions: PaginatedResponse<MonitoringSession> = {
       ...baseSessions,
       content: [
-        { ...baseSessions.content[0], status: "ACTIVE" as MonitoringSession["status"] },
+        {
+          ...baseSessions.content[0],
+          status: "ACTIVE" as MonitoringSession["status"],
+        },
       ],
     };
     render(
-      <SessionsTable
-        sessions={activeSessions}
-        onSelectSession={() => {}}
-      />,
+      <SessionsTable sessions={activeSessions} onSelectSession={() => {}} />,
     );
     expect(screen.getByText(/sdk-1/)).toBeInTheDocument();
   });

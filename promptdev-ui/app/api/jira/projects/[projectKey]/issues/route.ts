@@ -10,7 +10,9 @@ export async function GET(
   if (error) return error;
 
   const { projectKey } = await params;
-  const maxResults = Number(request.nextUrl.searchParams.get("maxResults") ?? 50);
+  const maxResults = Number(
+    request.nextUrl.searchParams.get("maxResults") ?? 50,
+  );
   const result = await jiraService.getIssuesByProject(projectKey, maxResults);
   return NextResponse.json(result);
 }

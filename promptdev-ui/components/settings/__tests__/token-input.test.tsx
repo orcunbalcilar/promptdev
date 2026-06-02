@@ -67,9 +67,7 @@ describe("TokenInput", () => {
   });
 
   it("uses custom placeholder when provided", () => {
-    render(
-      <TokenInput {...defaultProps} placeholder="Paste your API key" />,
-    );
+    render(<TokenInput {...defaultProps} placeholder="Paste your API key" />);
     expect(
       screen.getByPlaceholderText("Paste your API key"),
     ).toBeInTheDocument();

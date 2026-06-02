@@ -5,7 +5,7 @@ import { STATUS_GROUPS } from "@/lib/task-statuses";
 import { adaptTask } from "@/lib/task-adapter";
 
 // Force dynamic rendering since we read search params and DB
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function Page({
   searchParams,
@@ -17,7 +17,9 @@ export default async function Page({
   const size = Number(resolvedSearchParams.size ?? 100);
   const statusFilter = resolvedSearchParams.status as string | undefined;
   const search = resolvedSearchParams.search as string | undefined;
-  const workspaceType = resolvedSearchParams.workspaceType as string | undefined;
+  const workspaceType = resolvedSearchParams.workspaceType as
+    | string
+    | undefined;
 
   let statuses: string[] | undefined;
   if (statusFilter && statusFilter !== "all") {

@@ -4,7 +4,12 @@
  */
 import { toast } from "sonner";
 
-export type ErrorCategory = "AUTH" | "VALIDATION" | "NETWORK" | "SERVER" | "UNKNOWN";
+export type ErrorCategory =
+  | "AUTH"
+  | "VALIDATION"
+  | "NETWORK"
+  | "SERVER"
+  | "UNKNOWN";
 
 export interface AppError {
   category: ErrorCategory;
@@ -21,7 +26,11 @@ export function classifyError(error: unknown): AppError {
   if (error instanceof Error && "status" in error) {
     const apiError = error as Error & { status: number; details?: string };
     if (apiError.status === 401 || apiError.status === 403) {
-      return { category: "AUTH", message: "Your session has expired", status: apiError.status };
+      return {
+        category: "AUTH",
+        message: "Your session has expired",
+        status: apiError.status,
+      };
     }
     if (apiError.status === 422 || apiError.status === 400) {
       return {
@@ -40,7 +49,10 @@ export function classifyError(error: unknown): AppError {
     }
   }
   if (error instanceof TypeError && error.message.includes("fetch")) {
-    return { category: "NETWORK", message: "Network error. Check your connection." };
+    return {
+      category: "NETWORK",
+      message: "Network error. Check your connection.",
+    };
   }
   return { category: "UNKNOWN", message: "Something went wrong." };
 }
@@ -69,7 +81,9 @@ export function showErrorToast(error: unknown, context?: string) {
       toast.error("Connection lost. Please check your network.");
       break;
     case "SERVER":
-      toast.error(context ? `Failed to ${context}. Server error.` : "Server error.");
+      toast.error(
+        context ? `Failed to ${context}. Server error.` : "Server error.",
+      );
       break;
     default:
       toast.error(context ? `Failed to ${context}.` : "Something went wrong.");

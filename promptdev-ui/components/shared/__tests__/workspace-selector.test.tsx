@@ -5,15 +5,25 @@ import { WorkspaceSelector } from "../workspace-selector";
 
 // jsdom stubs for Radix Select pointer events
 globalThis.ResizeObserver = class ResizeObserver {
-  observe() { /* noop */ }
-  unobserve() { /* noop */ }
-  disconnect() { /* noop */ }
+  observe() {
+    /* noop */
+  }
+  unobserve() {
+    /* noop */
+  }
+  disconnect() {
+    /* noop */
+  }
 } as unknown as typeof ResizeObserver;
 
-Element.prototype.hasPointerCapture = Element.prototype.hasPointerCapture ?? (() => false);
-Element.prototype.setPointerCapture = Element.prototype.setPointerCapture ?? (() => {});
-Element.prototype.releasePointerCapture = Element.prototype.releasePointerCapture ?? (() => {});
-Element.prototype.scrollIntoView = Element.prototype.scrollIntoView ?? (() => {});
+Element.prototype.hasPointerCapture =
+  Element.prototype.hasPointerCapture ?? (() => false);
+Element.prototype.setPointerCapture =
+  Element.prototype.setPointerCapture ?? (() => {});
+Element.prototype.releasePointerCapture =
+  Element.prototype.releasePointerCapture ?? (() => {});
+Element.prototype.scrollIntoView =
+  Element.prototype.scrollIntoView ?? (() => {});
 
 // createPortal mock for Radix popover
 vi.mock("react-dom", async (importOriginal) => {
@@ -64,9 +74,7 @@ describe("WorkspaceSelector", () => {
   });
 
   it("renders local path input for LOCAL type", () => {
-    render(
-      <WorkspaceSelector {...defaultProps} workspaceType="LOCAL" />,
-    );
+    render(<WorkspaceSelector {...defaultProps} workspaceType="LOCAL" />);
     // Should not show bitbucket-specific fields
     expect(screen.queryByText("Project")).not.toBeInTheDocument();
   });
@@ -85,12 +93,7 @@ describe("WorkspaceSelector", () => {
   it("calls setWorkspaceType when type is changed", async () => {
     const user = userEvent.setup();
     const setType = vi.fn();
-    render(
-      <WorkspaceSelector
-        {...defaultProps}
-        setWorkspaceType={setType}
-      />,
-    );
+    render(<WorkspaceSelector {...defaultProps} setWorkspaceType={setType} />);
     const triggers = screen.getAllByRole("combobox");
     await user.click(triggers[0]);
     await user.click(screen.getByText("Local Workspace"));

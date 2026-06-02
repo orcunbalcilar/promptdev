@@ -1,4 +1,9 @@
-import { getFavorites, toggleFavorite, isFavorite, clearFavorites } from "@/lib/favorites";
+import {
+  getFavorites,
+  toggleFavorite,
+  isFavorite,
+  clearFavorites,
+} from "@/lib/favorites";
 
 describe("favorites", () => {
   beforeEach(() => {
@@ -12,7 +17,10 @@ describe("favorites", () => {
     });
 
     it("should return stored favorites", () => {
-      localStorage.setItem("promptdev-favorites", JSON.stringify(["task-1", "task-2"]));
+      localStorage.setItem(
+        "promptdev-favorites",
+        JSON.stringify(["task-1", "task-2"]),
+      );
       const favorites = getFavorites();
       expect(favorites.size).toBe(2);
       expect(favorites.has("task-1")).toBe(true);

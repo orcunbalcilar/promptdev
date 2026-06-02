@@ -18,8 +18,12 @@ export default function CopilotError({
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-8">
-      <h2 className="text-xl font-semibold text-destructive">Copilot session error</h2>
-      <p className="text-muted-foreground text-center max-w-md">{error.message}</p>
+      <h2 className="text-xl font-semibold text-destructive">
+        Copilot session error
+      </h2>
+      <p className="text-muted-foreground text-center max-w-md">
+        {error.message}
+      </p>
       <div className="flex gap-3">
         <Button onClick={reset} variant="outline">
           <RefreshCw className="h-4 w-4 mr-2" />

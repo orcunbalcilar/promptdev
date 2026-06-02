@@ -66,9 +66,14 @@ describe("validateCsrf", () => {
   });
 
   it("returns 403 when no CSRF header is present", async () => {
-    const req = makeRequest("POST", "/api/tasks", {}, {
-      "next-auth.csrf-token": "abc123|hash",
-    });
+    const req = makeRequest(
+      "POST",
+      "/api/tasks",
+      {},
+      {
+        "next-auth.csrf-token": "abc123|hash",
+      },
+    );
     const result = validateCsrf(req);
     expect(result).not.toBeNull();
     expect(result!.status).toBe(403);

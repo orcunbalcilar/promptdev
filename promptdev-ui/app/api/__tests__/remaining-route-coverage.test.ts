@@ -29,13 +29,19 @@ vi.mock("@/lib/services/jira-opt-out-service", () => ({
 import { POST as sessionIdPost } from "@/app/api/copilot/sessions/[sessionId]/route";
 import { DELETE as optOutsDelete } from "@/app/api/jira-opt-outs/route";
 
-function makeReq(url: string, init?: ConstructorParameters<typeof NextRequest>[1]) {
+function makeReq(
+  url: string,
+  init?: ConstructorParameters<typeof NextRequest>[1],
+) {
   return new NextRequest(new URL(url, "http://localhost:3000"), init);
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockRequireAuth.mockResolvedValue({ session: { user: { id: "u1" } }, error: null });
+  mockRequireAuth.mockResolvedValue({
+    session: { user: { id: "u1" } },
+    error: null,
+  });
 });
 
 describe("copilot/sessions/[sessionId]/route.ts – invalid action (line 95)", () => {
