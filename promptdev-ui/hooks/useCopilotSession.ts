@@ -151,7 +151,7 @@ export function useCopilotSession(
         }
 
         case "assistant.message": {
-          const data = event.data as { content: string; messageId?: string };
+          const data = event.data;
           setIsStreaming(false);
 
           // Track assistant response in monitoring

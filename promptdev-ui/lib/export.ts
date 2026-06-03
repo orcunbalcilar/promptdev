@@ -28,7 +28,7 @@ const DEFAULT_FIELDS: (keyof Task)[] = [
 function escapeCSV(value: unknown): string {
   const str = String(value ?? "");
   if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-    return `"${str.replace(/"/g, '""')}"`;
+    return `"${str.replaceAll('"', '""')}"`;
   }
   return str;
 }
@@ -69,7 +69,7 @@ export function exportTasks(tasks: Task[], options: ExportOptions): void {
   const mimeType = format === "csv" ? "text/csv" : "application/json";
   const extension = format === "csv" ? ".csv" : ".json";
 
-  if (typeof window !== "undefined") {
+  if (globalThis.window !== undefined) {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
